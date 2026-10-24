@@ -1,8 +1,8 @@
 param([Parameter(Mandatory=$true)][string]$SdkRoot,[Parameter(Mandatory=$true)][string]$JdkRoot,[string]$OutDir)
 $ErrorActionPreference='Stop'
 $project = Split-Path $PSScriptRoot -Parent
-$versionName='0.1.4'
-$versionCode='5'
+$versionName='0.1.6'
+$versionCode='7'
 if (!$OutDir) { $OutDir = Join-Path $project 'build' }
 $OutDir = [IO.Path]::GetFullPath($OutDir)
 $platform = Get-ChildItem (Join-Path $SdkRoot 'platforms') -Directory | Sort-Object Name -Descending | Select-Object -First 1
@@ -32,6 +32,7 @@ $key = Join-Path $OutDir 'local-debug.keystore'
 if (!(Test-Path -LiteralPath $key)) { Run $keytool @('-genkeypair','-keystore',$key,'-storepass','android','-keypass','android','-alias','androiddebugkey','-dname','CN=SplashGuard Local Development','-keyalg','RSA','-keysize','2048','-validity','10000') }
 Run $java @('-jar',(Join-Path $tools.FullName 'lib\apksigner.jar'),'sign','--ks',$key,'--ks-key-alias','androiddebugkey','--ks-pass','pass:android','--key-pass','pass:android','--out',(Join-Path $OutDir "SplashGuard-$versionName-preview.apk"),(Join-Path $OutDir 'aligned.apk'))
 Run $java @('-jar',(Join-Path $tools.FullName 'lib\apksigner.jar'),'verify','--verbose',(Join-Path $OutDir "SplashGuard-$versionName-preview.apk"))
-Run $javac @('-encoding','UTF-8','-d',(Join-Path $OutDir 'tests'),(Join-Path $project 'app\src\main\java\org\splashguard\app\AdRules.java'),(Join-Path $project 'tests\AdRulesTest.java'))
+Run $javac @('-encoding','UTF-8','-d',(Join-Path $OutDir 'tests'),(Join-Path $project 'app\src\main\java\org\splashguard\app\AdRules.java'),(Join-Path $project 'app\src\main\java\org\splashguard\app\SkipSession.java'),(Join-Path $project 'tests\AdRulesTest.java'),(Join-Path $project 'tests\SkipSessionTest.java'))
 Run $java @('-cp',(Join-Path $OutDir 'tests'),'AdRulesTest')
+Run $java @('-cp',(Join-Path $OutDir 'tests'),'SkipSessionTest')
 Write-Output ('APK: ' + (Join-Path $OutDir "SplashGuard-$versionName-preview.apk"))

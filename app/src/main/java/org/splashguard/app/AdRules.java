@@ -16,6 +16,7 @@ public final class AdRules {
         return cls.startsWith("tv.danmaku.bili.splash.ad.widget.")
                 || key.equals("tv.danmaku.bili:id/splash_interact_view")
                 || key.equals("tv.danmaku.bili:id/splash_container")
+                || (key.equals("tv.danmaku.bili:id/splash_layout") && cls.equals("android.widget.FrameLayout"))
                 || key.equals("tv.danmaku.bili:id/splash_button_container")
                 || key.equals("tv.danmaku.bili:id/full_brand_splash");
     }
