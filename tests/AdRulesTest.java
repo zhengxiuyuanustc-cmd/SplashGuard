@@ -40,6 +40,20 @@ public class AdRulesTest {
         check("recorded bottom skip within real display",AdRules.biliCandidate("tv.danmaku.bili","跳过 5","tv.danmaku.bili:id/count_down",true,868,2425,1148,2565,1200,2652),true);
         check("recorded skip was rejected by old app-area height",AdRules.biliCandidate("tv.danmaku.bili","跳过 5","tv.danmaku.bili:id/count_down",true,868,2425,1148,2565,1200,2516),false);
         check("recorded bottom label still requires scene",AdRules.biliCandidate("tv.danmaku.bili","跳过 5","tv.danmaku.bili:id/count_down",false,868,2425,1148,2565,1200,2652),false);
+        boolean tmallScene=AdRules.biliSplashMarker("tv.danmaku.bili:id/splash_layout","android.widget.FrameLayout");
+        check("recorded Tmall FrameLayout scene",tmallScene,true);
+        check("recorded Tmall lower skip",AdRules.biliCandidate("tv.danmaku.bili","跳过5","tv.danmaku.bili:id/count_down",tmallScene,868,2425,1148,2565,1200,2652),true);
+        check("new scene requires recorded class",AdRules.biliSplashMarker("tv.danmaku.bili:id/splash_layout","android.view.ViewGroup"),false);
+        check("new scene exact package",AdRules.biliSplashMarker("com.other:id/splash_layout","android.widget.FrameLayout"),false);
+        check("new scene exact id",AdRules.biliSplashMarker("tv.danmaku.bili:id/splash_layout_extra","android.widget.FrameLayout"),false);
+        check("logo alone is not a scene",AdRules.biliSplashMarker("tv.danmaku.bili:id/logo_layout","android.view.ViewGroup"),false);
+        check("unidentified FrameLayout is not a scene",AdRules.biliSplashMarker("","android.widget.FrameLayout"),false);
+        check("Tmall brand alone is not evidence",AdRules.adEvidence("天猫双十一"),false);
+        check("new scene rejects unrelated button",AdRules.biliCandidate("tv.danmaku.bili","跳过5","tv.danmaku.bili:id/skip",tmallScene,868,2425,1148,2565,1200,2652),false);
+        check("new scene rejects pure countdown",AdRules.biliCandidate("tv.danmaku.bili","5","tv.danmaku.bili:id/count_down",tmallScene,868,2425,1148,2565,1200,2652),false);
+        check("new scene rejects ad destination",AdRules.biliCandidate("tv.danmaku.bili","点击进入淘宝app","tv.danmaku.bili:id/count_down",tmallScene,868,2425,1148,2565,1200,2652),false);
+        check("new scene rejects center content",AdRules.biliCandidate("tv.danmaku.bili","跳过5","tv.danmaku.bili:id/count_down",tmallScene,868,1200,1148,1340,1200,2652),false);
+        check("new scene rejects offscreen control",AdRules.biliCandidate("tv.danmaku.bili","跳过5","tv.danmaku.bili:id/count_down",tmallScene,868,2525,1148,2665,1200,2652),false);
         System.out.println("PASS " + passed + " decision-rule cases");
     }
 }

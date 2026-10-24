@@ -154,7 +154,7 @@ public final class MainActivity extends Activity {
         gap(privacy,12); privacy.addView(text("已发送跳过操作：" + Prefs.get(this).getInt("count",0) + " 次\n计数表示操作已提交，不等于广告已成功消失。",13,GREEN));
         gap(privacy,10);privacy.addView(text("最近检查："+Prefs.get(this).getString("diagnostic","暂无检查记录"),12,MUTED));
         gap(privacy,10); privacy.addView(text("暂停：关闭上方开关。彻底停用：在系统无障碍设置中关闭本服务。系统方向权限需在系统页单独恢复。",12,MUTED));
-        gap(content,8); content.addView(text("SplashGuard 0.1.4 · MIT 开源预览版\n广告专用设置优先，谨慎点击兜底。",12,MUTED));
+        gap(content,8); content.addView(text("SplashGuard 0.1.6 · MIT 开源预览版\n广告专用设置优先，谨慎点击兜底。",12,MUTED));
     }
     private void backgroundGuide() {
         String guide;

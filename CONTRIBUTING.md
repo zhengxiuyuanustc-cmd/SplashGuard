@@ -20,14 +20,21 @@
 
 每项规则修改请补充正例及反例：既证明目标广告能匹配，也证明普通引导、授权、支付和无关页面不会匹配。脱敏后的控件样本可放入 `tests/fixtures/`，不包含账户信息或完整界面正文。
 
-在项目根目录运行不依赖 Android 的规则测试（需 JDK；输出目录已被忽略）：
+在项目根目录运行不依赖 Android 的规则和会话测试（需 JDK；输出目录已被忽略）：
 
 ```text
 mkdir build
-javac -encoding UTF-8 -d build app/src/main/java/org/splashguard/app/AdRules.java tests/AdRulesTest.java
+javac -encoding UTF-8 -d build app/src/main/java/org/splashguard/app/AdRules.java app/src/main/java/org/splashguard/app/SkipSession.java tests/AdRulesTest.java tests/SkipSessionTest.java
 java -cp build AdRulesTest
+java -cp build SkipSessionTest
 ```
 
-当前基线为 35 项通过。离线测试不能替代真实广告验收；实机结果应区分未出现广告、仅提交点击、实际提前消失及物理晃动跳转验证，并注明设备和版本。
+当前0.1.6 / versionCode 7工作源码基线为48项广告规则与40项会话状态测试，共88项通过。会话预算限制最多两轮处理、最多两次被系统接受的动作；首轮中被拒绝的控件调用可能转为父控件或精确手势回退，不表示所有Android API调用总共不超过两次。
+
+0.1.6依据过滤后的真实样本 `tests/fixtures/bilibili-9.15.0-tmall-splash-layout.json`，仅补充精确 `splash_layout` 标识与 `android.widget.FrameLayout` 类名同时匹配的B站场景，不放宽其余规则。13项新增正反例中的真实场景用例在旧规则下出现 `AssertionError: recorded Tmall FrameLayout scene`，修改后两套测试通过；贡献相似规则时也应保留修改前失败、修改后通过的证据。
+
+离线测试不能替代真实广告验收；实机结果应区分未出现广告、仅提交点击、实际提前消失及物理晃动跳转验证，并注明设备和版本。0.1.5同款天猫广告一例跳过、一例漏过的历史保留。0.1.6已安装并回读哈希一致，无调试断点干扰的两次间隔复测中，真实天猫“新品独家首发”素材均提前自动关闭；结论仅限本机这两例已观察广告。原0.1.5漏过的“疯狂试用日”素材尚未重新投放，不能声称其已通过或所有天猫素材均已覆盖。88项测试或安装哈希一致也不单独作为实际效果证据。
+
+0.1.6改动拟通过GitHub修复PR供审查，尚未发布新的Release；公开下载仍为0.1.4，不把工作源码与已发布安装包混同。
 
 提交 PR 时简述问题、改动范围、验证结果与尚未覆盖的条件。不要提交签名密钥、构建产物、私人日志或 SDK。项目代码遵循根目录 MIT 许可证；第三方组件须保留相应许可声明。
