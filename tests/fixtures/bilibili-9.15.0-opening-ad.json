@@ -1,0 +1,13 @@
+{
+  "source": "Actual rule-call arguments captured from our own 0.1.1 debug build on 2026-10-23; no account content",
+  "package": "tv.danmaku.bili",
+  "scene_id": "tv.danmaku.bili:id/splash_container",
+  "scene_class": "android.view.ViewGroup",
+  "root_bounds": [0, 0, 1200, 2652],
+  "button_id": "tv.danmaku.bili:id/count_down",
+  "button_text": "跳过 5",
+  "button_bounds": [868, 2425, 1148, 2565],
+  "legacy_display_metrics": [1200, 2516],
+  "actual_full_display": [1200, 2652],
+  "legacy_scene_flag": false
+}

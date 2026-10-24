@@ -1,0 +1,9 @@
+<resources>
+    <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item><item name="android:colorAccent">#126859</item>
+        <item name="android:windowLightStatusBar">true</item><item name="android:statusBarColor">#F3F5F1</item>
+        <item name="android:navigationBarColor">#F3F5F1</item><item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowActionModeOverlay">true</item>
+    </style>
+    <string name="service_description">仅在你选中的应用打开后的 12 秒内，本地识别明确的开屏广告跳过按钮并点击。无网络权限，不保存页面内容，不操作支付、授权或普通关闭按钮。可在开屏清净中随时暂停。</string>
+</resources>
