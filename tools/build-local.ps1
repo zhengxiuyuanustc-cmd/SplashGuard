@@ -1,8 +1,11 @@
 param([Parameter(Mandatory=$true)][string]$SdkRoot,[Parameter(Mandatory=$true)][string]$JdkRoot,[string]$OutDir)
 $ErrorActionPreference='Stop'
 $project = Split-Path $PSScriptRoot -Parent
-$versionName='0.1.6'
-$versionCode='7'
+$appConfig = Get-Content (Join-Path $project 'app\build.gradle') -Raw
+if ($appConfig -notmatch "versionName\s+'([^']+)'") { throw 'Missing versionName in app/build.gradle' }
+$versionName=$Matches[1]
+if ($appConfig -notmatch 'versionCode\s+(\d+)') { throw 'Missing versionCode in app/build.gradle' }
+$versionCode=$Matches[1]
 if (!$OutDir) { $OutDir = Join-Path $project 'build' }
 $OutDir = [IO.Path]::GetFullPath($OutDir)
 $platform = Get-ChildItem (Join-Path $SdkRoot 'platforms') -Directory | Sort-Object Name -Descending | Select-Object -First 1
@@ -35,4 +38,8 @@ Run $java @('-jar',(Join-Path $tools.FullName 'lib\apksigner.jar'),'verify','--v
 Run $javac @('-encoding','UTF-8','-d',(Join-Path $OutDir 'tests'),(Join-Path $project 'app\src\main\java\org\splashguard\app\AdRules.java'),(Join-Path $project 'app\src\main\java\org\splashguard\app\SkipSession.java'),(Join-Path $project 'tests\AdRulesTest.java'),(Join-Path $project 'tests\SkipSessionTest.java'))
 Run $java @('-cp',(Join-Path $OutDir 'tests'),'AdRulesTest')
 Run $java @('-cp',(Join-Path $OutDir 'tests'),'SkipSessionTest')
+if (Test-Path -LiteralPath (Join-Path $project 'tests\OnboardingPolicyTest.java')) {
+    Run $javac @('-encoding','UTF-8','-d',(Join-Path $OutDir 'tests'),(Join-Path $project 'app\src\main\java\org\splashguard\app\OnboardingPolicy.java'),(Join-Path $project 'tests\OnboardingPolicyTest.java'))
+    Run $java @('-cp',(Join-Path $OutDir 'tests'),'OnboardingPolicyTest')
+}
 Write-Output ('APK: ' + (Join-Path $OutDir "SplashGuard-$versionName-preview.apk"))

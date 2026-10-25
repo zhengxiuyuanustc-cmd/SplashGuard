@@ -1,0 +1,41 @@
+name: 功能与设计建议
+description: 提出清晰的使用场景、界面或能力研究建议
+title: "[建议] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        欢迎先提设计或认领小任务，不必一次实现全部功能。
+        “应用内广告跳过（不限开屏）”尚未支持，请先搜索同名研究议题集中讨论。不要通过延长12秒或常驻扫描代替设计。
+  - type: textarea
+    id: problem
+    attributes:
+      label: 希望解决的具体问题
+      description: 谁在什么操作下遇到什么困难？请给出实际例子。
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议行为与边界
+      description: 说明用户如何启用/停止，哪些页面不能处理；涉及权限、网络或本地记录时请说明。
+    validations:
+      required: true
+  - type: textarea
+    id: alternative
+    attributes:
+      label: 已考虑的替代方案与验证方法（可选）
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: 可以参与的部分（自愿）
+      options:
+        - label: 我愿意补充脱敏场景或测试反馈。
+        - label: 我愿意认领讨论范围内的小任务并提交 PR。
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已搜索现有议题，并检查内容不含私人信息或凭据。
+          required: true
