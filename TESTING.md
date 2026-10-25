@@ -1,6 +1,8 @@
 # 验证记录
 
-更新日期：2026-10-25。当前工作源码为`feature/simple-ui-onboarding`分支的0.1.7 / versionCode 8候选；当前main与既有公开发行仍为0.1.4。新候选已完成本地SDK构建与99项纯Java检查，用户报告UI修正版打开及重复选择窗口关闭/重开正常；设备断开，未完成最新候选的ADB版本与APK哈希回读。网页上传、GitHub CI与新发行等待实际发布记录确认。下方0.1.6的广告实测与回读结果仅是历史证据，不自动继承为0.1.7本轮通过。
+更新日期：2026-10-25。0.1.7 / versionCode 8 已通过[下载网站](https://zhengxiuyuanustc-cmd.github.io/xiuyuanzheng.github.io/splashguard/)公开开发预览包，免登录下载；网站文件与APK已匿名取回并逐项核对SHA-256。源码位于`feature/simple-ui-onboarding`，代码提交`ff2e8c10970835bda409fb909844e9c63031d94f`，由[PR #4](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/pull/4)保留人工审阅，尚未合并main。GitHub Release仍为0.1.4，与网站预览下载分别标注。
+
+本地SDK构建、验签及48项规则+40项会话+11项引导检查共99项通过；该代码提交的[push CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40172746441)和[PR CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40172749917)均成功。CI仅运行纯Java检查，不代表标准Gradle、Android界面或广告效果均已验证。用户手动确认App可打开，修正后重复点选只出现一个窗口，关闭后能重开；设备随后断开，最新候选未完成ADB版本和APK哈希回读。本轮核心沿用0.1.6，没有新增真实广告或物理晃动验收，标准Gradle仍无成功记录。 下方0.1.6广告和安装回读仅是历史证据。
 
 ## 0.1.7 界面、首次引导与选择窗口回归（2026-10-25）
 
@@ -13,7 +15,7 @@
 | 新界面打开 | 用户手动打开App后反馈正常；属于用户手动观察 |
 | 重复应用选择窗口 | 原候选连续点选会叠加窗口，保留为真实失败；单实例修正后，用户手动复测窗口关闭、重开并反馈功能正常 |
 | 最新候选安装二进制 | 设备断开，未完成ADB版本及APK哈希回读；不将上述用户反馈等同于最新二进制已独立核验安装 |
-| 标准Gradle / GitHub CI | 本轮没有成功运行记录；仓库工作流配置与本地检查通过不代表GitHub CI已执行 |
+| 标准Gradle / GitHub CI | 标准Gradle仍无通过记录；代码提交ff2e8c1的GitHub push与PR CI已通过同样99项纯Java检查 |
 | 真实广告与摇一摇 | 本轮没有新增测试；仍以各历史版本对应的广告、设备和失败记录为边界 |
 
 最后本地候选APK的SHA-256为`9acc48129e9f12d282cc18da73374c0a38fe32e17596b87eba044371ab6c3e64`。该值只标识本机构建文件，没有完成与手机所运行APK的二进制对比。

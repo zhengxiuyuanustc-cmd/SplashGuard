@@ -1,8 +1,9 @@
 # 更新记录
 
-## 0.1.7 · 候选，待发布（2026-10-25）
+## 0.1.7 · 网站开发预览版（2026-10-25）
 
-- 工作源码分支`feature/simple-ui-onboarding`升级为0.1.7 / versionCode 8；本地SDK编译、资源链接、D8、对齐与验签及48项规则+40项会话+11项引导策略检查共99项通过。标准Gradle和GitHub CI没有新增成功记录；网页与新发行上传待维护者执行验证，不提前把本地候选称为已公开版本。当前main与既有公开发行仍为v0.1.4-preview。
+- 0.1.7 / versionCode 8 已通过[下载网站](https://zhengxiuyuanustc-cmd.github.io/xiuyuanzheng.github.io/splashguard/)公开开发预览包，免登录下载；网站文件与APK已匿名取回并逐项核对SHA-256。源码位于`feature/simple-ui-onboarding`，代码提交`ff2e8c10970835bda409fb909844e9c63031d94f`，由[PR #4](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/pull/4)保留人工审阅，尚未合并main。GitHub Release仍为0.1.4，与网站预览下载分别标注。
+- 本地SDK构建、验签及48项规则+40项会话+11项引导检查共99项通过；该代码提交的[push CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40172746441)和[PR CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40172749917)均成功。CI仅运行纯Java检查，不代表标准Gradle、Android界面或广告效果均已验证。用户手动确认App可打开，修正后重复点选只出现一个窗口，关闭后能重开；设备随后断开，最新候选未完成ADB版本和APK哈希回读。本轮核心沿用0.1.6，没有新增真实广告或物理晃动验收，标准Gradle仍无成功记录。
 - 简化首页与功能分区，醒目区分“防摇一摇广告设置引导”和“自动跳过开屏广告”，详细原理、权限和机型说明可按需展开；应用选择保留搜索。
 - 增加可稍后完成、可重新进入的首次设置流程，已有配置的升级用户不应被强制重做。系统无障碍仍须本人主动授权，不把打开设置页面或看过指引当作配置成功。
 - 保留一次真实UI缺陷记录：用户发现连续点击“选择需要处理的应用”会叠加多个相同窗口。修正版在构建开始前预留唯一AlertDialog，关闭、保存、取消、异常和Activity销毁时正确释放；用户手动复测打开App及选择窗口关闭/重开后反馈功能正常，不把它写成自动化UI测试或广告效果验收。
@@ -11,7 +12,7 @@
 - 0.1.6核心规则及其历史广告通过/失败边界继续保留，不能由UI改版推导为全部广告或所有摇一摇跳转已解决。
 - 本轮没有新增真实广告测试。最后本地候选APK的SHA-256为`9acc48129e9f12d282cc18da73374c0a38fe32e17596b87eba044371ab6c3e64`；设备已断开，未完成该候选的ADB版本与APK哈希回读，不能将用户UI反馈当作最新二进制已独立核验安装。
 
-## 0.1.6 · 开发中，未发布
+## 0.1.6 · 历史开发记录（现已包含在0.1.7网页预览包）
 
 - 当前工作源码为0.1.6 / versionCode 7，未公开发布，下载仍为v0.1.4-preview。48项广告规则和40项会话测试共88项通过，本机SDK编译、D8、对齐及v2/v3验签通过；已安装并回读哈希匹配。
 - 21:19:45再次诊断天猫漏过素材，JDI过滤控件证据整理为 `tests/fixtures/bilibili-9.15.0-tmall-splash-layout.json`。根无资源标识且为FrameLayout，底部count_down“跳过5”可见、可用、可点击，父层级出现splash_layout容器；这次是诊断取证，不计效果验收。

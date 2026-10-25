@@ -4,9 +4,11 @@
 
 **[下载与机型设置网站](https://zhengxiuyuanustc-cmd.github.io/xiuyuanzheng.github.io/splashguard/)** · [GitHub 发行页](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/releases) · [隐私说明](PRIVACY.md)
 
-网站和下载免注册、免登录。本文对应工作分支 `feature/simple-ui-onboarding` 的 **0.1.7 / versionCode 8 候选**：已完成本地 SDK 构建及99项纯Java检查，用户已反馈打开App及重复选择窗口的修正功能正常。设备随后断开，最新候选未完成ADB版本与APK哈希回读；不能将用户反馈当作该二进制已核验安装。GitHub CI及网页/发行上传仍待实际发布记录确认，文档更新不代表已经公开；当前main与既有公开发行仍为0.1.4。下载前以网站实际按钮标注为准。
+0.1.7 / versionCode 8 已通过[下载网站](https://zhengxiuyuanustc-cmd.github.io/xiuyuanzheng.github.io/splashguard/)公开开发预览包，免登录下载；网站文件与APK已匿名取回并逐项核对SHA-256。源码位于`feature/simple-ui-onboarding`，代码提交`ff2e8c10970835bda409fb909844e9c63031d94f`，由[PR #4](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/pull/4)保留人工审阅，尚未合并main。GitHub Release仍为0.1.4，与网站预览下载分别标注。
 
-当前公开包采用开发签名并开启调试，属于预览构建，尚非正式稳定版。Android 8.0（API 26）及以上可试用；实机覆盖目前限于华为 GOA-AL80 / HarmonyOS 4.2 / Android API 31，其他机型和广告样式仍需验证。
+本地SDK构建、验签及48项规则+40项会话+11项引导检查共99项通过；该代码提交的[push CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40172746441)和[PR CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40172749917)均成功。CI仅运行纯Java检查，不代表标准Gradle、Android界面或广告效果均已验证。用户手动确认App可打开，修正后重复点选只出现一个窗口，关闭后能重开；设备随后断开，最新候选未完成ADB版本和APK哈希回读。本轮核心沿用0.1.6，没有新增真实广告或物理晃动验收，标准Gradle仍无成功记录。
+
+网站0.1.7包采用开发签名并开启调试，属于预览构建，尚非正式稳定版。Android 8.0（API 26）及以上可试用；实机覆盖目前限于华为 GOA-AL80 / HarmonyOS 4.2 / Android API 31，其他机型和广告样式仍需验证。
 
 ## 两项功能，各自怎么起作用
 

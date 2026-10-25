@@ -1,6 +1,8 @@
 # 设计与边界
 
-当前工作源码：`feature/simple-ui-onboarding`分支的0.1.7 / versionCode 8候选，已完成SDK构建、签名校验及99项纯Java检查。用户手动打开App，并针对重复选择窗口的修正版关闭/重开反馈正常；设备随后断开，最新候选未完成ADB版本与APK哈希回读，不能据此断言该二进制已核验安装。当前main与既有公开发行仍为0.1.4，网页上传、GitHub CI及新发行尚待实际记录确认。本轮沿用0.1.6广告识别与会话核心，没有新增真实广告验收，不把界面改版当作新增摇一摇拦截能力。
+0.1.7 / versionCode 8 已通过[下载网站](https://zhengxiuyuanustc-cmd.github.io/xiuyuanzheng.github.io/splashguard/)公开开发预览包，免登录下载；网站文件与APK已匿名取回并逐项核对SHA-256。源码位于`feature/simple-ui-onboarding`，代码提交`ff2e8c10970835bda409fb909844e9c63031d94f`，由[PR #4](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/pull/4)保留人工审阅，尚未合并main。GitHub Release仍为0.1.4，与网站预览下载分别标注。
+
+本地SDK构建、验签及48项规则+40项会话+11项引导检查共99项通过；该代码提交的[push CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40172746441)和[PR CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40172749917)均成功。CI仅运行纯Java检查，不代表标准Gradle、Android界面或广告效果均已验证。用户手动确认App可打开，修正后重复点选只出现一个窗口，关闭后能重开；设备随后断开，最新候选未完成ADB版本和APK哈希回读。本轮核心沿用0.1.6，没有新增真实广告或物理晃动验收，标准Gradle仍无成功记录。 界面改版没有新增摇一摇拦截能力。
 
 0.1.6基础版本的48项广告规则与40项会话状态测试共88项、本机构建、验签和安装回读已通过；“天猫双11·新品独家首发”两次真实提前跳过属于历史证据。它不同于0.1.5失败且尚未再投放的“疯狂试用日”，不能将原失败素材或全部样式标为验证通过。详细过程继续保留在下文及TESTING.md。
 
