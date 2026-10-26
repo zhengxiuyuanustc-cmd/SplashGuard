@@ -4,9 +4,9 @@
 
 本地SDK构建、验签及48项规则+40项会话+11项引导检查共99项通过；该代码提交的[push CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40172746441)和[PR CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40172749917)均成功。CI仅运行纯Java检查，不代表标准Gradle、Android界面或广告效果均已验证。用户手动确认App可打开，修正后重复点选只出现一个窗口，关闭后能重开；设备随后断开，最新候选未完成ADB版本和APK哈希回读。本轮核心沿用0.1.6，没有新增真实广告或物理晃动验收，标准Gradle仍无成功记录。 下方0.1.6广告和安装回读仅是历史证据。
 
-## 本地0.1.9候选：兼容策略、离线规则与诊断（2026-10-26，未发布）
+## 本地0.1.9候选：兼容策略、离线规则与诊断（2026-10-26，APK未公开）
 
-完整接线及提交前复核修正后，统一脚本实际运行12个纯Java检查程序，共598项通过；Android SDK 35整包Java编译、资源链接、D8、APK对齐和v2/v3验签通过，Manifest无uses-permission声明。本候选未做标准Gradle、远程CI、Android界面/文件选择器或真实广告验收，未安装到手机，也未更新网站0.1.7公开包。不能把本地构建通过当成荣耀Android 17已经适配。
+完整接线及提交前复核修正后，统一脚本实际运行12个纯Java检查程序，共598项通过；Android SDK 35整包Java编译、资源链接、D8、APK对齐和v2/v3验签通过，Manifest无uses-permission声明。代码提交[c8ce538](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/commit/c8ce538082ad41b5e1a34367090197701529c888)的[远程纯Java CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40255247780)亦成功。本候选未做标准Gradle、Android界面/文件选择器或真实广告验收，未安装到手机，也未更新网站0.1.7公开包。不能把本地构建通过当成荣耀Android 17已经适配。
 
 | 检查程序 | 通过项数 |
 | --- | ---: |
