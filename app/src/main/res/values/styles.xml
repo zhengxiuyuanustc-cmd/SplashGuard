@@ -1,9 +1,10 @@
 <resources>
-    <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+    <style name="BaseAppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:fontFamily">sans</item><item name="android:colorAccent">#126859</item>
         <item name="android:windowLightStatusBar">true</item><item name="android:statusBarColor">#F5F7F5</item>
-        <item name="android:navigationBarColor">#FFFFFF</item><item name="android:windowLightNavigationBar">true</item>
+        <item name="android:navigationBarColor">#126859</item>
         <item name="android:windowActionModeOverlay">true</item>
     </style>
+    <style name="AppTheme" parent="BaseAppTheme"/>
     <string name="service_description">在所选应用进入前台后的 12 秒内，本机识别明确的开屏广告跳过按钮并尝试点击。无障碍可读取界面控件并模拟点击；App 无联网权限，不上传界面或应用选择。不保存完整页面或截图，本地保留可清除的少量操作记录。可在开屏清净中随时暂停。</string>
 </resources>

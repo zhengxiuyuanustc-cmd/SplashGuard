@@ -14,6 +14,8 @@ import java.util.Set;
 public final class RuleReplay {
     private RuleReplay(){}
     public static final int MAX_CANDIDATES=64, MAX_SIZE=8192;
+    /** Bound diagnostic work before normalization; it does not truncate live matching inputs. */
+    public static final int MAX_SOURCE_LABEL_CHARS=1024;
     public enum Target { BILI,ZHIHU,OTHER_SELECTED }
     public enum VersionName { BILI9150,OTHER,UNKNOWN }
     public enum Scope { SAME,OTHER }
@@ -25,13 +27,13 @@ public final class RuleReplay {
 
     private static final class Value {
         final Scope scope;final Id id;final Kind kind;final String text,description;final boolean visible,enabled,clickable;
-        final String sourcePackage;
-        Value(Scope scope,Id id,Kind kind,String text,String description,boolean visible,boolean enabled,boolean clickable,String sourcePackage){
+        final String sourcePackage;final boolean sourceRepresented;
+        Value(Scope scope,Id id,Kind kind,String text,String description,boolean visible,boolean enabled,boolean clickable,String sourcePackage,boolean sourceRepresented){
             if(scope==null||id==null||kind==null||!validLabel(text)||!validLabel(description))throw invalid();
-            this.scope=scope;this.id=id;this.kind=kind;this.text=text;this.description=description;this.visible=visible;this.enabled=enabled;this.clickable=clickable;this.sourcePackage=sourcePackage;
+            this.scope=scope;this.id=id;this.kind=kind;this.text=text;this.description=description;this.visible=visible;this.enabled=enabled;this.clickable=clickable;this.sourcePackage=sourcePackage;this.sourceRepresented=sourceRepresented;
         }
-        static Value capture(RuleEvaluator.Node node){if(node==null)throw invalid();return new Value(Scope.OTHER,id(node.viewId),kind(node.className),label(node.text),label(node.description),node.visible,node.enabled,node.clickable,node.packageName);}
-        Value bind(String pkg){return new Value(sourcePackage==null?scope:pkg.equals(sourcePackage)?Scope.SAME:Scope.OTHER,id,kind,text,description,visible,enabled,clickable,null);}
+        static Value capture(RuleEvaluator.Node node){if(node==null)throw invalid();return new Value(Scope.OTHER,id(node.viewId),kind(node.className),label(node.text),label(node.description),node.visible,node.enabled,node.clickable,node.packageName,boundedLabel(node.text)&&boundedLabel(node.description));}
+        Value bind(String pkg){return new Value(sourcePackage==null?scope:pkg.equals(sourcePackage)?Scope.SAME:Scope.OTHER,id,kind,text,description,visible,enabled,clickable,null,sourceRepresented);}
         RuleEvaluator.Node node(String pkg){return new RuleEvaluator.Node(scope==Scope.SAME?pkg:OTHER_PACKAGE,idText(id),classText(kind),labelText(text),labelText(description),visible,enabled,clickable);}
         Map<String,Object> fields(){Map<String,Object> m=new LinkedHashMap<>();m.put("scope",scope.name());m.put("id",id.name());m.put("kind",kind.name());m.put("text",text);m.put("description",description);m.put("visible",visible);m.put("enabled",enabled);m.put("clickable",clickable);return m;}
     }
@@ -48,6 +50,7 @@ public final class RuleReplay {
             return new Candidate(identity,Value.capture(node),list,complete,left,top,right,bottom);
         }
         private Candidate bind(String pkg){List<Value> bound=new ArrayList<>();for(Value value:ancestors)bound.add(value.bind(pkg));return new Candidate(identity,node.bind(pkg),bound,ancestorsComplete,left,top,right,bottom);}
+        private boolean sourceRepresented(){if(!node.sourceRepresented)return false;for(Value value:ancestors)if(!value.sourceRepresented)return false;return true;}
         private Map<String,Object> fields(){Map<String,Object> m=new LinkedHashMap<>();m.put("identity",identity);m.put("node",node.fields());List<Object> parents=new ArrayList<>();for(Value v:ancestors)parents.add(v.fields());m.put("ancestors",parents);m.put("ancestorsComplete",ancestorsComplete);m.put("bounds",Arrays.asList(left,top,right,bottom));return m;}
     }
     public static final class Frame {
@@ -55,10 +58,10 @@ public final class RuleReplay {
         public final int width,height;public final boolean evidence,biliSplash,scanComplete;public final List<Candidate> candidates;
         private Frame(Target target,long code,VersionName name,int width,int height,boolean evidence,boolean biliSplash,boolean scanComplete,List<Candidate> candidates){
             if(target==null||name==null||code< -1||width<1||width>MAX_SIZE||height<1||height>MAX_SIZE||candidates==null||candidates.size()>MAX_CANDIDATES)throw invalid();
-            this.packageCategory=target;versionCode=code;versionName=name;this.width=width;this.height=height;this.evidence=evidence;this.biliSplash=biliSplash;this.scanComplete=scanComplete;
-            List<Candidate> safe=new ArrayList<>();Map<Integer,Map<String,Object>> aliases=new HashMap<>();
-            for(Candidate item:candidates){if(item==null)throw invalid();Candidate bound=item.bind(packageText(target));Map<String,Object> fields=bound.fields();Map<String,Object> before=aliases.put(bound.identity,fields);if(before!=null&&!before.equals(fields))throw invalid();safe.add(bound);}
-            this.candidates=Collections.unmodifiableList(safe);
+            this.packageCategory=target;versionCode=code;versionName=name;this.width=width;this.height=height;this.evidence=evidence;this.biliSplash=biliSplash;
+            boolean complete=scanComplete;List<Candidate> safe=new ArrayList<>();Map<Integer,Map<String,Object>> aliases=new HashMap<>();
+            for(Candidate item:candidates){if(item==null)throw invalid();Candidate bound=item.bind(packageText(target));if(!bound.sourceRepresented())complete=false;Map<String,Object> fields=bound.fields();Map<String,Object> before=aliases.put(bound.identity,fields);if(before!=null&&!before.equals(fields))throw invalid();safe.add(bound);}
+            this.scanComplete=complete;this.candidates=Collections.unmodifiableList(safe);
         }
     }
     public static Frame capture(String pkg,RuleEvaluator.VersionInfo version,int width,int height,boolean evidence,boolean biliSplash,boolean scanComplete,List<Candidate> candidates){
@@ -97,10 +100,11 @@ public final class RuleReplay {
         for(Object item:list(m.get("candidates"))){Map<String,Object> c=object(item);exact(c,"identity","node","ancestors","ancestorsComplete","bounds");List<Value> parents=new ArrayList<>();for(Object p:list(c.get("ancestors")))parents.add(value(object(p)));List<?> b=list(c.get("bounds"));if(b.size()!=4)throw invalid();candidates.add(new Candidate(number(c.get("identity")),value(object(c.get("node"))),parents,bool(c.get("ancestorsComplete")),number(b.get(0)),number(b.get(1)),number(b.get(2)),number(b.get(3))));}
         return new Frame(token(Target.class,m.get("packageCategory")),integer(m.get("versionCode")),token(VersionName.class,m.get("versionName")),number(m.get("width")),number(m.get("height")),bool(m.get("evidence")),bool(m.get("biliSplash")),bool(m.get("scanComplete")),candidates);
     }
-    private static Value value(Map<String,Object> m){exact(m,"scope","id","kind","text","description","visible","enabled","clickable");return new Value(token(Scope.class,m.get("scope")),token(Id.class,m.get("id")),token(Kind.class,m.get("kind")),string(m.get("text")),string(m.get("description")),bool(m.get("visible")),bool(m.get("enabled")),bool(m.get("clickable")),null);}
+    private static Value value(Map<String,Object> m){exact(m,"scope","id","kind","text","description","visible","enabled","clickable");return new Value(token(Scope.class,m.get("scope")),token(Id.class,m.get("id")),token(Kind.class,m.get("kind")),string(m.get("text")),string(m.get("description")),bool(m.get("visible")),bool(m.get("enabled")),bool(m.get("clickable")),null,true);}
     private static boolean knownLabel(String s){return s.length()<=32&&(AdRules.candidate(s,"",true,700,20,950,80,1000,2000)||AdRules.biliCandidate(RuleCatalog.BILI_PACKAGE,s,RuleCatalog.BILI_PACKAGE+":id/count_down",true,700,20,950,80,1000,2000));}
     private static boolean validLabel(String s){return s!=null&&(s.equals("@none")||s.equals("@other")||s.equals("@unsafe")||(s.equals(AdRules.normalize(s))&&knownLabel(s)));}
-    private static String label(String raw){String s=AdRules.normalize(raw);if(s.isEmpty())return "@none";RuleEvaluator.Node test=new RuleEvaluator.Node(SAMPLE_PACKAGE,"","",s,"",true,true,true);if(RuleEvaluator.genericCandidate(true,test).reason==RuleEvaluator.Reason.UNSAFE_LABEL)return "@unsafe";return knownLabel(s)?s:"@other";}
+    private static boolean boundedLabel(String raw){return raw==null||raw.length()<=MAX_SOURCE_LABEL_CHARS;}
+    private static String label(String raw){if(!boundedLabel(raw))return "@unsafe";String s=AdRules.normalize(raw);if(s.isEmpty())return "@none";RuleEvaluator.Node test=new RuleEvaluator.Node(SAMPLE_PACKAGE,"","",s,"",true,true,true);if(RuleEvaluator.genericCandidate(true,test).reason==RuleEvaluator.Reason.UNSAFE_LABEL)return "@unsafe";return knownLabel(s)?s:"@other";}
     private static String labelText(String token){return token.equals("@none")?"":token.equals("@unsafe")?"安装":token.equals("@other")?"other":token;}
     private static Id id(String raw){String s=raw==null?"":raw;if(s.isEmpty())return Id.NONE;for(Id id:Id.values())if(id!=Id.SDK_SKIP&&id!=Id.OTHER&&id!=Id.NONE&&s.equals(idText(id)))return id;return AdRules.candidate("",s,true,700,20,950,80,1000,2000)?Id.SDK_SKIP:Id.OTHER;}
     private static String idText(Id id){switch(id){case BILI_COUNT_DOWN:return RuleCatalog.BILI_PACKAGE+":id/count_down";case BILI_COUNTDOWN_TITLE:return RuleCatalog.BILI_PACKAGE+":id/countdown_title";case BILI_INTERACT:return RuleCatalog.BILI_PACKAGE+":id/splash_interact_view";case BILI_CONTAINER:return RuleCatalog.BILI_PACKAGE+":id/splash_container";case BILI_LAYOUT:return RuleCatalog.BILI_PACKAGE+":id/splash_layout";case BILI_BUTTON_CONTAINER:return RuleCatalog.BILI_PACKAGE+":id/splash_button_container";case BILI_FULL:return RuleCatalog.BILI_PACKAGE+":id/full_brand_splash";case SDK_SKIP:return "sdk:id/tt_splash_skip_btn";case OTHER:return "other";default:return "";}}

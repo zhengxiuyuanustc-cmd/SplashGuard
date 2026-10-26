@@ -29,6 +29,7 @@ public final class RuleReplayActivity extends Activity {
     public static void open(Context context){Intent intent=new Intent(context,RuleReplayActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);if(!(context instanceof Activity))intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);context.startActivity(intent);}
     @Override public void onCreate(Bundle saved){super.onCreate(saved);Object retained=getLastNonConfigurationInstance();state=retained instanceof State?(State)retained:new State();state.owner=this;
         if(saved!=null&&retained==null)state.chooser=saved.getBoolean("chooser");render();refresh();deliver();
+        if(state.busy)notice.setText("正在完成上次本地操作，请稍候…");
         if(saved!=null&&retained==null&&saved.getBoolean("busy"))notice.setText("上次文件操作已中断，夹具和导出内容未自动恢复，请重新选择。");}
     @Override protected void onResume(){super.onResume();if(status!=null)status.setText(RuleData.replayStatus());}
     @Override public Object onRetainNonConfigurationInstance(){return state;}

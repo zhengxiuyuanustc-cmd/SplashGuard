@@ -50,8 +50,9 @@ public final class SetupHelpActivity extends Activity {
     private DeviceGuidePolicy.Family family=DeviceGuidePolicy.Family.UNKNOWN;
     private DeviceGuidePolicy.ServiceState serviceState=DeviceGuidePolicy.ServiceState.UNKNOWN;
     private ScrollView scroll;
-    private TextView heading,status,guide,appChecks,notice;
-    private Button official;
+    private TextView heading,status,guide,appChecks,notice,modeSummary;
+    private Button official,modeAction,modeCancel,accessibilityAction;
+    private int modeConfirm;
     private int savedScroll;
     private String ownVersion="未知";
     private List<AppCheck> commonApps=new ArrayList<>();
@@ -76,10 +77,10 @@ public final class SetupHelpActivity extends Activity {
     }
     @Override protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);setIntent(intent);topic=DeviceGuidePolicy.topic(intent.getStringExtra(EXTRA_TOPIC));
-        heading.setText(DeviceGuidePolicy.title(topic));refreshGuide();refresh();
+        resetModeConfirm();heading.setText(DeviceGuidePolicy.title(topic));refreshGuide();refresh();
     }
     @Override protected void onResume(){super.onResume();refresh();handler.removeCallbacks(delayedRefresh);handler.postDelayed(delayedRefresh,600);}
-    @Override protected void onPause(){handler.removeCallbacks(delayedRefresh);super.onPause();}
+    @Override protected void onPause(){handler.removeCallbacks(delayedRefresh);resetModeConfirm();super.onPause();}
     @Override protected void onDestroy(){handler.removeCallbacks(delayedRefresh);super.onDestroy();}
     @Override protected void onSaveInstanceState(Bundle out){out.putString(EXTRA_TOPIC,topic);out.putString("family",family.name());out.putString("guideVendor",manualVendor?vendor.name():"auto");out.putInt("scroll",scroll.getScrollY());super.onSaveInstanceState(out);}
 
@@ -88,13 +89,17 @@ public final class SetupHelpActivity extends Activity {
     private void gap(LinearLayout box,int size){box.addView(new View(this),new LinearLayout.LayoutParams(1,dp(size)));}
     private GradientDrawable shape(int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;}
     private LinearLayout card(LinearLayout parent,String title){LinearLayout c=new LinearLayout(this);c.setOrientation(LinearLayout.VERTICAL);c.setPadding(dp(18),dp(18),dp(18),dp(18));c.setBackground(shape(Color.WHITE,16));parent.addView(c,new LinearLayout.LayoutParams(-1,-2));TextView h=text(title,20,INK);h.setTypeface(null,Typeface.BOLD);c.addView(h);gap(c,10);gap(parent,14);return c;}
-    private Button button(LinearLayout parent,String title,View.OnClickListener action){Button b=new Button(this);b.setText(title);b.setTextSize(16);b.setAllCaps(false);b.setTextColor(GREEN);b.setBackground(shape(Color.rgb(230,241,235),12));b.setMinHeight(dp(52));b.setPadding(dp(12),dp(10),dp(12),dp(10));LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.topMargin=dp(10);parent.addView(b,lp);b.setOnClickListener(action);return b;}
+    private Button button(LinearLayout parent,String title,View.OnClickListener action){Button b=new Button(this);b.setText(title);b.setTextSize(16);b.setAllCaps(false);b.setTextColor(GREEN);b.setBackground(shape(Color.rgb(230,241,235),12));b.setMinHeight(dp(52));b.setPadding(dp(12),dp(10),dp(12),dp(10));LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.topMargin=dp(10);parent.addView(b,lp);b.setOnClickListener(v->{if(v!=modeAction)resetModeConfirm();action.onClick(v);});return b;}
 
     private void render() {
         scroll=new ScrollView(this);scroll.setFillViewport(true);scroll.setBackgroundColor(Color.rgb(245,247,245));
         scroll.setOnApplyWindowInsetsListener((v,insets)->{v.setPadding(0,insets.getSystemWindowInsetTop(),0,insets.getSystemWindowInsetBottom());return insets;});
         LinearLayout content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);content.setPadding(dp(20),dp(22),dp(20),dp(24));scroll.addView(content);
         heading=text(DeviceGuidePolicy.title(topic),26,INK);heading.setTypeface(null,Typeface.BOLD);content.addView(heading);gap(content,14);
+        LinearLayout mode=card(content,"系统已明确提示不支持？");
+        modeSummary=text("",16,INK);mode.addView(modeSummary);
+        gap(mode,8);mode.addView(text("若本机实际显示“为保障您的隐私安全，应用暂不支持获取系统无障碍权限”这类提示，不必反复尝试授权。可由你确认后只查看设置指引。本工具不会读取系统提示，也不会仅凭型号判断；切换模式不修改系统授权。",16,MUTED));
+        modeAction=button(mode,"",v->changeGuideMode());modeCancel=button(mode,"取消本次模式更改",v->resetModeConfirm());
         LinearLayout device=card(content,"本机与运行环境");
         device.addView(text(safe(Build.MANUFACTURER)+" / "+safe(Build.BRAND)+" / "+safe(Build.MODEL)+"\nAndroid运行环境："+safe(Build.VERSION.RELEASE)+"（API "+Build.VERSION.SDK_INT+"）",16,MUTED));
         gap(device,8);device.addView(text("完整系统名称与版本请在“关于本机”核对。Android数字不能替代厂商系统版本，也不证明跨兼容环境能力。",16,MUTED));
@@ -110,15 +115,15 @@ public final class SetupHelpActivity extends Activity {
         RadioGroup choices=new RadioGroup(this);choices.setOrientation(RadioGroup.VERTICAL);
         addFamily(choices,FAMILY_UNKNOWN,DeviceGuidePolicy.Family.UNKNOWN);addFamily(choices,FAMILY_4,DeviceGuidePolicy.Family.HARMONY_4);addFamily(choices,FAMILY_5,DeviceGuidePolicy.Family.HARMONY_5_PLUS);
         choices.check(family==DeviceGuidePolicy.Family.HARMONY_4?FAMILY_4:family==DeviceGuidePolicy.Family.HARMONY_5_PLUS?FAMILY_5:FAMILY_UNKNOWN);
-        choices.setOnCheckedChangeListener((group,id)->{family=id==FAMILY_4?DeviceGuidePolicy.Family.HARMONY_4:id==FAMILY_5?DeviceGuidePolicy.Family.HARMONY_5_PLUS:DeviceGuidePolicy.Family.UNKNOWN;refreshGuide();});familyContainer.addView(choices);
+        choices.setOnCheckedChangeListener((group,id)->{resetModeConfirm();family=id==FAMILY_4?DeviceGuidePolicy.Family.HARMONY_4:id==FAMILY_5?DeviceGuidePolicy.Family.HARMONY_5_PLUS:DeviceGuidePolicy.Family.UNKNOWN;refreshGuide();});familyContainer.addView(choices);
         chooseBrand.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
             @Override public void onNothingSelected(AdapterView<?> parent){}
-            @Override public void onItemSelected(AdapterView<?> parent,View view,int position,long id){manualVendor=position>0;vendor=manualVendor?brands[position-1]:detectedVendor;refreshGuide();}
+            @Override public void onItemSelected(AdapterView<?> parent,View view,int position,long id){resetModeConfirm();manualVendor=position>0;vendor=manualVendor?brands[position-1]:detectedVendor;refreshGuide();}
         });
         LinearLayout ready=card(content,"实际状态自检");status=text("",16,INK);ready.addView(status);button(ready,"重新检查",v->refresh());
         gap(ready,8);ready.addView(text("授权开关和服务实际连接是不同状态；这里只显示本次检查结果。离开本页后系统仍可能停止服务。",15,MUTED));
         LinearLayout permissions=card(content,"无需“全权限”");permissions.addView(text(DeviceGuidePolicy.permissionExplanation(),16,MUTED));
-        button(permissions,"打开系统无障碍设置",v->openSettings(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS),"设置中搜索“无障碍”，由本人核对开屏清净服务。"));
+        accessibilityAction=button(permissions,"打开系统无障碍设置",v->openSettings(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS),"设置中搜索“无障碍”，由本人核对开屏清净服务。"));
         button(permissions,"打开本应用设置",v->openSettings(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,Uri.fromParts("package",getPackageName(),null)),"设置中搜索“应用管理”，找到开屏清净；不要把普通权限页为空当作缺少全权限。"));
         LinearLayout steps=card(content,"按本机情况处理");guide=text("",16,MUTED);steps.addView(guide);official=button(steps,"用浏览器查看对应官方说明",v->openOfficial());
         LinearLayout protections=card(content,"受限授权与系统保护（按需查看）");
@@ -135,14 +140,29 @@ public final class SetupHelpActivity extends Activity {
         setContentView(scroll);scroll.requestApplyInsets();refreshGuide();scroll.post(()->scroll.scrollTo(0,savedScroll));
     }
 
+    private void resetModeConfirm(){modeConfirm=0;refreshMode();}
+    private void refreshMode(){
+        if(modeSummary==null||modeAction==null||modeCancel==null)return;
+        boolean guideOnly=Prefs.guideOnly(this);
+        modeSummary.setText(guideOnly?"当前：仅查看设置指引。自动跳过保持暂停；系统授权和真实服务连接仍在下方单独显示。你可随时重新检查并退出此模式，退出后也不会自动启用。":"当前未选择仅指引模式。只有本人确认下方系统提示，才会切换并暂停自动跳过；手选品牌或鸿蒙家族不会切换此模式。");
+        modeAction.setText(modeConfirm==1?"确认：仅查看指引并暂停":modeConfirm==2?"确认退出（自动跳过仍暂停）":guideOnly?"退出仅指引模式，保持暂停":"我已看到不支持提示：仅查看指引");
+        modeCancel.setVisibility(modeConfirm==0?View.GONE:View.VISIBLE);
+        if(accessibilityAction!=null)accessibilityAction.setText(guideOnly?"手动检查系统无障碍（可选）":"打开系统无障碍设置");
+    }
+    private void changeGuideMode(){
+        boolean currentlyGuide=Prefs.guideOnly(this);int expected=currentlyGuide?2:1;
+        if(modeConfirm!=expected){modeConfirm=expected;refreshMode();notice.setText(currentlyGuide?"确认退出后仍会暂停自动跳过，请到首页核对后再本人启用。":"确认后仅查看设置指引，并暂停自动跳过；不会修改系统授权或判断具体限制原因。");return;}
+        boolean saved=Prefs.setGuideOnly(this,!currentlyGuide);modeConfirm=0;refresh();
+        notice.setText(!saved?"保存未能确认，请重新检查当前模式；不会自动开启功能。":currentlyGuide?"已退出仅指引模式。自动跳过仍暂停，请核对实际支持情况后再本人启用。":"已设为仅查看设置指引，自动跳过已暂停，无需反复尝试授权。系统授权未被修改。");
+    }
     private void addFamily(RadioGroup group,int id,DeviceGuidePolicy.Family value){RadioButton b=new RadioButton(this);b.setId(id);b.setText(DeviceGuidePolicy.familyLabel(value));b.setTextSize(16);b.setTextColor(INK);b.setMinHeight(dp(48));group.addView(b);}
     private void refreshGuide(){if(familyContainer!=null)familyContainer.setVisibility(vendor==DeviceGuidePolicy.Vendor.HUAWEI?View.VISIBLE:View.GONE);if(guide==null)return;guide.setText("指引品牌："+DeviceGuidePolicy.vendorLabel(vendor)+(manualVendor?"（手动查看）":"（自动识别）")+"\n路径参考官方资料，本机广告效果仍需实测。\n\n"+DeviceGuidePolicy.guide(vendor,family,topic));official.setVisibility(DeviceGuidePolicy.officialUrl(vendor,family,topic).isEmpty()?View.GONE:View.VISIBLE);official.setText(vendor==DeviceGuidePolicy.Vendor.GOOGLE&&"accessibility".equals(topic)?"受限设置说明（仅提示受限时参考）":(vendor==DeviceGuidePolicy.Vendor.MEIZU||vendor==DeviceGuidePolicy.Vendor.ONEPLUS)&&!"shake".equals(topic)?"查看官网支持入口（菜单需核对）":"用浏览器查看官方路径参考");}
     private void refresh() {
         if(status==null)return;
-        serviceState=queryEnabledService();
+        refreshMode();serviceState=queryEnabledService();
         Set<String> selected=Prefs.selected(this);
         ownVersion=packageVersion(getPackageName());
-        status.setText("本工具版本："+ownVersion+"\n自动跳过开关："+(Prefs.enabled(this)?"已开启":"未开启")
+        status.setText("本工具版本："+ownVersion+"\n使用模式："+(Prefs.guideOnly(this)?"仅查看设置指引（本人选择）":"自动跳过设置")+"\n自动跳过开关："+(Prefs.enabled(this)?"已开启":"未开启")
                 +"\n已选择应用："+selected.size()+"个\n"+DeviceGuidePolicy.serviceLabel(serviceState)
                 +"\n服务实际连接："+(SkipService.isConnected()?"已连接（当前Android环境）":"未连接"));
         commonApps=new ArrayList<>();StringBuilder rows=new StringBuilder();
@@ -183,6 +203,7 @@ public final class SetupHelpActivity extends Activity {
         value.append("\n系统完整版本：请本人从关于本机补充");
         value.append("\n当前查看指引：").append(DeviceGuidePolicy.vendorLabel(vendor)).append(manualVendor?"（手动，仅为指引选择）":"（自动）");
         if(vendor==DeviceGuidePolicy.Vendor.HUAWEI)value.append("\n手动家族选择：").append(DeviceGuidePolicy.familyLabel(family));
+        value.append("\n本工具使用模式：").append(Prefs.guideOnly(this)?"仅查看设置指引（本人选择）":"自动跳过设置");
         value.append("\n本工具版本：").append(ownVersion).append("\n自动跳过：").append(Prefs.enabled(this)?"已开":"未开");
         value.append("\n").append(DeviceGuidePolicy.serviceLabel(serviceState)).append("\n服务实际连接：").append(SkipService.isConnected()?"已连接":"未连接");
         for(AppCheck app:commonApps)value.append("\n\n").append(app.describe());

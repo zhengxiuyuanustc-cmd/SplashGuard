@@ -56,6 +56,8 @@ final class RuleData {
     static DiagnosticSample lastSample(){return sample;}
     static synchronized void clearSample(){sample=null;replay=null;captureSession.clear();}
     static synchronized void requestReplayCapture(){replay=null;captureSession.arm(android.os.SystemClock.elapsedRealtime());}
+    static synchronized void observeReplayForeground(String pkg,long now){captureSession.observeForeground(pkg,now);}
+    static synchronized void replayScreenOff(long now){captureSession.screenOff(now);}
     static synchronized boolean wantsReplayCapture(String pkg,long now){return captureSession.accepts(pkg,now);}
     static synchronized void rememberReplay(String pkg,RuleReplay.Frame value,long now){
         if(!captureSession.accepts(pkg,now))return;

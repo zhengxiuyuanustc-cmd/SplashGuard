@@ -39,7 +39,9 @@ public final class SkipService extends AccessibilityService implements SharedPre
     private final Runnable scanTask = () -> { scanQueued=false; scan(); };
     private final BroadcastReceiver screenReceiver = new BroadcastReceiver() {
         @Override public void onReceive(Context context, Intent intent) {
-            if (Intent.ACTION_SCREEN_OFF.equals(intent.getAction())) resetSession();
+            if (Intent.ACTION_SCREEN_OFF.equals(intent.getAction())) {
+                RuleData.replayScreenOff(SystemClock.elapsedRealtime());resetSession();
+            }
             else queueScan(40); // Waking/unlocking requests a scan; it never renews a session.
         }
     };
@@ -98,12 +100,14 @@ public final class SkipService extends AccessibilityService implements SharedPre
     }
     private void scan() {
         if (!Prefs.enabled(this)) return;
-        if (!unlocked()) { if (!session.packageName().isEmpty()) resetSession(); return; }
+        if (!unlocked()) { RuleData.replayScreenOff(SystemClock.elapsedRealtime());if (!session.packageName().isEmpty()) resetSession(); return; }
         AccessibilityNodeInfo root = getRootInActiveWindow();
         if (root == null) { schedule(); return; }
         try {
             String pkg = String.valueOf(root.getPackageName());
             long now=SystemClock.elapsedRealtime();
+            // End active diagnostics on any confirmed departure, before filtering selected applications.
+            RuleData.observeReplayForeground(str(root.getPackageName()),now);
             if (session.observe(pkg, now)) { reviewAt=0; versionPackage=""; }
             if (selected == null || !selected.contains(pkg) || pkg.equals(getPackageName())) return;
             RuleEvaluator.VersionInfo appVersion=versionFor(pkg);

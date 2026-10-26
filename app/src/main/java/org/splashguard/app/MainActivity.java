@@ -26,6 +26,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,11 +42,11 @@ public final class MainActivity extends Activity {
     private static final String WEBSITE="https://zhengxiuyuanustc-cmd.github.io/xiuyuanzheng.github.io/splashguard/";
     private LinearLayout content;
     private ScrollView scroll;
-    private TextView stateTitle,stateBody,selectedSummary,permissionSummary,recordsSummary,wizardSummary;
-    private Button stateAction;
+    private TextView stateTitle,stateBody,selectedSummary,permissionSummary,recordsSummary,wizardSummary,backgroundSummary;
+    private Button stateAction,permissionAction,closeHomeAction;
     private Switch autoSwitch;
     private AlertDialog appPickerDialog;
-    private boolean changingSwitch,onboarding;
+    private boolean changingSwitch,onboarding,renderedGuideOnly;
     private int page,wizardStep;
     private final int[] pageScroll={0,0,0};
     private int wizardScroll;
@@ -74,7 +75,7 @@ public final class MainActivity extends Activity {
         if(onboarding)persistWizard();
         render();
     }
-    @Override public void onResume(){super.onResume();refreshStatus();statusHandler.removeCallbacks(statusRefresh);statusHandler.post(statusRefresh);}
+    @Override public void onResume(){super.onResume();if(content!=null&&renderedGuideOnly!=Prefs.guideOnly(this)){rememberScroll();render();}else refreshStatus();statusHandler.removeCallbacks(statusRefresh);statusHandler.post(statusRefresh);}
     @Override public void onPause(){rememberScroll();statusHandler.removeCallbacks(statusRefresh);super.onPause();}
     @Override public void onDestroy(){
         statusHandler.removeCallbacks(statusRefresh);
@@ -109,7 +110,8 @@ public final class MainActivity extends Activity {
     private void rememberScroll(){if(scroll!=null){if(onboarding)wizardScroll=scroll.getScrollY();else pageScroll[page]=scroll.getScrollY();}}
     private void switchPage(int next){rememberScroll();page=next;render();}
     private void render(){
-        stateTitle=null;stateBody=null;stateAction=null;autoSwitch=null;selectedSummary=null;permissionSummary=null;recordsSummary=null;wizardSummary=null;lastStatus="";
+        renderedGuideOnly=Prefs.guideOnly(this);
+        stateTitle=null;stateBody=null;stateAction=null;autoSwitch=null;selectedSummary=null;permissionSummary=null;recordsSummary=null;wizardSummary=null;backgroundSummary=null;permissionAction=null;closeHomeAction=null;lastStatus="";
         LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setBackgroundColor(CANVAS);
         root.setOnApplyWindowInsetsListener((v,insets)->{v.setPadding(0,insets.getSystemWindowInsetTop(),0,insets.getSystemWindowInsetBottom());return insets;});
         scroll=new ScrollView(this);scroll.setFillViewport(true);scroll.setClipToPadding(false);
@@ -131,7 +133,9 @@ public final class MainActivity extends Activity {
     private void addAutoSwitch(LinearLayout c){
         autoSwitch=new Switch(this);autoSwitch.setText("启用自动跳过");autoSwitch.setTextColor(INK);autoSwitch.setTextSize(19);autoSwitch.setSwitchMinWidth(dp(48));autoSwitch.setPadding(0,dp(8),0,dp(8));
         autoSwitch.setMinHeight(dp(56));c.addView(autoSwitch,new LinearLayout.LayoutParams(-1,-2));autoSwitch.setChecked(Prefs.enabled(this));
-        autoSwitch.setOnCheckedChangeListener((b,on)->{if(!changingSwitch){Prefs.get(this).edit().putBoolean("enabled",on).apply();refreshStatus();}});
+        autoSwitch.setOnCheckedChangeListener((b,on)->{if(!changingSwitch){
+            if(on&&Prefs.guideOnly(this)){changingSwitch=true;autoSwitch.setChecked(false);changingSwitch=false;Toast.makeText(this,"当前仅查看指引。请先到本机帮助中退出该模式，再由本人启用自动跳过。",Toast.LENGTH_LONG).show();return;}
+            Prefs.get(this).edit().putBoolean("enabled",on).apply();refreshStatus();}});
     }
     private void renderHome(){
         pageHeading("开屏清净","少一点广告打扰，多一点使用自主。");statusCard();
@@ -139,10 +143,10 @@ public final class MainActivity extends Activity {
         button(shake,"查看防摇一摇设置",true,v->switchPage(1));gap(shake,10);shake.addView(text("设置引导 · 不代表已自动拦截全部跳转",14,GREEN));
         LinearLayout auto=card();title(auto,"自动跳过开屏广告",21);addAutoSwitch(auto);
         selectedSummary=text("",16,MUTED);auto.addView(selectedSummary);button(auto,"选择需要处理的应用",false,v->chooseApps());
-        permissionSummary=text("",16,MUTED);gap(auto,14);auto.addView(permissionSummary);button(auto,"设置无障碍服务",false,v->disclosure());
+        permissionSummary=text("",16,MUTED);gap(auto,14);auto.addView(permissionSummary);permissionAction=button(auto,"设置无障碍服务",false,v->disclosure());
         disclosureSection(auto,"auto-principle","如何帮你关闭广告","进入所选应用后的短暂开屏时段内，按本地规则检查控件文字、标识和位置，只尝试点击明确的广告跳过按钮。没有可读取按钮或样式不匹配时可能漏过；操作计数不代表每次都成功。\n\n请只选需要帮助的应用，首次使用时观察效果；可随时关掉上方开关。");
-        LinearLayout background=card();title(background,"关闭首页后，继续自动跳过",20);body(background,"系统需允许服务在后台运行。强行停止或系统清理若关闭了服务，需要本人重新开启。");
-        button(background,"查看本机后台指引",false,v->backgroundGuide());button(background,"广告未跳过？检查原因",false,v->SetupHelpActivity.open(this,"no_skip"));button(background,"关闭首页，保留自动跳过",true,v->closeHome());
+        LinearLayout background=card();title(background,"界面关闭与后台运行",20);backgroundSummary=text("",16,MUTED);gap(background,8);background.addView(backgroundSummary);
+        button(background,"查看本机后台指引",false,v->backgroundGuide());button(background,"广告未跳过？检查原因",false,v->SetupHelpActivity.open(this,"no_skip"));closeHomeAction=button(background,"关闭首页，保留自动跳过",true,v->closeHome());
         gap(content,4);content.addView(text("本地处理  ·  无联网权限  ·  随时可停",14,MUTED));
     }
     private void renderShake(){
@@ -179,18 +183,22 @@ public final class MainActivity extends Activity {
     }
     private boolean rulesValid(){try{RuleData.loadStore(this);return true;}catch(RuntimeException invalid){return false;}}
     private void refreshStatus(){
-        SharedPreferences p=Prefs.get(this);boolean enabled=Prefs.enabled(this),connected=SkipService.isConnected(),valid=rulesValid();
+        SharedPreferences p=Prefs.get(this);boolean guideOnly=Prefs.guideOnly(this),enabled=Prefs.enabled(this),connected=SkipService.isConnected(),valid=rulesValid();
         DeviceGuidePolicy.ServiceState permission=serviceState();int count=Prefs.selected(this).size();
-        String signature=enabled+":"+permission+":"+connected+":"+valid+":"+count+":"+p.getInt("count",0)+":"+p.getLong("last_time",0)+":"+p.getString("diagnostic","");if(signature.equals(lastStatus))return;lastStatus=signature;
+        String signature=guideOnly+":"+enabled+":"+permission+":"+connected+":"+valid+":"+count+":"+p.getInt("count",0)+":"+p.getLong("last_time",0)+":"+p.getString("diagnostic","");if(signature.equals(lastStatus))return;lastStatus=signature;
         if(autoSwitch!=null&&autoSwitch.isChecked()!=enabled){changingSwitch=true;autoSwitch.setChecked(enabled);changingSwitch=false;}
         if(selectedSummary!=null)selectedSummary.setText("已选择 "+count+" 个应用");
         String permissionText=permission==DeviceGuidePolicy.ServiceState.ON?"已开启":permission==DeviceGuidePolicy.ServiceState.OFF?"未开启":"状态暂时无法读取";
-        if(permissionSummary!=null)permissionSummary.setText("无障碍授权："+permissionText+"\n服务连接："+(connected?"已连接":"未连接"));
-        if(wizardSummary!=null)wizardSummary.setText("已选择 "+count+" 个应用\n无障碍授权："+permissionText+"\n服务连接："+(connected?"已连接":"未连接")+"\n自动跳过："+(enabled?"已开启":"已关闭"));
+        if(permissionSummary!=null)permissionSummary.setText((guideOnly?"模式：仅查看设置指引\n":"")+"无障碍授权："+permissionText+"\n服务连接："+(connected?"已连接":"未连接"));
+        if(permissionAction!=null)permissionAction.setText(guideOnly?"查看可用功能与模式":"设置无障碍服务");
+        if(backgroundSummary!=null)backgroundSummary.setText(guideOnly?"当前仅查看设置指引，自动跳过保持暂停。关闭首页不会开启功能，也不会修改系统授权。":"系统需允许服务在后台运行。强行停止或系统清理若关闭了服务，需要本人重新检查。若系统明确提示不支持无障碍，可在本机帮助中选择仅查看指引。");
+        if(closeHomeAction!=null)closeHomeAction.setText(guideOnly?"关闭首页":"关闭首页，保留自动跳过");
+        if(wizardSummary!=null)wizardSummary.setText((guideOnly?"当前仅查看设置指引\n":"")+"已选择 "+count+" 个应用\n无障碍授权："+permissionText+"\n服务连接："+(connected?"已连接":"未连接")+"\n自动跳过："+(enabled?"已开启":"已关闭"));
         if(recordsSummary!=null)recordsSummary.setText("本地操作计数："+p.getInt("count",0)+" 次\n计数代表操作提交，不等于每次广告都消失。");
         if(stateTitle==null)return;
         stateTitle.setTextColor(Color.rgb(145,87,20));stateAction.setVisibility(View.VISIBLE);
-        if(!enabled){stateTitle.setText("自动跳过已暂停");stateBody.setText("开启开关后，仍需选择应用并由本人授权无障碍服务。");stateAction.setText("启用自动跳过");}
+        if(guideOnly){stateTitle.setText("当前设为仅查看指引");stateBody.setText("这是你在本工具中的选择，自动跳过已暂停，无需反复尝试授权。仍可查看应用内防摇一摇设置；需要时可在本机帮助中重新检查并退出该模式。系统实际连接状态仍单独显示。");stateAction.setText("查看可用功能与模式");}
+        else if(!enabled){stateTitle.setText("自动跳过已暂停");stateBody.setText("开启开关后，仍需选择应用并由本人授权无障碍服务。");stateAction.setText("启用自动跳过");}
         else if(!valid){stateTitle.setText("请检查本地规则");stateBody.setText("规则状态无法验证，当前已停止处理。可在离线工具中恢复内置规则。");stateAction.setText("检查规则状态");}
         else if(permission==DeviceGuidePolicy.ServiceState.OFF){stateTitle.setText("还需开启无障碍服务");stateBody.setText("当前查询显示授权未开启，请到系统设置中核对。");stateAction.setText("设置无障碍服务");}
         else if(!connected){stateTitle.setText(permission==DeviceGuidePolicy.ServiceState.UNKNOWN?"请核对服务状态":"等待服务连接");stateBody.setText("服务目前未连接。权限开关、功能开关和应用选择需要分别检查，无需开启所有权限。");stateAction.setText("检查服务与设置");}
@@ -198,12 +206,13 @@ public final class MainActivity extends Activity {
         else{stateTitle.setText("自动跳过已就绪");stateTitle.setTextColor(GREEN);stateBody.setText("服务已连接，将在所选应用的开屏时段尝试处理。不同广告样式可能漏过；操作提交不等于广告成功关闭。");stateAction.setVisibility(View.GONE);}
     }
     private void repairStatus(){
+        if(Prefs.guideOnly(this)){SetupHelpActivity.open(this,"accessibility");return;}
         if(!Prefs.enabled(this)){Prefs.get(this).edit().putBoolean("enabled",true).apply();refreshStatus();}
         else if(!rulesValid())OfflineToolsActivity.open(this);
         else if(serviceState()==DeviceGuidePolicy.ServiceState.OFF||!SkipService.isConnected())SetupHelpActivity.open(this,"accessibility");
         else chooseApps();
     }
-    private void closeHome(){if(Prefs.enabled(this)&&serviceState()!=DeviceGuidePolicy.ServiceState.OFF&&SkipService.isConnected()&&rulesValid()&&!Prefs.selected(this).isEmpty()){finishAndRemoveTask();return;}SetupHelpActivity.open(this,"background");}
+    private void closeHome(){if(Prefs.guideOnly(this)){finishAndRemoveTask();return;}if(Prefs.enabled(this)&&serviceState()!=DeviceGuidePolicy.ServiceState.OFF&&SkipService.isConnected()&&rulesValid()&&!Prefs.selected(this).isEmpty()){finishAndRemoveTask();return;}SetupHelpActivity.open(this,"background");}
 
     private void startWizard(){rememberScroll();onboarding=true;wizardStep=0;wizardScroll=0;persistWizard();render();}
     private void persistWizard(){Prefs.get(this).edit().putBoolean("setup_in_progress",true).putInt("setup_step",wizardStep).apply();}
@@ -211,7 +220,7 @@ public final class MainActivity extends Activity {
     private void finishWizard(){Prefs.get(this).edit().putBoolean("onboarding_seen",true).putBoolean("setup_in_progress",false).remove("setup_step").apply();onboarding=false;page=0;wizardScroll=0;render();}
     private void renderWizard(){
         TextView step=text("首次设置  "+(wizardStep+1)+" / "+OnboardingPolicy.STEP_COUNT,15,GREEN);step.setTypeface(null,Typeface.BOLD);content.addView(step);gap(content,14);
-        String[] headings={"欢迎使用开屏清净","选择需要帮助的应用","由你开启无障碍服务","设置防摇一摇与后台","看清状态，再开始使用"};
+        String[] headings={"欢迎使用开屏清净","选择需要帮助的应用",Prefs.guideOnly(this)?"本工具的可用功能":"由你开启无障碍服务","设置防摇一摇与后台","看清状态，再开始使用"};
         title(content,headings[wizardStep],29);gap(content,20);
         LinearLayout c=card();
         if(wizardStep==0){
@@ -221,8 +230,15 @@ public final class MainActivity extends Activity {
             title(c,"只选你需要的",21);body(c,"建议先选择一两个有开屏广告的应用试用，避开银行、支付、导航及体感游戏。可搜索名称，也可稍后再选。");
             selectedSummary=text("",18,GREEN);gap(c,16);c.addView(selectedSummary);button(c,"选择应用",true,v->chooseApps());
         }else if(wizardStep==2){
-            title(c,"权限由你决定",21);body(c,"点下方按钮阅读用途，再到系统的无障碍设置中开启“开屏清净 · 自动跳过”。返回后会更新当前状态，继续停留在这一步。");
-            wizardSummary=text("",17,GREEN);gap(c,16);c.addView(wizardSummary);button(c,"了解并前往无障碍设置",true,v->disclosure());gap(c,12);addAutoSwitch(c);body(c,"你可稍后设置。未授权、未选应用或未启用时，自动跳过不会运行。");
+            if(Prefs.guideOnly(this)){
+                title(c,"当前仅查看设置指引",21);body(c,"自动跳过保持暂停，无需反复尝试无障碍授权。你仍可继续查看防摇一摇指引，也可在本机帮助中重新检查并退出该模式；退出后不会自动启用。");
+                wizardSummary=text("",17,GREEN);gap(c,16);c.addView(wizardSummary);button(c,"查看或退出仅指引模式",true,v->SetupHelpActivity.open(this,"accessibility"));
+            }else{
+                title(c,"权限由你决定",21);body(c,"系统支持时，点下方按钮阅读用途，再由本人到无障碍设置开启服务。返回后会更新当前状态。");
+                wizardSummary=text("",17,GREEN);gap(c,16);c.addView(wizardSummary);button(c,"了解并前往无障碍设置",true,v->disclosure());gap(c,12);addAutoSwitch(c);
+                body(c,"若系统明确提示“应用暂不支持获取系统无障碍权限”，请停止重复尝试。可在本机帮助中由本人确认选择仅查看设置指引；本工具不会读取该系统提示或自动判断原因。");button(c,"系统提示不支持？查看可用功能",false,v->SetupHelpActivity.open(this,"accessibility"));
+                body(c,"你可稍后设置。未授权、未选应用或未启用时，自动跳过不会运行。");
+            }
         }else if(wizardStep==3){
             title(c,"防摇一摇广告",23);body(c,"B站 9.15.0：我的 → 设置 → 隐私权限设置 → 关闭“允许广告访问传感器”。只改广告专用选项，保留正常方向感应。");
             button(c,"查看本机防摇一摇选项",true,v->SetupHelpActivity.open(this,"shake"));button(c,"查看B站防摇一摇步骤",false,v->biliGuide());body(c,"设置是否完成须到B站核对；本工具不能读取或确认该开关。其他应用先查找自己的广告设置。");
@@ -244,7 +260,7 @@ public final class MainActivity extends Activity {
         .setMessage((huawei()?"本机相关实测仅覆盖华为 GOA-AL80 / HarmonyOS 4.2；没有验证到只拦广告的独立系统跳转权限。\n\n":"此机型的广告专用系统入口尚未实测。\n\n")+"先在目标应用的隐私或广告设置中查找“摇一摇广告”“广告访问传感器”。若系统实际提供“应用跳转提醒”，可了解提示后自行配置。\n\n不要用整体“设备方向”“动作与方向”“身体传感器”或“活动识别”权限替代广告专用设置，它们可能影响正常功能，且未必对应加速度计。\n\n没有独立开关时，自动跳过只能作为补充，不能保证消除晃动跳转。")
         .setPositiveButton("知道了",null).show();}
     private void openSystem(){openAppSettings();}
-    private void disclosure(){new AlertDialog.Builder(this).setTitle("了解后，再由你授权")
+    private void disclosure(){if(Prefs.guideOnly(this)){SetupHelpActivity.open(this,"accessibility");return;}new AlertDialog.Builder(this).setTitle("了解后，再由你授权")
         .setMessage("无障碍服务允许读取界面控件并模拟点击。开屏清净先判断前台应用，再在你选中的应用开屏时段按本地规则识别明确的跳过按钮。\n\nApp 没有联网权限；不保存完整页面或截图。本地保存设置、应用选择、计数和最近按钮/诊断记录，可清除操作记录。不会上传这些内容。\n\n你可随时暂停、关闭无障碍服务或卸载。未授权也可以查看防摇一摇设置指引。")
         .setNegativeButton("暂不开启",null).setPositiveButton("了解，前往系统设置",(d,w)->openAccessibility()).show();}
     private void openAccessibility(){try{startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));}catch(RuntimeException unavailable){openSettings();}}

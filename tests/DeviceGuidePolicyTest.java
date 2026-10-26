@@ -81,6 +81,20 @@ public final class DeviceGuidePolicyTest {
         check("OnePlus doesn't inherit stale Harmony family",!oneplus.contains("系统自动管理")&&oneplus.contains("本人确认是OxygenOS14"));
         String meizu=DeviceGuidePolicy.guide(Vendor.MEIZU,Family.UNKNOWN,"background");
         check("unknown Meizu route stays search-first",meizu.contains("尚未核实")&&meizu.contains("搜索"));
+        DeviceGuidePolicy.GuideModeChange enter=DeviceGuidePolicy.confirmedGuideMode(true);
+        DeviceGuidePolicy.GuideModeChange exit=DeviceGuidePolicy.confirmedGuideMode(false);
+        check("enter guide mode is an explicit local choice",enter.guideOnly);
+        check("enter guide mode pauses automation",!enter.enabled);
+        check("exit guide mode clears only the local mode",!exit.guideOnly);
+        check("exit never revives a previous enable flag",!exit.enabled);
+        check("normal requested enable can run",DeviceGuidePolicy.effectiveEnabled(true,false));
+        check("normal pause remains pause",!DeviceGuidePolicy.effectiveEnabled(false,false));
+        check("stale requested enable cannot override guide mode",!DeviceGuidePolicy.effectiveEnabled(true,true));
+        check("guide mode remains paused when requested off",!DeviceGuidePolicy.effectiveEnabled(false,true));
+        check("confirmed exit still requires later personal enable",!DeviceGuidePolicy.effectiveEnabled(exit.enabled,exit.guideOnly));
+        check("guide choice does not falsify enabled-service query",enter.guideOnly&&DeviceGuidePolicy.serviceLabel(ServiceState.ON).contains("已列为启用"));
+        check("modern family label explicitly includes reported Harmony7",DeviceGuidePolicy.familyLabel(Family.HARMONY_5_PLUS).contains("7"));
+        check("family selection remains separate from local mode",DeviceGuidePolicy.restoreFamily("HARMONY_5_PLUS")==Family.HARMONY_5_PLUS&&DeviceGuidePolicy.effectiveEnabled(true,false));
         System.out.println("DeviceGuidePolicy: "+passed+" checks passed");
     }
 }

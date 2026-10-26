@@ -1,6 +1,6 @@
 # 开屏清净 · SplashGuard
 
-本地0.1.11 / versionCode 12候选继续补齐推进清单：应用选择备份与暂停恢复、预览后的单组规则暂停，以及用户主动准备的脱敏节点夹具和真实离线匹配回放。共享15个纯Java程序759项与SDK35完整构建/签名通过；标准Gradle与lint检查新增独立工作流，发布后按对应提交检查，不能把SDK构建当作Gradle通过。新UI和多机型实机未验收，官网默认仍0.1.7。
+本地0.1.11 / versionCode 12候选继续补齐推进清单：应用选择备份与暂停恢复、预览后的单组规则暂停，以及用户主动准备的脱敏节点夹具和真实离线匹配回放。共享15个纯Java程序797项与SDK35完整构建/签名通过；标准Gradle与lint检查新增独立工作流，发布后按对应提交检查，不能把SDK构建当作Gradle通过。新增本人确认的“仅查看设置指引”模式，处理系统明确不支持无障碍时的反复授权提示；此模式不代表原生鸿蒙已支持。新UI和多机型实机未验收，官网默认仍0.1.7。
 
 **当前不支持纯血鸿蒙原生自动跳过。** 华为当前公开Kit明确限制界面节点查询，旧相关接口有废弃标记；APK兼容运行和鸿蒙指南不代表原生支持。见[原生核验](docs/HARMONY_NATIVE_FEASIBILITY.md)及[推进清单实际状态](docs/IMPLEMENTATION_STATUS.md)。
 
@@ -12,7 +12,7 @@
 
 0.1.7 / versionCode 8 已通过[下载网站](https://zhengxiuyuanustc-cmd.github.io/xiuyuanzheng.github.io/splashguard/)公开开发预览包，免登录下载；网站文件与APK已匿名取回并逐项核对SHA-256。源码位于`feature/simple-ui-onboarding`，代码提交`ff2e8c10970835bda409fb909844e9c63031d94f`，由[PR #4](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/pull/4)保留人工审阅，尚未合并main。GitHub Release仍为0.1.4，与网站预览下载分别标注。
 
-本地SDK构建、验签及48项规则+40项会话+11项引导检查共99项通过；该代码提交的[push CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40172746441)和[PR CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40172749917)均成功。CI仅运行纯Java检查，不代表标准Gradle、Android界面或广告效果均已验证。用户手动确认App可打开，修正后重复点选只出现一个窗口，关闭后能重开；设备随后断开，最新候选未完成ADB版本和APK哈希回读。本轮核心沿用0.1.6，没有新增真实广告或物理晃动验收，标准Gradle仍无成功记录。
+本地SDK构建、验签及48项规则+40项会话+11项引导检查共99项通过；该代码提交的[push CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40172746441)和[PR CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40172749917)均成功。CI仅运行纯Java检查，不代表标准Gradle、Android界面或广告效果均已验证。用户手动确认App可打开，修正后重复点选只出现一个窗口，关闭后能重开；设备随后断开，最新候选未完成ADB版本和APK哈希回读。本轮核心沿用0.1.6，没有新增真实广告或物理晃动验收，该0.1.7阶段未取得标准Gradle成功记录。
 
 网站0.1.7包采用开发签名并开启调试，属于预览构建，尚非正式稳定版。Android 8.0（API 26）及以上可试用；实机覆盖目前限于华为 GOA-AL80 / HarmonyOS 4.2 / Android API 31，其他机型和广告样式仍需验证。
 
@@ -71,7 +71,7 @@ App中的网站/作者支持入口交给系统浏览器处理，不为此新增A
 
 0.1.4在该华为设备完成后台设置后，划卡或关闭首页的三种条件各有一例知乎广告提前跳过；这不证明所有机型长期存活，也未通过物理晃动验证知乎跳转被阻断。
 
-0.1.7本轮沿用0.1.6的广告规则、12秒会话与动作预算；新增11项引导策略检查，与48项规则、40项会话检查合计99项通过。用户手动打开App，并针对修正后的重复选择窗口关闭/重开反馈正常；本轮没有新增真实广告验收，标准Gradle仍无成功记录；对应源码的纯Java GitHub CI已通过，最新候选安装二进制未完成ADB回读。历史通过、失败和未出现广告的观察均保留在 [TESTING.md](TESTING.md)，实现边界见 [DESIGN.md](DESIGN.md)。
+0.1.7本轮沿用0.1.6的广告规则、12秒会话与动作预算；新增11项引导策略检查，与48项规则、40项会话检查合计99项通过。用户手动打开App，并针对修正后的重复选择窗口关闭/重开反馈正常；本轮没有新增真实广告验收，该0.1.7阶段未取得标准Gradle成功记录；对应源码的纯Java GitHub CI已通过，最新候选安装二进制未完成ADB回读。历史通过、失败和未出现广告的观察均保留在 [TESTING.md](TESTING.md)，实现边界见 [DESIGN.md](DESIGN.md)。
 
 ## 编译与贡献
 

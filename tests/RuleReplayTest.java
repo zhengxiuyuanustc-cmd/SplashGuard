@@ -70,6 +70,30 @@ public final class RuleReplayTest {
         rejects("future schema rejected",()->RuleReplay.decode(json.replace("\"schemaVersion\":1","\"schemaVersion\":2")));
         rejects("wrong type boolean rejected",()->RuleReplay.decode(json.replace("\"evidence\":true","\"evidence\":\"true\"")));
         check("no candidate is not success",RuleReplay.evaluate(f()).outcome==RuleReplay.Outcome.NO_MATCH);
+        char[] labelChars=new char[RuleReplay.MAX_SOURCE_LABEL_CHARS];Arrays.fill(labelChars,'x');String bounded=new String(labelChars);
+        RuleEvaluator.Node boundaryNode=node(privatePkg,"private:id/tt_splash_skip_btn","android.widget.Button",bounded,"");
+        RuleReplay.Candidate boundary=RuleReplay.Candidate.capture(0,boundaryNode,Collections.emptyList(),true,700,20,950,80);
+        RuleReplay.Frame boundaryFrame=RuleReplay.capture(privatePkg,OLD,1000,2000,true,false,true,Collections.singletonList(boundary));
+        check("source-label boundary remains representable",boundaryFrame.scanComplete);
+        check("bounded unknown SDK label keeps existing matching semantics",RuleReplay.evaluate(boundaryFrame).outcome==RuleReplay.Outcome.UNIQUE_RULE_MATCH);
+        RuleEvaluator.Node oversizedNode=node(privatePkg,"private:id/tt_splash_skip_btn","android.widget.Button",bounded+"private-account","");
+        RuleReplay.Candidate oversized=RuleReplay.Candidate.capture(0,oversizedNode,Collections.emptyList(),true,700,20,950,80);
+        RuleReplay.Frame oversizedFrame=RuleReplay.capture(privatePkg,OLD,1000,2000,true,false,true,Collections.singletonList(oversized));
+        check("overlong source label marks whole frame incomplete",!oversizedFrame.scanComplete);
+        check("overlong SDK label cannot claim unique replay",RuleReplay.evaluate(oversizedFrame).outcome==RuleReplay.Outcome.INCOMPLETE_SCAN);
+        String oversizedJson=RuleReplay.encode(oversizedFrame);
+        check("overlong raw account content never retained",!oversizedJson.contains("private-account")&&!oversizedJson.contains(bounded));
+        check("incomplete source survives file roundtrip",!RuleReplay.decode(oversizedJson).scanComplete);
+        RuleReplay.Candidate longDescription=c(0,"跳过5",bounded+"description",Collections.singletonList(parent()));
+        check("opposite overlong description marks incomplete",!f(longDescription).scanComplete);
+        RuleEvaluator.Node longParent=node(BILI,BILI+":id/splash_container","android.widget.FrameLayout",bounded+"ancestor","");
+        RuleReplay.Frame longAncestry=f(c(0,"跳过5","",Collections.singletonList(longParent)));
+        check("overlong ancestor labels mark incomplete",!longAncestry.scanComplete&&RuleReplay.evaluate(longAncestry).outcome==RuleReplay.Outcome.INCOMPLETE_SCAN);
+        RuleEvaluator.Node originalSkip=node(BILI,BILI+":id/countdown_title","android.widget.TextView","跳过5","");
+        check("diagnostic cap does not change live rule matching",RuleCatalog.evaluate(OLD,originalSkip,Collections.singletonList(longParent),true,true,true,true).matched);
+        check("lossy candidate does not silently select another identity",RuleReplay.evaluate(f(longDescription,sameMeta)).outcome==RuleReplay.Outcome.INCOMPLETE_SCAN);
+        char[] spaces=new char[RuleReplay.MAX_SOURCE_LABEL_CHARS+1];Arrays.fill(spaces,' ');
+        check("capture bounds input before whitespace normalization",!f(c(0,new String(spaces)+"跳过5","",Collections.singletonList(parent()))).scanComplete);
         System.out.println("RuleReplayTest: "+passed+" checks passed");
     }
 }

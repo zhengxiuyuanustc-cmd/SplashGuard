@@ -66,13 +66,23 @@ public final class DeviceGuidePolicy {
 
     public static String familyLabel(Family family) {
         if (family==Family.HARMONY_4) return "HarmonyOS 4.x（含4.2、4.3）";
-        if (family==Family.HARMONY_5_PLUS) return "HarmonyOS 5/NEXT/6及以上";
+        if (family==Family.HARMONY_5_PLUS) return "HarmonyOS 5及以上（含NEXT、6、7）";
         return "不确定／尚未核对";
     }
 
+    /** A local user choice, never inferred from a device name, API number or selected guide. */
+    public static final class GuideModeChange {
+        public final boolean guideOnly;
+        public final boolean enabled;
+        private GuideModeChange(boolean guideOnly){this.guideOnly=guideOnly;this.enabled=false;}
+    }
+    public static GuideModeChange confirmedGuideMode(boolean guideOnly){return new GuideModeChange(guideOnly);}
+    /** Even a stale saved enable flag cannot run automatic actions while guide-only mode is selected. */
+    public static boolean effectiveEnabled(boolean requestedEnabled,boolean guideOnly){return requestedEnabled&&!guideOnly;}
+
     public static String permissionExplanation() {
         return "不需要给本应用“全权限”。普通权限页没有相机、联系人等开关是正常的。App不申请联网、相机、联系人、悬浮窗或设备管理员。\n\n"
-                +"自动跳过需要你本人开启无障碍服务。BIND_ACCESSIBILITY_SERVICE是系统绑定服务的保护声明，不是普通权限页里的“全部允许”。"
+                +"自动跳过仅在当前环境支持本人授权无障碍服务时可用；系统明确提示不支持时，可选择仅查看设置指引。BIND_ACCESSIBILITY_SERVICE是系统绑定服务的保护声明，不是普通权限页里的“全部允许”。"
                 +"无障碍授权、服务实际连接、后台运行和目标应用的广告专用开关，需要分别核对。打开过设置页面不表示已经设置成功。";
     }
 
