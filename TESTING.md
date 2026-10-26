@@ -1,8 +1,52 @@
 # 验证记录
 
-更新日期：2026-10-25。0.1.7 / versionCode 8 已通过[下载网站](https://zhengxiuyuanustc-cmd.github.io/xiuyuanzheng.github.io/splashguard/)公开开发预览包，免登录下载；网站文件与APK已匿名取回并逐项核对SHA-256。源码位于`feature/simple-ui-onboarding`，代码提交`ff2e8c10970835bda409fb909844e9c63031d94f`，由[PR #4](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/pull/4)保留人工审阅，尚未合并main。GitHub Release仍为0.1.4，与网站预览下载分别标注。
+更新日期：2026-10-26。0.1.7 / versionCode 8 已通过[下载网站](https://zhengxiuyuanustc-cmd.github.io/xiuyuanzheng.github.io/splashguard/)公开开发预览包，免登录下载；网站文件与APK已匿名取回并逐项核对SHA-256。源码位于`feature/simple-ui-onboarding`，代码提交`ff2e8c10970835bda409fb909844e9c63031d94f`，由[PR #4](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/pull/4)保留人工审阅，尚未合并main。GitHub Release仍为0.1.4，与网站预览下载分别标注。
 
 本地SDK构建、验签及48项规则+40项会话+11项引导检查共99项通过；该代码提交的[push CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40172746441)和[PR CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40172749917)均成功。CI仅运行纯Java检查，不代表标准Gradle、Android界面或广告效果均已验证。用户手动确认App可打开，修正后重复点选只出现一个窗口，关闭后能重开；设备随后断开，最新候选未完成ADB版本和APK哈希回读。本轮核心沿用0.1.6，没有新增真实广告或物理晃动验收，标准Gradle仍无成功记录。 下方0.1.6广告和安装回读仅是历史证据。
+
+## 本地0.1.9候选：兼容策略、离线规则与诊断（2026-10-26，未发布）
+
+完整接线及提交前复核修正后，统一脚本实际运行12个纯Java检查程序，共598项通过；Android SDK 35整包Java编译、资源链接、D8、APK对齐和v2/v3验签通过，Manifest无uses-permission声明。本候选未做标准Gradle、远程CI、Android界面/文件选择器或真实广告验收，未安装到手机，也未更新网站0.1.7公开包。不能把本地构建通过当成荣耀Android 17已经适配。
+
+| 检查程序 | 通过项数 |
+| --- | ---: |
+| AdRulesTest | 48 |
+| SkipSessionTest | 55 |
+| OnboardingPolicyTest | 11 |
+| CandidateSelectionTest | 24 |
+| RuleEvaluatorTest | 46 |
+| ActionPolicyTest | 18 |
+| OfflineRuleStoreTest | 69 |
+| DiagnosticSampleTest | 46 |
+| RuleJsonCodecTest | 172 |
+| DeviceGuidePolicyTest | 33 |
+| RuleCatalogTest | 25 |
+| RuleRuntimeTest | 51 |
+| 合计 | 598 |
+
+这些程序验证策略与文件边界，不含Android仪器测试。提交前复核的Android接线经过代码审查与SDK编译；它重新完整扫描并刷新原节点、核对身份/窗口/边界/版本/最新前台与限制，节点动作失败后本轮结束，后轮再作兼容检查。跨进程窗口和控件读取仍不是原子快照，界面可能在最后检查后改变，不能保证零误触。
+
+| 验证方向 | 检查边界与待实测项目 |
+| --- | --- |
+| 动作策略 | 默认控件动作；无匹配或被拒绝不自动获得坐标权限；仅明确开启且版本/祖先场景验证的兼容规则允许手势 |
+| 规则和会话 | 多候选、扫描截断、危险标签、错误父链/包名/版本、旧回调、预算耗尽均应拒绝；规则修改不得给同包续期 |
+| 提交前复核 | 完整重扫候选、目标refresh、节点身份/窗口/边界/版本及最新前台/解锁/限制校验；节点动作失败本轮结束，不使用旧坐标立刻补手势 |
+| 文件边界 | 精确JSON字段、重复键、异常Unicode、大小/深度/整数边界，未知规则及放宽已有规则均应拒绝；导入失败不改变设置 |
+| 持久化与恢复 | 规则当前/上一步快照一起保存；损坏状态拒点；撤销只有一步，恢复内置不重置apps/enabled/引导和系统权限 |
+| 最小样本 | 仅固定枚举、数字、布尔；内存暂存；主动预览/导出/导入，离线复核不执行点击或证明关闭效果 |
+| 设置帮助 | 荣耀独立分流、华为家族用户手选；启用查询未知与未启用分开，实际连接单列；打开设置不算完成 |
+| 实机与界面 | 需补文件选择器、返回/取消/旋转/大字体与荣耀设备实际广告样本；Java检查或SDK编译不能替代 |
+
+用户目前报告的是荣耀“Android 17”，无障碍和管理权限已开，B站/百度出现广告但未跳过；型号、MagicOS、服务实际连接和应用版本未知。未取得足够现场信息，不能宣称Android 17已适配，也不能判为不支持。网易云未出现广告仅记缺少样本。官方资料与说明见[机型帮助](docs/SETUP_HELP.md)及[核验记录](docs/HUAWEI_COMPATIBILITY.md)。
+
+## 本地0.1.8候选：多候选冲突拒点（2026-10-25，未发布）
+
+- 修正首个匹配即点击的路径，先按真实节点身份收齐候选，再判断唯一性。多个不同候选、可知的扫描截断/缺失子节点，或重试键变化时停止本次开屏；不以ID/文字/位置相同合并不同节点。
+- 同一节点text/description重复不造成冲突；不同父子节点无法证明是同一动作目标时保守拒点，尚未增加父子归并，可能减少正常广告的跳过率。
+- 48项AdRules、55项SkipSession、11项OnboardingPolicy、24项CandidateSelection，共138项本地纯Java检查通过；SDK编译、D8、资源链接、对齐与APK v2/v3验签通过，标准Gradle及本候选远程CI未验证。
+- 候选回归覆盖真假顺序互换、相同元信息但不同节点、等价句柄、父子不确定和冲突不可解除；会话回归覆盖阻断后不续期、旧回调/计数失效、预算保留和不同包独立会话。
+- 服务接入与扫描上限分支做代码复核和Android SDK编译，没有Android仪器测试或真实双按钮/覆盖层广告实测。唯一假节点、未暴露的位图按钮、同键替换和坐标手势截获仍不能保证识别；该0.1.8历史候选的唯一手势兼容路径当时保持原样；0.1.9正在单独收紧，不能把两者当同一验证产物。
+- APK仅在work/ambiguity-018-build本地生成，未安装到手机、未推送源码、未更新网站0.1.7下载包，也不把以前的GitHub CI成功写成本候选通过。原理和待验证边界见[真假按钮策略](docs/FAKE_BUTTONS.md)。
 
 ## 0.1.7 界面、首次引导与选择窗口回归（2026-10-25）
 
@@ -226,3 +270,6 @@ adb shell am start -n org.splashguard.fixture/.FixtureActivity --es mode late
 ## 已知验证范围
 
 这些测试证明规则及服务在该设备的受控页面工作，不代表覆盖所有真实广告。尚未完成多品牌、多系统版本、横屏/分屏、图像按钮、所有广告SDK或长时间后台稳定性验证。暂不能声称通用阻断全部摇一摇跳转。正式公开发布前应补齐目标用户设备范围内的验证。
+
+<!-- local-019-artifact -->
+0.1.9本地整合候选（versionCode 10）：86565字节，SHA-256 `a0ec797f0d2a74fe88308e5e5a00cf98680e1cdcffcc00448d09bb697a26cebe`。签名证书SHA-256 `48bba90fb630f2b95d30fe7d3420dd7e884fefbaac842f0416424ba42d2517c4`，与原预览包一致。最终包的实际权限列表为空，未新增联网或存储权限。此校验值仅对应已构建候选，不证明荣耀或新版B站实机效果；APK尚未替换官网下载。

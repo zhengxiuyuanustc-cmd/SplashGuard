@@ -60,6 +60,15 @@ public final class SkipSession {
     }
 
     public boolean busy() { return pendingOperation != 0; }
+
+    /** Fail closed without making a same-package observation start another opening window. */
+    public void stop() {
+        epoch++;
+        pendingOperation = 0;
+        pendingAccepted = false;
+        done = true;
+    }
+
     public boolean done() { return done; }
     public int attempts() { return attempts; }
     public long epoch() { return epoch; }

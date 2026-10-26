@@ -34,17 +34,15 @@ macOS / Linux：
 
 ## 先运行不依赖手机的检查
 
-以下三个检查类分别覆盖规则、有限会话及首次引导迁移。当前源码共有 48 + 40 + 11 = 99 项检查；测试数量会随贡献变化。
+本地0.1.9候选继续使用不依赖Android的纯Java策略检查，覆盖原规则、有限会话、引导、多候选、版本/祖先规则、动作策略、受限文件模型/解析、最小样本及机型分流。新增统一入口由SDK构建与CI复用，避免各处名单不一致：
 
-```text
-mkdir build
-javac -encoding UTF-8 -d build app/src/main/java/org/splashguard/app/AdRules.java app/src/main/java/org/splashguard/app/SkipSession.java app/src/main/java/org/splashguard/app/OnboardingPolicy.java tests/AdRulesTest.java tests/SkipSessionTest.java tests/OnboardingPolicyTest.java
-java -cp build AdRulesTest
-java -cp build SkipSessionTest
-java -cp build OnboardingPolicyTest
+```powershell
+.\tools\test-local.ps1 -JdkRoot "C:\Program Files\Java\jdk-21" -OutDir ".\build\pure-tests"
 ```
 
-项目的 PR CI 使用 JDK 21 执行同样的三个检查，不需要 Android SDK、手机、账号页面或签名密钥。它不能证明 Android 界面已经通过、服务可以长期存活，或真实广告一定跳过。
+`-JdkRoot`可使用自己的JDK目录；已正确设置`JAVA_HOME`时可省略。`-OutDir`省略时使用项目`build/pure-tests`。脚本内列出的源码和测试类是当前完整清单；新增策略类时需更新清单。非Windows环境可使用同一清单的`javac -encoding UTF-8 -d …`与对应`java -cp …`调用，CI配置记录具体调用环境。
+
+当前0.1.9已完成统一12个程序共598项纯Java检查与SDK 35整包构建/验签；尚无本候选标准Gradle、远程CI或实机通过，细目以[TESTING.md](../TESTING.md)为准。公开0.1.7的99项历史CI不覆盖新候选；0.1.8曾通过138项也不能当作最新源码已通过。纯Java检查不证明Android文件选择器、界面、长期后台、覆盖层或真实广告效果已验证。
 
 ## Windows SDK 备用构建
 
@@ -65,6 +63,14 @@ java -cp build OnboardingPolicyTest
 - 新贡献者使用自己的开发密钥，在模拟器或独立测试环境验证；它通常无法覆盖安装采用另一证书的已有版本。不要为了测试随意清除日常使用手机的数据。
 - 发布者维护升级所需签名，开发密钥和正式密钥均不得进入 Git、Issue、PR、构建日志或公开附件。仓库忽略密钥与本地输出目录，但提交前仍需检查文件清单。
 - 正式发布需要维护者单独确定非调试构建、签名保管和更新路线；本项目的纯测试 CI 不签名、不上传 APK，也不接收发行密钥。
+
+## 本地文件与兼容帮助的验证
+
+0.1.9候选的`RuleSpec`/`RuleEvaluator`只接受编译期可信匹配定义；`OfflineRuleStore`/`RuleJsonCodec`接受的外部文件只有更严格的已有规则限制，不能从JSON导入新选择器或执行代码。`RuleData`连接手机私有偏好与运行时，损坏状态不能静默恢复宽松默认。具体格式和撤销语义见[离线规则与诊断](OFFLINE_RULES.md)。
+
+复核文件边界、无副作用取消、坏状态恢复、单步撤销、兼容设置废弃旧回调，以及规则恢复不改变`apps`/`enabled`/引导。最小样本复核不是屏幕回放或广告成功证明。样本只在内存暂存；实际文件导出和系统剪贴板均需用户主动操作。不要在测试输出或仓库加入私人偏好、手机原始树、完整应用列表、截图或签名密钥。
+
+新增帮助页需验证返回设置保留家族选择与滚动、系统查询未知与未启用分开、服务实际连接单列、荣耀不误入华为路径。官方资料的适用范围不代替机型实测；参见[机型帮助](SETUP_HELP.md)和[官方核验](HUAWEI_COMPATIBILITY.md)。
 
 ## 实机验证要记录什么
 

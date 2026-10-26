@@ -21,16 +21,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Compile pure Java policies and regression checks
-        run: |
-          mkdir -p build/pure-tests
-          javac -encoding UTF-8 -d build/pure-tests \
-            app/src/main/java/org/splashguard/app/AdRules.java \
-            app/src/main/java/org/splashguard/app/SkipSession.java \
-            app/src/main/java/org/splashguard/app/OnboardingPolicy.java \
-            tests/AdRulesTest.java tests/SkipSessionTest.java tests/OnboardingPolicyTest.java
-      - name: Run rules, sessions and onboarding checks
-        run: |
-          java -cp build/pure-tests AdRulesTest
-          java -cp build/pure-tests SkipSessionTest
-          java -cp build/pure-tests OnboardingPolicyTest
+      - name: Run the shared pure Java safety suite
+        shell: pwsh
+        run: ./tools/test-local.ps1

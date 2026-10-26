@@ -35,11 +35,5 @@ $key = Join-Path $OutDir 'local-debug.keystore'
 if (!(Test-Path -LiteralPath $key)) { Run $keytool @('-genkeypair','-keystore',$key,'-storepass','android','-keypass','android','-alias','androiddebugkey','-dname','CN=SplashGuard Local Development','-keyalg','RSA','-keysize','2048','-validity','10000') }
 Run $java @('-jar',(Join-Path $tools.FullName 'lib\apksigner.jar'),'sign','--ks',$key,'--ks-key-alias','androiddebugkey','--ks-pass','pass:android','--key-pass','pass:android','--out',(Join-Path $OutDir "SplashGuard-$versionName-preview.apk"),(Join-Path $OutDir 'aligned.apk'))
 Run $java @('-jar',(Join-Path $tools.FullName 'lib\apksigner.jar'),'verify','--verbose',(Join-Path $OutDir "SplashGuard-$versionName-preview.apk"))
-Run $javac @('-encoding','UTF-8','-d',(Join-Path $OutDir 'tests'),(Join-Path $project 'app\src\main\java\org\splashguard\app\AdRules.java'),(Join-Path $project 'app\src\main\java\org\splashguard\app\SkipSession.java'),(Join-Path $project 'tests\AdRulesTest.java'),(Join-Path $project 'tests\SkipSessionTest.java'))
-Run $java @('-cp',(Join-Path $OutDir 'tests'),'AdRulesTest')
-Run $java @('-cp',(Join-Path $OutDir 'tests'),'SkipSessionTest')
-if (Test-Path -LiteralPath (Join-Path $project 'tests\OnboardingPolicyTest.java')) {
-    Run $javac @('-encoding','UTF-8','-d',(Join-Path $OutDir 'tests'),(Join-Path $project 'app\src\main\java\org\splashguard\app\OnboardingPolicy.java'),(Join-Path $project 'tests\OnboardingPolicyTest.java'))
-    Run $java @('-cp',(Join-Path $OutDir 'tests'),'OnboardingPolicyTest')
-}
+& (Join-Path $PSScriptRoot 'test-local.ps1') -JdkRoot $JdkRoot -OutDir (Join-Path $OutDir 'tests')
 Write-Output ('APK: ' + (Join-Path $OutDir "SplashGuard-$versionName-preview.apk"))

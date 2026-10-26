@@ -142,7 +142,7 @@ public final class MainActivity extends Activity {
         permissionSummary=text("",16,MUTED);gap(auto,14);auto.addView(permissionSummary);button(auto,"设置无障碍服务",false,v->disclosure());
         disclosureSection(auto,"auto-principle","如何帮你关闭广告","进入所选应用后的短暂开屏时段内，按本地规则检查控件文字、标识和位置，只尝试点击明确的广告跳过按钮。没有可读取按钮或样式不匹配时可能漏过；操作计数不代表每次都成功。\n\n请只选需要帮助的应用，首次使用时观察效果；可随时关掉上方开关。");
         LinearLayout background=card();title(background,"关闭首页后，继续自动跳过",20);body(background,"系统需允许服务在后台运行。强行停止或系统清理若关闭了服务，需要本人重新开启。");
-        button(background,"查看本机后台指引",false,v->backgroundGuide());button(background,"关闭首页，保留自动跳过",true,v->closeHome());
+        button(background,"查看本机后台指引",false,v->backgroundGuide());button(background,"广告未跳过？检查原因",false,v->SetupHelpActivity.open(this,"no_skip"));button(background,"关闭首页，保留自动跳过",true,v->closeHome());
         gap(content,4);content.addView(text("本地处理  ·  无联网权限  ·  随时可停",14,MUTED));
     }
     private void renderShake(){
@@ -159,33 +159,51 @@ public final class MainActivity extends Activity {
         LinearLayout setup=card();title(setup,"设置向导",21);body(setup,"按步骤了解权限、选择应用，并检查当前功能状态。随时可以稍后设置。");button(setup,"重新打开设置向导",true,v->startWizard());
         LinearLayout privacy=card();title(privacy,"隐私与本地记录",21);body(privacy,"App 没有联网权限，不上传界面内容、应用选择或设备信息。");
         recordsSummary=text("",16,GREEN);gap(privacy,12);privacy.addView(recordsSummary);
-        disclosureSection(privacy,"privacy","查看权限与保存内容","无障碍权限允许读取界面控件和模拟点击，系统授权范围较大。服务先判断前台应用，再按你的选择与本地规则处理。\n\n不保存完整页面或截图。手机本地保存功能开关、所选应用、操作计数、最近按钮文字/应用/时间及少量诊断记录；这些记录不会上传。下方可清除操作记录，保留你的应用选择和功能开关。\n\n打开网站、反馈或打赏由系统浏览器处理，需要联网；网站托管方及支付平台会处理各自的访问或付款信息。");
+        disclosureSection(privacy,"privacy","查看权限与保存内容","无障碍权限允许读取界面控件和模拟点击，系统授权范围较大。服务先判断前台应用，再按你的选择与本地规则处理。\n\n不保存完整页面或截图。手机本地保存功能开关、所选应用、操作计数、最近按钮文字/应用/时间及少量诊断记录；高级工具只在进程内暂存固定字段的最小判定样本；本人可预览后导出文件，文件不会因清除记录而自动删除。这些记录不会自动上传。下方可清除操作记录，保留你的应用选择和功能开关。\n\n打开网站、反馈或打赏由系统浏览器处理，需要联网；网站托管方及支付平台会处理各自的访问或付款信息。");
         button(privacy,"清除本地操作记录",false,v->clearRecords());
         LinearLayout control=card();title(control,"随时暂停或停用",21);body(control,"暂时不用：关闭首页“启用自动跳过”。彻底关闭：在系统无障碍设置中关闭本服务；也可直接卸载。");button(control,"打开系统无障碍设置",false,v->openAccessibility());
         disclosureSection(control,"background","后台运行说明","系统电池管理、划掉卡片、一键清理或重启可能关闭第三方无障碍服务。请按本机指引设置后，返回首页确认真实状态。\n\n“关闭首页，保留自动跳过”仅关闭界面；强行停止会停止服务。B站的广告专用开关保存在B站内，不依赖本工具后台维持。");button(control,"查看本机后台指引",false,v->backgroundGuide());
+        LinearLayout tools=card();title(tools,"兼容排查与离线工具",21);body(tools,"分别检查权限、实际服务连接和应用选择。高级工具支持规则限制、撤销与本人决定是否导出的最小判定样本。");button(tools,"检查本机设置与未跳过原因",false,v->SetupHelpActivity.open(this,"no_skip"));button(tools,"离线规则与诊断",false,v->OfflineToolsActivity.open(this));
         LinearLayout author=card();title(author,"作者与支持",21);body(author,"免费开源，全部功能无需付费。自愿打赏仅用于支持作者，不解锁功能。");button(author,"作者、网站与自愿支持",false,v->openWebsite("#support"));
         String version;try{version=getPackageManager().getPackageInfo(getPackageName(),0).versionName;}catch(Exception ignored){version="预览版";}
         gap(content,4);content.addView(text("SplashGuard "+version+" · MIT 开源预览版",14,MUTED));
     }
-    private boolean serviceEnabled(){String raw=Settings.Secure.getString(getContentResolver(),Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);if(raw==null)return false;ComponentName own=new ComponentName(this,SkipService.class);for(String v:raw.split(":"))if(own.equals(ComponentName.unflattenFromString(v)))return true;return false;}
+    private DeviceGuidePolicy.ServiceState serviceState(){
+        try{String raw=Settings.Secure.getString(getContentResolver(),Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+            if(raw==null)return DeviceGuidePolicy.ServiceState.UNKNOWN;
+            ComponentName own=new ComponentName(this,SkipService.class);
+            for(String value:raw.split(":"))if(own.equals(ComponentName.unflattenFromString(value)))return DeviceGuidePolicy.ServiceState.ON;
+            return DeviceGuidePolicy.ServiceState.OFF;
+        }catch(RuntimeException unavailable){return DeviceGuidePolicy.ServiceState.UNKNOWN;}
+    }
+    private boolean rulesValid(){try{RuleData.loadStore(this);return true;}catch(RuntimeException invalid){return false;}}
     private void refreshStatus(){
-        SharedPreferences p=Prefs.get(this);boolean enabled=Prefs.enabled(this),permission=serviceEnabled(),connected=SkipService.isConnected();int count=Prefs.selected(this).size();
-        String signature=enabled+":"+permission+":"+connected+":"+count+":"+p.getInt("count",0)+":"+p.getLong("last_time",0)+":"+p.getString("diagnostic","");if(signature.equals(lastStatus))return;lastStatus=signature;
+        SharedPreferences p=Prefs.get(this);boolean enabled=Prefs.enabled(this),connected=SkipService.isConnected(),valid=rulesValid();
+        DeviceGuidePolicy.ServiceState permission=serviceState();int count=Prefs.selected(this).size();
+        String signature=enabled+":"+permission+":"+connected+":"+valid+":"+count+":"+p.getInt("count",0)+":"+p.getLong("last_time",0)+":"+p.getString("diagnostic","");if(signature.equals(lastStatus))return;lastStatus=signature;
         if(autoSwitch!=null&&autoSwitch.isChecked()!=enabled){changingSwitch=true;autoSwitch.setChecked(enabled);changingSwitch=false;}
         if(selectedSummary!=null)selectedSummary.setText("已选择 "+count+" 个应用");
-        if(permissionSummary!=null)permissionSummary.setText(!permission?"无障碍服务：尚未开启":connected?"无障碍服务：已连接":"无障碍服务：等待连接");
-        if(wizardSummary!=null)wizardSummary.setText("已选择 "+count+" 个应用\n无障碍："+(!permission?"未开启":connected?"已连接":"等待连接")+"\n自动跳过开关："+(enabled?"已开启":"已关闭"));
+        String permissionText=permission==DeviceGuidePolicy.ServiceState.ON?"已开启":permission==DeviceGuidePolicy.ServiceState.OFF?"未开启":"状态暂时无法读取";
+        if(permissionSummary!=null)permissionSummary.setText("无障碍授权："+permissionText+"\n服务连接："+(connected?"已连接":"未连接"));
+        if(wizardSummary!=null)wizardSummary.setText("已选择 "+count+" 个应用\n无障碍授权："+permissionText+"\n服务连接："+(connected?"已连接":"未连接")+"\n自动跳过："+(enabled?"已开启":"已关闭"));
         if(recordsSummary!=null)recordsSummary.setText("本地操作计数："+p.getInt("count",0)+" 次\n计数代表操作提交，不等于每次广告都消失。");
         if(stateTitle==null)return;
         stateTitle.setTextColor(Color.rgb(145,87,20));stateAction.setVisibility(View.VISIBLE);
         if(!enabled){stateTitle.setText("自动跳过已暂停");stateBody.setText("开启开关后，仍需选择应用并由本人授权无障碍服务。");stateAction.setText("启用自动跳过");}
-        else if(!permission){stateTitle.setText("还需开启无障碍服务");stateBody.setText("系统权限未开启，当前无法自动跳过广告。");stateAction.setText("设置无障碍服务");}
-        else if(!connected){stateTitle.setText("等待服务连接");stateBody.setText("系统开关已开启，服务暂未连接。稍候若仍未恢复，请进入设置检查。");stateAction.setText("检查无障碍服务");}
+        else if(!valid){stateTitle.setText("请检查本地规则");stateBody.setText("规则状态无法验证，当前已停止处理。可在离线工具中恢复内置规则。");stateAction.setText("检查规则状态");}
+        else if(permission==DeviceGuidePolicy.ServiceState.OFF){stateTitle.setText("还需开启无障碍服务");stateBody.setText("当前查询显示授权未开启，请到系统设置中核对。");stateAction.setText("设置无障碍服务");}
+        else if(!connected){stateTitle.setText(permission==DeviceGuidePolicy.ServiceState.UNKNOWN?"请核对服务状态":"等待服务连接");stateBody.setText("服务目前未连接。权限开关、功能开关和应用选择需要分别检查，无需开启所有权限。");stateAction.setText("检查服务与设置");}
         else if(count==0){stateTitle.setText("还需选择应用");stateBody.setText("服务已连接；选择需要处理的应用后才会尝试跳过。");stateAction.setText("选择应用");}
-        else{stateTitle.setText("自动跳过已就绪");stateTitle.setTextColor(GREEN);stateBody.setText("服务已连接，已选择 "+count+" 个应用。\n防摇一摇还需单独核对应用内广告设置。");stateAction.setVisibility(View.GONE);}
+        else{stateTitle.setText("自动跳过已就绪");stateTitle.setTextColor(GREEN);stateBody.setText("服务已连接，将在所选应用的开屏时段尝试处理。不同广告样式可能漏过；操作提交不等于广告成功关闭。");stateAction.setVisibility(View.GONE);}
     }
-    private void repairStatus(){if(!Prefs.enabled(this)){Prefs.get(this).edit().putBoolean("enabled",true).apply();refreshStatus();}else if(!serviceEnabled()||!SkipService.isConnected())disclosure();else chooseApps();}
-    private void closeHome(){if(Prefs.enabled(this)&&serviceEnabled()&&SkipService.isConnected()&&!Prefs.selected(this).isEmpty()){finishAndRemoveTask();return;}new AlertDialog.Builder(this).setTitle("请先完成自动跳过设置").setMessage("需要开启功能开关、选择应用并连接无障碍服务。当前尚未就绪；关闭界面不会补齐这些设置。").setNegativeButton("留在首页",null).setPositiveButton("继续设置",(d,w)->repairStatus()).show();}
+    private void repairStatus(){
+        if(!Prefs.enabled(this)){Prefs.get(this).edit().putBoolean("enabled",true).apply();refreshStatus();}
+        else if(!rulesValid())OfflineToolsActivity.open(this);
+        else if(serviceState()==DeviceGuidePolicy.ServiceState.OFF||!SkipService.isConnected())SetupHelpActivity.open(this,"accessibility");
+        else chooseApps();
+    }
+    private void closeHome(){if(Prefs.enabled(this)&&serviceState()!=DeviceGuidePolicy.ServiceState.OFF&&SkipService.isConnected()&&rulesValid()&&!Prefs.selected(this).isEmpty()){finishAndRemoveTask();return;}SetupHelpActivity.open(this,"background");}
+
     private void startWizard(){rememberScroll();onboarding=true;wizardStep=0;wizardScroll=0;persistWizard();render();}
     private void persistWizard(){Prefs.get(this).edit().putBoolean("setup_in_progress",true).putInt("setup_step",wizardStep).apply();}
     private void moveWizard(int delta){wizardStep=OnboardingPolicy.clampStep(wizardStep+delta);wizardScroll=0;persistWizard();render();}
@@ -216,10 +234,7 @@ public final class MainActivity extends Activity {
         if(wizardStep!=OnboardingPolicy.STEP_COUNT-1)button(content,"稍后设置，先看首页",false,v->finishWizard());
     }
     private boolean huawei(){return Build.MANUFACTURER.toLowerCase(Locale.ROOT).contains("huawei");}
-    private void backgroundGuide(){
-        String guide=huawei()?"已核对的华为机型：GOA-AL80 / HarmonyOS 4.2。其他版本入口可能不同。\n\n1. 在系统设置搜索“应用启动管理”。\n2. 找到开屏清净，关闭“自动管理”。\n3. 允许自启动、关联启动、后台活动，并确认保存。\n4. 返回本工具，检查无障碍服务已连接、已选择应用。\n5. 使用首页“关闭首页，保留自动跳过”，再打开目标应用实测。\n\n强行停止、重启或系统清理仍可能停止服务。打开此指引不表示配置已经成功。\n\n依据：华为官方说明 zh-cn00410039。":"此型号的后台入口尚未实测。\n\n在本应用系统设置或系统搜索中查找“自启动”“后台活动”“电池优化”等选项，仅为开屏清净允许需要的后台运行。不同系统名称可能不同。\n\n返回后确认无障碍服务已连接、已选择应用，并实际打开目标应用验证。强行停止或系统清理若关闭了服务，需要本人重新开启。";
-        new AlertDialog.Builder(this).setTitle("本机后台运行指引").setMessage(guide).setNegativeButton("知道了",null).setPositiveButton("打开本应用设置",(d,w)->openAppSettings()).show();
-    }
+    private void backgroundGuide(){SetupHelpActivity.open(this,"background");}
     private void openAppSettings(){try{startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,Uri.fromParts("package",getPackageName(),null)));}catch(RuntimeException ignored){openSettings();}}
     private void biliGuide(){new AlertDialog.Builder(this).setTitle("B站防摇一摇广告")
         .setMessage("已核对版本：哔哩哔哩 9.15.0。\n\n1. 打开B站 → 我的 → 设置。\n2. 打开“隐私权限设置”。\n3. 关闭“允许广告访问传感器”。说明应包含关闭后不展示“摇一摇”“扭一扭”类型广告。\n4. 结束B站后台后重新打开验证。\n\n只关闭广告专用选项；不要关闭系统里的整个设备方向权限。该开关由B站保存，本工具不能把阅读指引当作配置成功。其他版本以实际页面为准。")
@@ -227,14 +242,14 @@ public final class MainActivity extends Activity {
     private void manualGuide(){new AlertDialog.Builder(this).setTitle(Build.MANUFACTURER+" "+Build.MODEL)
         .setMessage((huawei()?"本机相关实测仅覆盖华为 GOA-AL80 / HarmonyOS 4.2；没有验证到只拦广告的独立系统跳转权限。\n\n":"此机型的广告专用系统入口尚未实测。\n\n")+"先在目标应用的隐私或广告设置中查找“摇一摇广告”“广告访问传感器”。若系统实际提供“应用跳转提醒”，可了解提示后自行配置。\n\n不要用整体“设备方向”“动作与方向”“身体传感器”或“活动识别”权限替代广告专用设置，它们可能影响正常功能，且未必对应加速度计。\n\n没有独立开关时，自动跳过只能作为补充，不能保证消除晃动跳转。")
         .setPositiveButton("知道了",null).show();}
-    private void openSystem(){List<Intent> choices=new ArrayList<>();if(huawei())choices.add(new Intent("huawei.intent.action.HSM_PERMISSION_MANAGER"));choices.add(new Intent("android.intent.action.MANAGE_PERMISSIONS"));choices.add(new Intent(Settings.ACTION_PRIVACY_SETTINGS));choices.add(new Intent(Settings.ACTION_SETTINGS));for(Intent i:choices){try{startActivity(i);return;}catch(RuntimeException ignored){}}message("请手动打开设置","可在手机系统设置中搜索权限管理。");}
+    private void openSystem(){openAppSettings();}
     private void disclosure(){new AlertDialog.Builder(this).setTitle("了解后，再由你授权")
         .setMessage("无障碍服务允许读取界面控件并模拟点击。开屏清净先判断前台应用，再在你选中的应用开屏时段按本地规则识别明确的跳过按钮。\n\nApp 没有联网权限；不保存完整页面或截图。本地保存设置、应用选择、计数和最近按钮/诊断记录，可清除操作记录。不会上传这些内容。\n\n你可随时暂停、关闭无障碍服务或卸载。未授权也可以查看防摇一摇设置指引。")
         .setNegativeButton("暂不开启",null).setPositiveButton("了解，前往系统设置",(d,w)->openAccessibility()).show();}
     private void openAccessibility(){try{startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));}catch(RuntimeException unavailable){openSettings();}}
     private void openSettings(){try{startActivity(new Intent(Settings.ACTION_SETTINGS));}catch(RuntimeException unavailable){message("请手动打开系统设置","找到开屏清净后，按页面说明检查权限。");}}
     private void openWebsite(String anchor){try{startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(WEBSITE+anchor)));}catch(RuntimeException unavailable){message("请用浏览器打开",WEBSITE+anchor);}}
-    private void clearRecords(){new AlertDialog.Builder(this).setTitle("清除本地操作记录？").setMessage("清除计数、最近操作与诊断信息，保留应用选择、功能开关和设置向导状态。").setNegativeButton("取消",null).setPositiveButton("清除记录",(d,w)->{Prefs.get(this).edit().remove("count").remove("last").remove("last_time").remove("diagnostic").remove("last_diag_time").apply();refreshStatus();}).show();}
+    private void clearRecords(){new AlertDialog.Builder(this).setTitle("清除本地操作记录？").setMessage("清除计数、最近操作和进程内诊断样本，保留规则、应用选择、功能开关与向导状态。本人已导出的文件需自行到保存位置删除。").setNegativeButton("取消",null).setPositiveButton("清除记录",(d,w)->{Prefs.get(this).edit().remove("count").remove("last").remove("last_time").remove("diagnostic").remove("last_diag_time").apply();RuleData.clearSample();refreshStatus();}).show();}
     private void message(String title,String body){new AlertDialog.Builder(this).setTitle(title).setMessage(body).setPositiveButton("知道了",null).show();}
     private static final class App{final String pkg,label;App(String p,String l){pkg=p;label=l;}}
     private void chooseApps(){
@@ -253,7 +268,7 @@ public final class MainActivity extends Activity {
         Button common=new Button(this);common.setText("勾选常见广告应用（可调整）");common.setTextSize(15);common.setAllCaps(false);box.addView(common);
         ScrollView scroller=new ScrollView(this);LinearLayout list=new LinearLayout(this);list.setOrientation(LinearLayout.VERTICAL);scroller.addView(list);int listHeight=Math.min(340,Math.max(160,(int)(getResources().getDisplayMetrics().heightPixels/getResources().getDisplayMetrics().density)-390));box.addView(scroller,new LinearLayout.LayoutParams(-1,dp(listHeight)));
         Runnable refill=()->{String q=search.getText().toString().trim().toLowerCase(Locale.ROOT);list.removeAllViews();int matched=0;for(App app:apps)if(app.label.toLowerCase(Locale.ROOT).contains(q)||app.pkg.toLowerCase(Locale.ROOT).contains(q)){matched++;CheckBox check=new CheckBox(this);check.setText(app.label);check.setTextSize(17);check.setMinHeight(dp(52));check.setChecked(chosen.contains(app.pkg));check.setOnCheckedChangeListener((b,on)->{if(on)chosen.add(app.pkg);else chosen.remove(app.pkg);});list.addView(check,new LinearLayout.LayoutParams(-1,-2));}if(matched==0)list.addView(text("没有找到匹配应用",16,MUTED));};
-        common.setOnClickListener(v->{Set<String> suggestions=new HashSet<>(Arrays.asList("tv.danmaku.bili","com.taobao.taobao","com.jingdong.app.mall","com.xunmeng.pinduoduo","com.sankuai.meituan","com.baidu.netdisk","com.netease.cloudmusic","com.tencent.qqmusic","com.zhihu.android","com.baidu.tieba","com.cainiao.wireless","com.taobao.idlefish","com.xingin.xhs","ctrip.android.view","com.Qunar"));for(App app:apps)if(suggestions.contains(app.pkg))chosen.add(app.pkg);refill.run();});
+        common.setOnClickListener(v->{Set<String> suggestions=new HashSet<>(Arrays.asList("tv.danmaku.bili","com.taobao.taobao","com.jingdong.app.mall","com.xunmeng.pinduoduo","com.sankuai.meituan","com.baidu.netdisk","com.baidu.searchbox","com.baidu.searchbox.lite","com.netease.cloudmusic","com.tencent.qqmusic","com.zhihu.android","com.baidu.tieba","com.cainiao.wireless","com.taobao.idlefish","com.xingin.xhs","ctrip.android.view","com.Qunar"));for(App app:apps)if(suggestions.contains(app.pkg))chosen.add(app.pkg);refill.run();});
         search.addTextChangedListener(new TextWatcher(){public void beforeTextChanged(CharSequence s,int start,int count,int after){}public void onTextChanged(CharSequence s,int start,int before,int count){refill.run();}public void afterTextChanged(Editable e){}});refill.run();
         dialog.setView(box);
         dialog.setButton(AlertDialog.BUTTON_NEGATIVE,"取消",(d,w)->{});
