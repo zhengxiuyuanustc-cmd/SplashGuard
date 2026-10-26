@@ -1,6 +1,6 @@
 # 标准Gradle构建与Android lint验证
 
-0.1.12流程扩展了未签名release构建和lintRelease，新源码结果仍须关联准确检查。下述931f2b9成功记录属于0.1.11原有debug/lintDebug检查，不能替代新增release任务的实际执行。
+0.1.12流程扩展了未签名release构建和lintRelease，准确源码`26f63c5a0d7d2c6f1bb8708fedea1c4be230d45d`的[远程检查](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40331782330)已成功，job121602782223实际完成四个任务；[纯Java检查](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40331788182)成功。下述931f2b9成功记录属于0.1.11原有debug/lintDebug检查，不能替代新增release任务的实际执行。
 
 本页说明已有的[Android Gradle检查流程](../.github/workflows/android-gradle.yml)。首次提交d1873a2的标准assembleDebug成功，lintDebug因API26默认样式使用API27导航栏属性失败（[原始检查](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40291633154)）。现按values/values-v27分流，保留最低API26；补齐新版备份排除声明，未跳过lint或降低严重级别。修正后的准确源码提交`931f2b9489f5d4775958d74fb4ee68c479deb4c1`已取得[标准构建与lint成功结果](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40294858713)；job121478324825的assembleDebug与lintDebug同一步成功，[纯Java检查](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40294858791)也成功。它们分别是实际远程结果，不能用SDK备用构建代替。发布后的实际状态应查看对应提交的GitHub检查，而不是推断历史结果覆盖新源码。
 

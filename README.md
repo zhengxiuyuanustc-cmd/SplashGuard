@@ -1,6 +1,6 @@
 # 开屏清净 · SplashGuard
 
-本地0.1.12 / versionCode 13候选新增[本人预览的兼容报告](docs/COMPATIBILITY_REPORT.md)，帮助其他手机区分授权、实际连接和广告漏过；固定元数据可自愿复制/保存，不自动上传。修正中断或前台信息暂缺时的会话续期，保留原点击范围与预算。16个纯Java程序862项通过，构建/签名与实机状态分别见[验证记录](TESTING.md)。原生鸿蒙仍待官方能力答复；官网下载默认仍0.1.7。
+本地0.1.12 / versionCode 13候选新增[本人预览的兼容报告](docs/COMPATIBILITY_REPORT.md)，帮助其他手机区分授权、实际连接和广告漏过；固定元数据可自愿复制/保存，不自动上传。修正中断或前台信息暂缺时的会话续期，保留原点击范围与预算。16个纯Java程序862项通过；源码26f63c5的[debug/未签名release及lint](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40331782330)均通过，构建/签名与实机状态分别见[验证记录](TESTING.md)。原生鸿蒙仍待官方能力答复；官网下载默认仍0.1.7。
 
 **当前不支持纯血鸿蒙原生自动跳过。** 华为当前公开Kit明确限制界面节点查询，旧相关接口有废弃标记；APK兼容运行和鸿蒙指南不代表原生支持。见[原生核验](docs/HARMONY_NATIVE_FEASIBILITY.md)及[推进清单实际状态](docs/IMPLEMENTATION_STATUS.md)。
 

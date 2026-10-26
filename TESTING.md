@@ -8,7 +8,7 @@
 
 16个共享纯Java程序共862项通过：0.1.11基数797，加兼容报告53项、会话中断／未知前台边界12项（SkipSession55→67）。报告回归覆盖实际连接与列表差异、未知值、模式/规则/选择优先级、四应用白名单、不可变快照、Unicode控制与长度，状态就绪不冒充广告关闭。
 
-标准Android检查已配置debug及未签名release构建与对应lint，新提交实际结果待远程执行。本地SDK35的UnsignedValidation已完成资源、全部Java、D8、对齐和862项检查，Manifest明确不可调试、min26/target35且无uses-permission。未签名验证文件115367字节，SHA256 `cf2a8e5ea2ad3219b9681de6c246953824c2dc36b1075703a4c65da80ad27062`；它不是可安装签名产物。本候选先完成不接触密钥的未签名验证；未签名包不可安装或公开分发。可安装的非调试测试包需要维护者明确确认本次签名，并按现有证书配置完成签名和最终校验，当前尚未执行。不会把不调试等同于获得系统授权、原生支持或正式密钥治理。
+准确源码`26f63c5a0d7d2c6f1bb8708fedea1c4be230d45d`的[标准Android检查](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40331782330)已成功，实际执行assembleDebug、assembleRelease、lintDebug、lintRelease；[共享纯Java CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40331788182)也成功。本地SDK35的UnsignedValidation已完成资源、全部Java、D8、对齐和862项检查，Manifest明确不可调试、min26/target35且无uses-permission。未签名验证文件115367字节，SHA256 `cf2a8e5ea2ad3219b9681de6c246953824c2dc36b1075703a4c65da80ad27062`；它不是可安装签名产物。本候选先完成不接触密钥的未签名验证；未签名包不可安装或公开分发。可安装的非调试测试包需要维护者明确确认本次签名，并按现有证书配置完成签名和最终校验，当前尚未执行。不会把不调试等同于获得系统授权、原生支持或正式密钥治理。
 
 新报告页及服务边界修正未在其他机型/真实广告/文件提供者/长期后台验证；没有要求用户重复已解决的本机广告测试。0.1.11的安装和用户模式界面确认仍属该版本历史证据。更多机型参见docs/COMPATIBILITY_CASES.md。
 

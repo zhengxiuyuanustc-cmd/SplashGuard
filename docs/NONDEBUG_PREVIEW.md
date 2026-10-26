@@ -61,3 +61,5 @@ try {
 当这些任务实际执行成功后，需在验证记录中附准确源码SHA及检查链接；新增工作流命令本身不算成功。SDK备用非调试包与CI的未签名AGP release也应分别记录，不能混作同一产物。
 
 本地0.1.12/code13的UnsignedValidation实际构建与862项纯检查通过，Manifest不可调试、无uses-permission；验证文件115367字节，SHA256 cf2a8e5ea2ad3219b9681de6c246953824c2dc36b1075703a4c65da80ad27062。此记录不包含签名、安装或正式发行，仍不可安装／发布。
+
+源码`26f63c5a0d7d2c6f1bb8708fedea1c4be230d45d`的[标准Gradle检查](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40331782330)也已实际成功，包含debug/未签名release和各自lint。它不含维护者私钥，也不改变当前本地可安装包尚未签名的状态。
