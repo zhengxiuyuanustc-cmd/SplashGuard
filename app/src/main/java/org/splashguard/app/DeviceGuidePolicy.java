@@ -5,7 +5,7 @@ import java.util.Locale;
 /** Pure, conservative setup routing. Android API numbers never identify HarmonyOS. */
 public final class DeviceGuidePolicy {
     private DeviceGuidePolicy() {}
-    public enum Vendor { HUAWEI, HONOR, OTHER }
+    public enum Vendor { HUAWEI, HONOR, XIAOMI, OPPO, REALME, ONEPLUS, VIVO, IQOO, SAMSUNG, MEIZU, GOOGLE, OTHER }
     public enum Family { UNKNOWN, HARMONY_4, HARMONY_5_PLUS }
     public enum ServiceState { UNKNOWN, ON, OFF }
 
@@ -18,7 +18,31 @@ public final class DeviceGuidePolicy {
         // Some older Honor devices identify their manufacturer as Huawei.
         if (names.contains("honor") || names.contains("荣耀")) return Vendor.HONOR;
         if (names.contains("huawei") || names.contains("华为")) return Vendor.HUAWEI;
+        if (names.contains("realme") || names.contains("真我")) return Vendor.REALME;
+        if (names.contains("oneplus") || names.contains("一加")) return Vendor.ONEPLUS;
+        if (names.contains("iqoo")) return Vendor.IQOO;
+        if (names.contains("xiaomi") || names.contains("redmi") || names.contains("poco") || names.contains("小米") || names.contains("红米")) return Vendor.XIAOMI;
+        if (names.contains("oppo")) return Vendor.OPPO;
+        if (names.contains("vivo")) return Vendor.VIVO;
+        if (names.contains("samsung") || names.contains("三星")) return Vendor.SAMSUNG;
+        if (names.contains("meizu") || names.contains("魅族")) return Vendor.MEIZU;
+        if (names.contains("google") || names.contains("pixel")) return Vendor.GOOGLE;
         return Vendor.OTHER;
+    }
+
+    public static String vendorLabel(Vendor value) {
+        if(value==null)return "其他／不确定";
+        switch(value){
+            case HUAWEI:return "华为";case HONOR:return "荣耀";case XIAOMI:return "小米／REDMI／POCO";
+            case OPPO:return "OPPO";case REALME:return "realme 真我";case ONEPLUS:return "一加";
+            case VIVO:return "vivo";case IQOO:return "iQOO";case SAMSUNG:return "三星";case MEIZU:return "魅族";case GOOGLE:return "Google／Pixel";
+            default:return "其他／不确定";
+        }
+    }
+    /** Null means automatic routing. A manual guide choice never asserts the real OS or changes it. */
+    public static Vendor restoreGuideVendor(String token){
+        if(token==null||"auto".equals(token))return null;
+        try{return Vendor.valueOf(token);}catch(IllegalArgumentException unknown){return null;}
     }
 
     /** Restores our own UI token, not a guessed platform or Android version string. */
@@ -29,11 +53,12 @@ public final class DeviceGuidePolicy {
     }
 
     public static String topic(String value) {
-        return "accessibility".equals(value) || "background".equals(value) ? value : "no_skip";
+        return "accessibility".equals(value) || "background".equals(value) || "shake".equals(value) ? value : "no_skip";
     }
 
     public static String title(String value) {
         String t=topic(value);
+        if ("shake".equals(t)) return "防摇一摇：本机专用设置";
         if ("accessibility".equals(t)) return "无障碍与授权帮助";
         if ("background".equals(t)) return "后台与系统兼容帮助";
         return "没有自动跳过？逐项检查";
@@ -61,7 +86,12 @@ public final class DeviceGuidePolicy {
         String common="\n\n若出现“受限制”“风险”或灰色开关，请保留提示原文，只按系统为本应用实际提供的选项处理。"
                 +"没有可用入口时，请核对下载来源并查看官方说明；不要关闭全机安全保护，也不要用关闭整体方向或传感器权限代替广告专用设置。";
         String text;
-        if (vendor==Vendor.HONOR) {
+        if ("shake".equals(topic(topic))) {
+            return BrandGuides.shakeGuide(vendor)+common;
+        }
+        if (BrandGuides.handles(vendor)) {
+            text=BrandGuides.guide(vendor,topic(topic));
+        } else if (vendor==Vendor.HONOR) {
             text="本机按荣耀 MagicOS／Android 独立处理，不套用华为鸿蒙步骤。请在关于本机核对完整MagicOS与Android版本；Android版本较新本身不证明不兼容。\n\n"
                     +"无障碍：在设置搜索“无障碍”，检查本服务；部分版本入口为“辅助功能 → 无障碍 → 下载服务”，以实际页面为准。"
                     +"权限已开时，先看下方“服务实际连接”，无需重复要求全开权限。\n\n"
@@ -96,6 +126,8 @@ public final class DeviceGuidePolicy {
     }
 
     public static String officialUrl(Vendor vendor, Family family, String topic) {
+        if("shake".equals(topic(topic)))return BrandGuides.shakeUrl(vendor);
+        if(BrandGuides.handles(vendor))return BrandGuides.officialUrl(vendor,topic(topic));
         if (vendor==Vendor.HONOR) return "accessibility".equals(topic(topic))
                 ? "https://www.honor.com/cn/support/content/zh-cn15869276/"
                 : "https://www.honor.com/cn/support/content/zh-cn00428704/";

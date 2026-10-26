@@ -22,6 +22,9 @@ import android.provider.Settings;
 import android.view.View;
 import android.view.accessibility.AccessibilityManager;
 import android.widget.Button;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -41,7 +44,9 @@ public final class SetupHelpActivity extends Activity {
     private static final String[] LABELS={"哔哩哔哩","百度（不是百度网盘）","百度极速版","网易云音乐"};
     private static final int FAMILY_UNKNOWN=11001,FAMILY_4=11002,FAMILY_5=11003;
     private String topic="no_skip";
-    private DeviceGuidePolicy.Vendor vendor;
+    private DeviceGuidePolicy.Vendor vendor,detectedVendor;
+    private boolean manualVendor;
+    private LinearLayout familyContainer;
     private DeviceGuidePolicy.Family family=DeviceGuidePolicy.Family.UNKNOWN;
     private DeviceGuidePolicy.ServiceState serviceState=DeviceGuidePolicy.ServiceState.UNKNOWN;
     private ScrollView scroll;
@@ -64,7 +69,8 @@ public final class SetupHelpActivity extends Activity {
     @Override public void onCreate(Bundle saved) {
         super.onCreate(saved);
         topic=DeviceGuidePolicy.topic(saved==null?getIntent().getStringExtra(EXTRA_TOPIC):saved.getString(EXTRA_TOPIC));
-        vendor=DeviceGuidePolicy.vendor(Build.MANUFACTURER,Build.BRAND);
+        detectedVendor=DeviceGuidePolicy.vendor(Build.MANUFACTURER,Build.BRAND);vendor=detectedVendor;
+        if(saved!=null){DeviceGuidePolicy.Vendor chosen=DeviceGuidePolicy.restoreGuideVendor(saved.getString("guideVendor"));if(chosen!=null){vendor=chosen;manualVendor=true;}}
         if(saved!=null){family=DeviceGuidePolicy.restoreFamily(saved.getString("family"));savedScroll=saved.getInt("scroll",0);}
         render();
     }
@@ -75,7 +81,7 @@ public final class SetupHelpActivity extends Activity {
     @Override protected void onResume(){super.onResume();refresh();handler.removeCallbacks(delayedRefresh);handler.postDelayed(delayedRefresh,600);}
     @Override protected void onPause(){handler.removeCallbacks(delayedRefresh);super.onPause();}
     @Override protected void onDestroy(){handler.removeCallbacks(delayedRefresh);super.onDestroy();}
-    @Override protected void onSaveInstanceState(Bundle out){out.putString(EXTRA_TOPIC,topic);out.putString("family",family.name());out.putInt("scroll",scroll.getScrollY());super.onSaveInstanceState(out);}
+    @Override protected void onSaveInstanceState(Bundle out){out.putString(EXTRA_TOPIC,topic);out.putString("family",family.name());out.putString("guideVendor",manualVendor?vendor.name():"auto");out.putInt("scroll",scroll.getScrollY());super.onSaveInstanceState(out);}
 
     private int dp(int value){return Math.round(value*getResources().getDisplayMetrics().density);}
     private TextView text(String value,int size,int color){TextView t=new TextView(this);t.setText(value);t.setTextSize(size);t.setTextColor(color);t.setLineSpacing(dp(3),1);return t;}
@@ -91,24 +97,35 @@ public final class SetupHelpActivity extends Activity {
         heading=text(DeviceGuidePolicy.title(topic),26,INK);heading.setTypeface(null,Typeface.BOLD);content.addView(heading);gap(content,14);
         LinearLayout device=card(content,"本机与运行环境");
         device.addView(text(safe(Build.MANUFACTURER)+" / "+safe(Build.BRAND)+" / "+safe(Build.MODEL)+"\nAndroid运行环境："+safe(Build.VERSION.RELEASE)+"（API "+Build.VERSION.SDK_INT+"）",16,MUTED));
-        gap(device,8);device.addView(text("完整MagicOS／鸿蒙版本请在关于本机核对。上面的Android信息不能自动证明鸿蒙版本，也不代表跨兼容环境能力。",16,MUTED));
-        if(vendor==DeviceGuidePolicy.Vendor.HUAWEI){
-            gap(device,12);device.addView(text("仅按本机实际显示手动选择：",16,INK));
-            RadioGroup choices=new RadioGroup(this);choices.setOrientation(RadioGroup.VERTICAL);
-            addFamily(choices,FAMILY_UNKNOWN,DeviceGuidePolicy.Family.UNKNOWN);
-            addFamily(choices,FAMILY_4,DeviceGuidePolicy.Family.HARMONY_4);
-            addFamily(choices,FAMILY_5,DeviceGuidePolicy.Family.HARMONY_5_PLUS);
-            choices.check(family==DeviceGuidePolicy.Family.HARMONY_4?FAMILY_4:family==DeviceGuidePolicy.Family.HARMONY_5_PLUS?FAMILY_5:FAMILY_UNKNOWN);
-            choices.setOnCheckedChangeListener((group,id)->{family=id==FAMILY_4?DeviceGuidePolicy.Family.HARMONY_4:id==FAMILY_5?DeviceGuidePolicy.Family.HARMONY_5_PLUS:DeviceGuidePolicy.Family.UNKNOWN;refreshGuide();});
-            device.addView(choices);
-        } else if(vendor==DeviceGuidePolicy.Vendor.HONOR){gap(device,8);device.addView(text("本机按荣耀独立处理，不使用华为鸿蒙权限路径。",16,GREEN));}
-
+        gap(device,8);device.addView(text("完整系统名称与版本请在“关于本机”核对。Android数字不能替代厂商系统版本，也不证明跨兼容环境能力。",16,MUTED));
+        gap(device,12);device.addView(text("识别的品牌："+DeviceGuidePolicy.vendorLabel(detectedVendor)+"。下方可手动查看其他品牌指引；这不会改变手机设置，也不确认系统版本。",16,MUTED));
+        final DeviceGuidePolicy.Vendor[] brands=DeviceGuidePolicy.Vendor.values();
+        String[] labels=new String[brands.length+1];labels[0]="自动识别（"+DeviceGuidePolicy.vendorLabel(detectedVendor)+"）";
+        for(int i=0;i<brands.length;i++)labels[i+1]="查看："+DeviceGuidePolicy.vendorLabel(brands[i]);
+        Spinner chooseBrand=new Spinner(this);chooseBrand.setContentDescription("选择要查看的品牌指引");
+        ArrayAdapter<String> adapter=new ArrayAdapter<>(this,android.R.layout.simple_spinner_item,labels);adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);chooseBrand.setAdapter(adapter);chooseBrand.setMinimumHeight(dp(52));
+        chooseBrand.setSelection(manualVendor?vendor.ordinal()+1:0);device.addView(chooseBrand,new LinearLayout.LayoutParams(-1,-2));
+        familyContainer=new LinearLayout(this);familyContainer.setOrientation(LinearLayout.VERTICAL);device.addView(familyContainer);
+        gap(familyContainer,10);familyContainer.addView(text("华为系统家族，请按关于本机实际显示手动选择：",16,INK));
+        RadioGroup choices=new RadioGroup(this);choices.setOrientation(RadioGroup.VERTICAL);
+        addFamily(choices,FAMILY_UNKNOWN,DeviceGuidePolicy.Family.UNKNOWN);addFamily(choices,FAMILY_4,DeviceGuidePolicy.Family.HARMONY_4);addFamily(choices,FAMILY_5,DeviceGuidePolicy.Family.HARMONY_5_PLUS);
+        choices.check(family==DeviceGuidePolicy.Family.HARMONY_4?FAMILY_4:family==DeviceGuidePolicy.Family.HARMONY_5_PLUS?FAMILY_5:FAMILY_UNKNOWN);
+        choices.setOnCheckedChangeListener((group,id)->{family=id==FAMILY_4?DeviceGuidePolicy.Family.HARMONY_4:id==FAMILY_5?DeviceGuidePolicy.Family.HARMONY_5_PLUS:DeviceGuidePolicy.Family.UNKNOWN;refreshGuide();});familyContainer.addView(choices);
+        chooseBrand.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            @Override public void onNothingSelected(AdapterView<?> parent){}
+            @Override public void onItemSelected(AdapterView<?> parent,View view,int position,long id){manualVendor=position>0;vendor=manualVendor?brands[position-1]:detectedVendor;refreshGuide();}
+        });
         LinearLayout ready=card(content,"实际状态自检");status=text("",16,INK);ready.addView(status);button(ready,"重新检查",v->refresh());
         gap(ready,8);ready.addView(text("授权开关和服务实际连接是不同状态；这里只显示本次检查结果。离开本页后系统仍可能停止服务。",15,MUTED));
         LinearLayout permissions=card(content,"无需“全权限”");permissions.addView(text(DeviceGuidePolicy.permissionExplanation(),16,MUTED));
         button(permissions,"打开系统无障碍设置",v->openSettings(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS),"设置中搜索“无障碍”，由本人核对开屏清净服务。"));
         button(permissions,"打开本应用设置",v->openSettings(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,Uri.fromParts("package",getPackageName(),null)),"设置中搜索“应用管理”，找到开屏清净；不要把普通权限页为空当作缺少全权限。"));
         LinearLayout steps=card(content,"按本机情况处理");guide=text("",16,MUTED);steps.addView(guide);official=button(steps,"用浏览器查看对应官方说明",v->openOfficial());
+        LinearLayout protections=card(content,"受限授权与系统保护（按需查看）");
+        TextView protectionText=text(BrandGuides.platformHelp(Build.VERSION.SDK_INT),16,MUTED);protectionText.setVisibility(View.GONE);
+        button(protections,"展开／收起系统限制说明",v->protectionText.setVisibility(protectionText.getVisibility()==View.VISIBLE?View.GONE:View.VISIBLE));protections.addView(protectionText);
+        button(protections,"查看Android官方受限设置说明",v->openUrl(BrandGuides.RESTRICTED_URL));
+        button(protections,"查看官方高级保护说明",v->openUrl(BrandGuides.PROTECTION_URL));
         LinearLayout apps=card(content,"常见应用检查");appChecks=text("",16,INK);apps.addView(appChecks);
         gap(apps,10);apps.addView(text("百度与百度网盘是不同应用。分身、工作资料或兼容环境中的应用可能不在当前列表；请确认本工具与目标应用处在同一环境。未出现广告不算跳过失败。",16,MUTED));
         button(apps,"将上述已安装应用加入处理",v->addCommonApps());
@@ -119,7 +136,7 @@ public final class SetupHelpActivity extends Activity {
     }
 
     private void addFamily(RadioGroup group,int id,DeviceGuidePolicy.Family value){RadioButton b=new RadioButton(this);b.setId(id);b.setText(DeviceGuidePolicy.familyLabel(value));b.setTextSize(16);b.setTextColor(INK);b.setMinHeight(dp(48));group.addView(b);}
-    private void refreshGuide(){if(guide==null)return;guide.setText(DeviceGuidePolicy.guide(vendor,family,topic));official.setVisibility(DeviceGuidePolicy.officialUrl(vendor,family,topic).isEmpty()?View.GONE:View.VISIBLE);}
+    private void refreshGuide(){if(familyContainer!=null)familyContainer.setVisibility(vendor==DeviceGuidePolicy.Vendor.HUAWEI?View.VISIBLE:View.GONE);if(guide==null)return;guide.setText("指引品牌："+DeviceGuidePolicy.vendorLabel(vendor)+(manualVendor?"（手动查看）":"（自动识别）")+"\n路径参考官方资料，本机广告效果仍需实测。\n\n"+DeviceGuidePolicy.guide(vendor,family,topic));official.setVisibility(DeviceGuidePolicy.officialUrl(vendor,family,topic).isEmpty()?View.GONE:View.VISIBLE);official.setText(vendor==DeviceGuidePolicy.Vendor.GOOGLE&&"accessibility".equals(topic)?"受限设置说明（仅提示受限时参考）":(vendor==DeviceGuidePolicy.Vendor.MEIZU||vendor==DeviceGuidePolicy.Vendor.ONEPLUS)&&!"shake".equals(topic)?"查看官网支持入口（菜单需核对）":"用浏览器查看官方路径参考");}
     private void refresh() {
         if(status==null)return;
         serviceState=queryEnabledService();
@@ -164,6 +181,7 @@ public final class SetupHelpActivity extends Activity {
         value.append("品牌/型号：").append(safe(Build.MANUFACTURER)).append(" / ").append(safe(Build.BRAND)).append(" / ").append(safe(Build.MODEL));
         value.append("\nAndroid运行环境：").append(safe(Build.VERSION.RELEASE)).append(" / API ").append(Build.VERSION.SDK_INT);
         value.append("\n系统完整版本：请本人从关于本机补充");
+        value.append("\n当前查看指引：").append(DeviceGuidePolicy.vendorLabel(vendor)).append(manualVendor?"（手动，仅为指引选择）":"（自动）");
         if(vendor==DeviceGuidePolicy.Vendor.HUAWEI)value.append("\n手动家族选择：").append(DeviceGuidePolicy.familyLabel(family));
         value.append("\n本工具版本：").append(ownVersion).append("\n自动跳过：").append(Prefs.enabled(this)?"已开":"未开");
         value.append("\n").append(DeviceGuidePolicy.serviceLabel(serviceState)).append("\n服务实际连接：").append(SkipService.isConnected()?"已连接":"未连接");
@@ -171,8 +189,9 @@ public final class SetupHelpActivity extends Activity {
         try{ClipboardManager clipboard=(ClipboardManager)getSystemService(CLIPBOARD_SERVICE);if(clipboard==null)throw new IllegalStateException();clipboard.setPrimaryClip(ClipData.newPlainText("开屏清净自检摘要",value.toString()));notice.setText("已复制到系统剪贴板，没有自动上传或发送。请本人检查后再决定是否分享。");}
         catch(RuntimeException unavailable){notice.setText("无法写入剪贴板；可根据上方内容手动记录，不影响设置。");}
     }
-    private void openSettings(Intent intent,String fallback){try{startActivity(intent);}catch(RuntimeException unavailable){notice.setText("无法打开该系统入口。请手动"+fallback);}}
-    private void openOfficial(){String url=DeviceGuidePolicy.officialUrl(vendor,family,topic);if(url.isEmpty())return;try{startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(url)));}catch(RuntimeException unavailable){notice.setText("没有可用浏览器，请手动打开："+url);notice.setTextIsSelectable(true);}}
+    private void openSettings(Intent intent,String fallback){try{startActivity(intent);}catch(RuntimeException unavailable){String message="无法打开该系统入口。请手动在"+fallback;notice.setText(message);Toast.makeText(this,message,Toast.LENGTH_LONG).show();}}
+    private void openOfficial(){String url=DeviceGuidePolicy.officialUrl(vendor,family,topic);if(!url.isEmpty())openUrl(url);}
+    private void openUrl(String url){try{startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(url)));}catch(RuntimeException unavailable){notice.setText("没有可用浏览器，请手动打开："+url);notice.setTextIsSelectable(true);}}
     private static String safe(String value){if(value==null||value.isEmpty())return "未知";String line=value.replaceAll("[\\r\\n\\t\\p{Cntrl}]"," ");return line.length()>100?line.substring(0,100):line;}
     private static final class AppCheck {
         final String pkg,label,version;final boolean installed,selected;

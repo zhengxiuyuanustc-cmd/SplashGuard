@@ -1,4 +1,5 @@
 import org.splashguard.app.DeviceGuidePolicy;
+import org.splashguard.app.BrandGuides;
 import org.splashguard.app.DeviceGuidePolicy.Family;
 import org.splashguard.app.DeviceGuidePolicy.Vendor;
 import org.splashguard.app.DeviceGuidePolicy.ServiceState;
@@ -13,7 +14,7 @@ public final class DeviceGuidePolicyTest {
         check("Chinese Honor brand",DeviceGuidePolicy.vendor("华为","荣耀")==Vendor.HONOR);
         check("Huawei independent",DeviceGuidePolicy.vendor("HUAWEI","HUAWEI")==Vendor.HUAWEI);
         check("null device unknown",DeviceGuidePolicy.vendor(null,null)==Vendor.OTHER);
-        check("other brand independent",DeviceGuidePolicy.vendor("Google","google")==Vendor.OTHER);
+        check("other brand independent",DeviceGuidePolicy.vendor("Sony","sony")==Vendor.OTHER);
         check("restore explicit 4 family",DeviceGuidePolicy.restoreFamily("HARMONY_4")==Family.HARMONY_4);
         check("restore explicit 5 family",DeviceGuidePolicy.restoreFamily("HARMONY_5_PLUS")==Family.HARMONY_5_PLUS);
         check("Android17 is not Harmony",DeviceGuidePolicy.restoreFamily("Android 17")==Family.UNKNOWN);
@@ -46,6 +47,40 @@ public final class DeviceGuidePolicyTest {
         check("enabled is a query state",DeviceGuidePolicy.serviceLabel(ServiceState.ON).contains("系统查询"));
         check("query off preserves actual settings caveat",DeviceGuidePolicy.serviceLabel(ServiceState.OFF).contains("实际界面"));
         check("query failure stays unknown",DeviceGuidePolicy.serviceLabel(ServiceState.UNKNOWN).contains("无法确认"));
+        check("Xiaomi independent",DeviceGuidePolicy.vendor("XIAOMI","xiaomi")==Vendor.XIAOMI);
+        check("Redmi routes to scoped Xiaomi examples",DeviceGuidePolicy.vendor("unknown","Redmi")==Vendor.XIAOMI);
+        check("Poco routes without guessing firmware",DeviceGuidePolicy.vendor("unknown","POCO")==Vendor.XIAOMI);
+        check("realme before OEM OPPO",DeviceGuidePolicy.vendor("OPPO","realme")==Vendor.REALME);
+        check("OnePlus before OEM OPPO",DeviceGuidePolicy.vendor("OPPO","OnePlus")==Vendor.ONEPLUS);
+        check("iQOO before OEM vivo",DeviceGuidePolicy.vendor("vivo","iQOO")==Vendor.IQOO);
+        check("OPPO independent",DeviceGuidePolicy.vendor("OPPO","oppo")==Vendor.OPPO);
+        check("vivo independent",DeviceGuidePolicy.vendor("vivo","vivo")==Vendor.VIVO);
+        check("Samsung independent",DeviceGuidePolicy.vendor("SAMSUNG","samsung")==Vendor.SAMSUNG);
+        check("Meizu independent",DeviceGuidePolicy.vendor("MEIZU","meizu")==Vendor.MEIZU);
+        check("Pixel independent",DeviceGuidePolicy.vendor("Google","google")==Vendor.GOOGLE);
+        check("Chinese Xiaomi",DeviceGuidePolicy.vendor("小米","红米")==Vendor.XIAOMI);
+        check("Chinese OnePlus priority",DeviceGuidePolicy.vendor("OPPO","一加")==Vendor.ONEPLUS);
+        check("unknown ROM is not inferred by Android number",DeviceGuidePolicy.vendor("Android 17","generic")==Vendor.OTHER);
+        check("automatic guide is not manual hardware assertion",DeviceGuidePolicy.restoreGuideVendor("auto")==null);
+        check("unknown saved vendor falls back to auto",DeviceGuidePolicy.restoreGuideVendor("ColorOS 16")==null);
+        check("saved guide uses explicit name",DeviceGuidePolicy.restoreGuideVendor("IQOO")==Vendor.IQOO);
+        check("enum ordinal not accepted as identity",DeviceGuidePolicy.restoreGuideVendor("2")==null);
+        check("no missing vendor assertion",DeviceGuidePolicy.restoreGuideVendor(null)==null);
+        check("shake topic retained",DeviceGuidePolicy.topic("shake").equals("shake"));
+        check("vivo dedicated guide keeps version scope",DeviceGuidePolicy.guide(Vendor.VIVO,Family.HARMONY_5_PLUS,"shake").contains("X100 Ultra")&&DeviceGuidePolicy.guide(Vendor.VIVO,Family.HARMONY_5_PLUS,"shake").contains("仅开屏时禁止"));
+        check("iQOO does not assert every firmware supported",DeviceGuidePolicy.guide(Vendor.IQOO,Family.UNKNOWN,"shake").contains("需到机上核对"));
+        check("Flyme proof remains historical scoped version",DeviceGuidePolicy.guide(Vendor.MEIZU,Family.UNKNOWN,"shake").contains("8.1.9.0A"));
+        check("unverified Xiaomi sensor setting not invented",DeviceGuidePolicy.officialUrl(Vendor.XIAOMI,Family.UNKNOWN,"shake").isEmpty());
+        check("unverified Samsung sensor setting not invented",DeviceGuidePolicy.officialUrl(Vendor.SAMSUNG,Family.UNKNOWN,"shake").isEmpty());
+        check("vivo shake source is separate from background",!DeviceGuidePolicy.officialUrl(Vendor.VIVO,Family.UNKNOWN,"shake").equals(DeviceGuidePolicy.officialUrl(Vendor.VIVO,Family.UNKNOWN,"background")));
+        check("newer platforms do not get ordinary restricted-menu promise",BrandGuides.platformHelp(37).contains("与普通受限设置不相同"));
+        check("old platforms not falsely assigned Android13 menu",!BrandGuides.platformHelp(26).contains("应用信息 → 更多 → 允许受限设置"));
+        check("protection is never inferred from API",BrandGuides.platformHelp(37).contains("没有读取该模式状态"));
+        check("unknown brand remains no exact setup source",DeviceGuidePolicy.officialUrl(Vendor.OTHER,Family.UNKNOWN,"background").isEmpty());
+        String oneplus=DeviceGuidePolicy.guide(Vendor.ONEPLUS,Family.HARMONY_5_PLUS,"background");
+        check("OnePlus doesn't inherit stale Harmony family",!oneplus.contains("系统自动管理")&&oneplus.contains("本人确认是OxygenOS14"));
+        String meizu=DeviceGuidePolicy.guide(Vendor.MEIZU,Family.UNKNOWN,"background");
+        check("unknown Meizu route stays search-first",meizu.contains("尚未核实")&&meizu.contains("搜索"));
         System.out.println("DeviceGuidePolicy: "+passed+" checks passed");
     }
 }

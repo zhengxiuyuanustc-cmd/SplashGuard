@@ -147,7 +147,8 @@ public final class MainActivity extends Activity {
     }
     private void renderShake(){
         pageHeading("防摇一摇广告","只针对广告设置，不关闭手机全局方向感应。");
-        LinearLayout bili=card(MINT);title(bili,"哔哩哔哩广告专用开关",22);body(bili,"已核对：哔哩哔哩 9.15.0。其他版本以实际设置页面为准。");
+        LinearLayout local=card(MINT);title(local,"本机防摇一摇选项",22);body(local,"部分OriginOS、Flyme版本提供仅在开屏时限制动作传感器的选项。先查看本机指引；没有专用选项时，不关闭整体方向感应。");button(local,"查看本机广告专用设置",true,v->SetupHelpActivity.open(this,"shake"));
+        LinearLayout bili=card();title(bili,"哔哩哔哩广告专用开关",22);body(bili,"已核对：哔哩哔哩 9.15.0。其他版本以实际设置页面为准。");
         gap(bili,14);TextView path=text("我的 → 设置 → 隐私权限设置\n关闭“允许广告访问传感器”",18,GREEN);path.setTypeface(null,Typeface.BOLD);bili.addView(path);button(bili,"查看B站设置步骤",true,v->biliGuide());
         body(bili,"该开关由B站保存，请到B站核对。阅读本页或启用自动跳过，都不代表已经关闭了摇一摇跳转。");
         LinearLayout others=card();title(others,"其他应用与本机设置",21);body(others,Build.MANUFACTURER+" "+Build.MODEL+" · Android "+Build.VERSION.RELEASE);
@@ -224,7 +225,7 @@ public final class MainActivity extends Activity {
             wizardSummary=text("",17,GREEN);gap(c,16);c.addView(wizardSummary);button(c,"了解并前往无障碍设置",true,v->disclosure());gap(c,12);addAutoSwitch(c);body(c,"你可稍后设置。未授权、未选应用或未启用时，自动跳过不会运行。");
         }else if(wizardStep==3){
             title(c,"防摇一摇广告",23);body(c,"B站 9.15.0：我的 → 设置 → 隐私权限设置 → 关闭“允许广告访问传感器”。只改广告专用选项，保留正常方向感应。");
-            button(c,"查看B站防摇一摇步骤",true,v->biliGuide());body(c,"设置是否完成须到B站核对；本工具不能读取或确认该开关。其他应用先查找自己的广告设置。");
+            button(c,"查看本机防摇一摇选项",true,v->SetupHelpActivity.open(this,"shake"));button(c,"查看B站防摇一摇步骤",false,v->biliGuide());body(c,"设置是否完成须到B站核对；本工具不能读取或确认该开关。其他应用先查找自己的广告设置。");
             button(c,"查看本机后台运行指引",false,v->backgroundGuide());disclosureSection(c,"setup-background","为什么还要检查后台设置","部分手机会在划掉卡片、清理后台、省电或重启后关闭无障碍服务。按本机指引设置后，返回首页确认已连接，并实际打开所选应用验证。打开指引不等于已经完成配置。");
         }else{
             title(c,"当前设置结果",21);wizardSummary=text("",17,GREEN);gap(c,14);c.addView(wizardSummary);body(c,"完成向导不会自动授权或开启功能。防摇一摇广告的应用内开关仍需本人核对。");statusCard();
@@ -233,7 +234,7 @@ public final class MainActivity extends Activity {
         button(content,wizardStep==OnboardingPolicy.STEP_COUNT-1?"完成，进入首页":wizardStep==0?"开始设置":"下一步",true,v->{if(wizardStep==OnboardingPolicy.STEP_COUNT-1)finishWizard();else moveWizard(1);});
         if(wizardStep!=OnboardingPolicy.STEP_COUNT-1)button(content,"稍后设置，先看首页",false,v->finishWizard());
     }
-    private boolean huawei(){return Build.MANUFACTURER.toLowerCase(Locale.ROOT).contains("huawei");}
+    private boolean huawei(){return DeviceGuidePolicy.vendor(Build.MANUFACTURER,Build.BRAND)==DeviceGuidePolicy.Vendor.HUAWEI;}
     private void backgroundGuide(){SetupHelpActivity.open(this,"background");}
     private void openAppSettings(){try{startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,Uri.fromParts("package",getPackageName(),null)));}catch(RuntimeException ignored){openSettings();}}
     private void biliGuide(){new AlertDialog.Builder(this).setTitle("B站防摇一摇广告")

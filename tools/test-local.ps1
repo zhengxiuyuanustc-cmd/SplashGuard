@@ -11,7 +11,7 @@ if($JdkRoot){
     $javac=Join-Path $JdkRoot "bin/javac$suffix"
 }
 # All files here are Android-independent. Keep local and CI checks on the same list.
-$policies=@('AdRules','SkipSession','OnboardingPolicy','CandidateSelection','RuleSpec','RuleEvaluator','ActionPolicy','OfflineRuleStore','DiagnosticSample','RuleJsonCodec','DeviceGuidePolicy','RuleCatalog','RuleRuntime')
+$policies=@('AdRules','SkipSession','OnboardingPolicy','CandidateSelection','RuleSpec','RuleEvaluator','ActionPolicy','OfflineRuleStore','DiagnosticSample','RuleJsonCodec','DeviceGuidePolicy','BrandGuides','RuleCatalog','RuleRuntime')
 $checks=@('AdRulesTest','SkipSessionTest','OnboardingPolicyTest','CandidateSelectionTest','RuleEvaluatorTest','ActionPolicyTest','OfflineRuleStoreTest','DiagnosticSampleTest','RuleJsonCodecTest','DeviceGuidePolicyTest','RuleCatalogTest','RuleRuntimeTest')
 $sources=@($policies | ForEach-Object {Join-Path $project "app/src/main/java/org/splashguard/app/$_.java"})+@($checks | ForEach-Object {Join-Path $project "tests/$_.java"})
 foreach($source in $sources){if(!(Test-Path -LiteralPath $source)){throw "Missing safety check source: $source"}}
