@@ -1,6 +1,6 @@
 # 标准Gradle构建与Android lint验证
 
-本页说明新增的[Android Gradle检查流程](../.github/workflows/android-gradle.yml)。首次提交d1873a2的标准assembleDebug成功，lintDebug因API26默认样式使用API27导航栏属性失败（[原始检查](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40291633154)）。现按values/values-v27分流，保留最低API26；补齐新版备份排除声明，未跳过lint或降低严重级别。修正后的结果须以新提交实际检查为准，不能将SDK备用脚本或纯Java检查写成标准Gradle已经通过。发布后的实际状态应查看对应提交的GitHub检查，而不是推断历史结果覆盖新源码。
+本页说明新增的[Android Gradle检查流程](../.github/workflows/android-gradle.yml)。首次提交d1873a2的标准assembleDebug成功，lintDebug因API26默认样式使用API27导航栏属性失败（[原始检查](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40291633154)）。现按values/values-v27分流，保留最低API26；补齐新版备份排除声明，未跳过lint或降低严重级别。修正后的准确源码提交`931f2b9489f5d4775958d74fb4ee68c479deb4c1`已取得[标准构建与lint成功结果](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40294858713)；job121478324825的assembleDebug与lintDebug同一步成功，[纯Java检查](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40294858791)也成功。它们分别是实际远程结果，不能用SDK备用构建代替。发布后的实际状态应查看对应提交的GitHub检查，而不是推断历史结果覆盖新源码。
 
 ## 运行内容
 

@@ -10,7 +10,7 @@
 - 新增用户先准备才暂存的有限脱敏节点夹具，最多等2分钟、固定下一所选应用的短暂开屏；不会延长自动点击时段。离线重新运行真实匹配器与身份冲突判断，区别于旧诊断结论解释，不执行Android动作。
 - 加入标准Android Gradle assembleDebug+lintDebug检查，不放宽lint或使用发行密钥；运行结果以对应提交检查为准。
 - 核实华为当前Kit不支持节点/屏幕查询及旧接口废弃，明确原生鸿蒙自动跳过暂不支持；按用户不损害正常体感的约束，方向权限整App开关只列版本限定参考，不作为默认关闭方案。
-- 797项纯Java检查、SDK35整包与v2/v3签名通过。新UI、真实广告、多机型、纯血鸿蒙与正式发行未验收；公开下载仍0.1.7。详细进度见docs/IMPLEMENTATION_STATUS.md。
+- 797项纯Java检查、SDK35整包与v2/v3签名通过；源码931f2b9的[标准Gradle与lint](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40294858713)、[纯Java CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40294858791)也通过。新UI、真实广告、多机型、纯血鸿蒙与正式发行未验收；公开下载仍0.1.7。详细进度见docs/IMPLEMENTATION_STATUS.md。
 
 ## 0.1.10 · 多品牌指引候选，APK未公开（2026-10-26）
 

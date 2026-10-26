@@ -1,6 +1,6 @@
 # 开屏清净 · SplashGuard
 
-本地0.1.11 / versionCode 12候选继续补齐推进清单：应用选择备份与暂停恢复、预览后的单组规则暂停，以及用户主动准备的脱敏节点夹具和真实离线匹配回放。共享15个纯Java程序797项与SDK35完整构建/签名通过；标准Gradle与lint检查新增独立工作流，发布后按对应提交检查，不能把SDK构建当作Gradle通过。新增本人确认的“仅查看设置指引”模式，处理系统明确不支持无障碍时的反复授权提示；此模式不代表原生鸿蒙已支持。新UI和多机型实机未验收，官网默认仍0.1.7。
+本地0.1.11 / versionCode 12候选继续补齐推进清单：应用选择备份与暂停恢复、预览后的单组规则暂停，以及用户主动准备的脱敏节点夹具和真实离线匹配回放。共享15个纯Java程序797项与SDK35完整构建/签名通过；准确源码提交`931f2b9489f5d4775958d74fb4ee68c479deb4c1`的[标准Gradle构建与lint](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40294858713)、[纯Java检查](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40294858791)均通过。新增本人确认的“仅查看设置指引”模式，处理系统明确不支持无障碍时的反复授权提示；此模式不代表原生鸿蒙已支持。新UI和多机型实机未验收，官网默认仍0.1.7。
 
 **当前不支持纯血鸿蒙原生自动跳过。** 华为当前公开Kit明确限制界面节点查询，旧相关接口有废弃标记；APK兼容运行和鸿蒙指南不代表原生支持。见[原生核验](docs/HARMONY_NATIVE_FEASIBILITY.md)及[推进清单实际状态](docs/IMPLEMENTATION_STATUS.md)。
 
@@ -84,7 +84,7 @@ gradlew.bat :app:assembleDebug
 sh gradlew :app:assembleDebug
 ```
 
-首次构建下载工具需要联网；App运行识别功能不需要联网。标准Gradle路径曾因官方发行包下载超时未进入编译，尚无通过记录。已有预览包通过Google SDK 35 / Build Tools 35.0.0和JDK 21的本机构建路径验证：
+首次构建下载工具需要联网；App运行识别功能不需要联网。早期本地Gradle下载曾超时；目前源码提交931f2b9已通过远程标准assembleDebug与lintDebug（见[验证记录](docs/GRADLE_VALIDATION.md)）。本地预览包另通过Google SDK 35 / Build Tools 35.0.0和JDK 21的本机构建路径验证：
 
 ```powershell
 .\tools\build-local.ps1 -SdkRoot C:\Android\Sdk -JdkRoot C:\Java\jdk-21 -OutDir C:\build\SplashGuard

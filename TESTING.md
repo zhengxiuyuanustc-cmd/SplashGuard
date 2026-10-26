@@ -6,7 +6,7 @@
 
 ## 本地0.1.11候选：备份、规则暂停与真实离线回放（2026-10-26，APK未公开）
 
-完整接线后15个共享纯Java检查共797项通过：继承630项，另增ConfigBackup77、RuleReplay49、ReplayCaptureSession29，以及DeviceGuidePolicy新增12项模式边界（65→77）。SDK35整包Java/资源/D8/对齐/v2v3签名通过，Manifest仍无uses-permission。新标准Gradle工作流会执行assembleDebug和lintDebug，是否通过须看本候选具体提交的远程检查；此处不能预写成功。
+完整接线后15个共享纯Java检查共797项通过：继承630项，另增ConfigBackup77、RuleReplay49、ReplayCaptureSession29，以及DeviceGuidePolicy新增12项模式边界（65→77）。SDK35整包Java/资源/D8/对齐/v2v3签名通过，Manifest仍无uses-permission。源码`931f2b9489f5d4775958d74fb4ee68c479deb4c1`的[标准Gradle assembleDebug与lintDebug](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40294858713)和[纯Java检查](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40294858791)均成功。首次lint指出API27导航栏属性在API26默认样式使用，现按资源版本拆分；未提高最低API26或忽略lint错误。显式排除云备份和设备迁移，不代表所有OEM迁移行为已实测。
 
 本地候选APK为115319字节，SHA-256 `bdd641e61bbc3a5de62c17b1c68be56b27fc02a60841d26b3b433e359ef3d639`，沿用原开发证书`48bba90fb630f2b95d30fe7d3420dd7e884fefbaac842f0416424ba42d2517c4`。此校验值只对应本地SDK构建包，不代表标准Gradle临时调试签名产物、实机效果或原生鸿蒙支持。
 
