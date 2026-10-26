@@ -4,6 +4,14 @@
 
 本地SDK构建、验签及48项规则+40项会话+11项引导检查共99项通过；该代码提交的[push CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40172746441)和[PR CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40172749917)均成功。CI仅运行纯Java检查，不代表标准Gradle、Android界面或广告效果均已验证。用户手动确认App可打开，修正后重复点选只出现一个窗口，关闭后能重开；设备随后断开，最新候选未完成ADB版本和APK哈希回读。本轮核心沿用0.1.6，没有新增真实广告或物理晃动验收，该0.1.7阶段未取得标准Gradle成功记录。 下方0.1.6广告和安装回读仅是历史证据。
 
+## 本地0.1.12候选：其他手机的兼容报告（2026-10-26，未公开APK）
+
+16个共享纯Java程序共862项通过：0.1.11基数797，加兼容报告53项、会话中断／未知前台边界12项（SkipSession55→67）。报告回归覆盖实际连接与列表差异、未知值、模式/规则/选择优先级、四应用白名单、不可变快照、Unicode控制与长度，状态就绪不冒充广告关闭。
+
+标准Android检查已配置debug及未签名release构建与对应lint，新提交实际结果待远程执行。本地SDK35的UnsignedValidation已完成资源、全部Java、D8、对齐和862项检查，Manifest明确不可调试、min26/target35且无uses-permission。未签名验证文件115367字节，SHA256 `cf2a8e5ea2ad3219b9681de6c246953824c2dc36b1075703a4c65da80ad27062`；它不是可安装签名产物。本候选先完成不接触密钥的未签名验证；未签名包不可安装或公开分发。可安装的非调试测试包需要维护者明确确认本次签名，并按现有证书配置完成签名和最终校验，当前尚未执行。不会把不调试等同于获得系统授权、原生支持或正式密钥治理。
+
+新报告页及服务边界修正未在其他机型/真实广告/文件提供者/长期后台验证；没有要求用户重复已解决的本机广告测试。0.1.11的安装和用户模式界面确认仍属该版本历史证据。更多机型参见docs/COMPATIBILITY_CASES.md。
+
 ## 本地0.1.11候选：备份、规则暂停与真实离线回放（2026-10-26，APK未公开）
 
 完整接线后15个共享纯Java检查共797项通过：继承630项，另增ConfigBackup77、RuleReplay49、ReplayCaptureSession29，以及DeviceGuidePolicy新增12项模式边界（65→77）。SDK35整包Java/资源/D8/对齐/v2v3签名通过，Manifest仍无uses-permission。源码`931f2b9489f5d4775958d74fb4ee68c479deb4c1`的[标准Gradle assembleDebug与lintDebug](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40294858713)和[纯Java检查](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40294858791)均成功。首次lint指出API27导航栏属性在API26默认样式使用，现按资源版本拆分；未提高最低API26或忽略lint错误。显式排除云备份和设备迁移，不代表所有OEM迁移行为已实测。

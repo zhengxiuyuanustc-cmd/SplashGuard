@@ -1,13 +1,15 @@
 # 标准Gradle构建与Android lint验证
 
-本页说明新增的[Android Gradle检查流程](../.github/workflows/android-gradle.yml)。首次提交d1873a2的标准assembleDebug成功，lintDebug因API26默认样式使用API27导航栏属性失败（[原始检查](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40291633154)）。现按values/values-v27分流，保留最低API26；补齐新版备份排除声明，未跳过lint或降低严重级别。修正后的准确源码提交`931f2b9489f5d4775958d74fb4ee68c479deb4c1`已取得[标准构建与lint成功结果](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40294858713)；job121478324825的assembleDebug与lintDebug同一步成功，[纯Java检查](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40294858791)也成功。它们分别是实际远程结果，不能用SDK备用构建代替。发布后的实际状态应查看对应提交的GitHub检查，而不是推断历史结果覆盖新源码。
+0.1.12流程扩展了未签名release构建和lintRelease，新源码结果仍须关联准确检查。下述931f2b9成功记录属于0.1.11原有debug/lintDebug检查，不能替代新增release任务的实际执行。
+
+本页说明已有的[Android Gradle检查流程](../.github/workflows/android-gradle.yml)。首次提交d1873a2的标准assembleDebug成功，lintDebug因API26默认样式使用API27导航栏属性失败（[原始检查](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40291633154)）。现按values/values-v27分流，保留最低API26；补齐新版备份排除声明，未跳过lint或降低严重级别。修正后的准确源码提交`931f2b9489f5d4775958d74fb4ee68c479deb4c1`已取得[标准构建与lint成功结果](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40294858713)；job121478324825的assembleDebug与lintDebug同一步成功，[纯Java检查](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40294858791)也成功。它们分别是实际远程结果，不能用SDK备用构建代替。发布后的实际状态应查看对应提交的GitHub检查，而不是推断历史结果覆盖新源码。
 
 ## 运行内容
 
 流程在推送、Pull Request或本人手动运行时，使用GitHub托管的Ubuntu24.04环境执行：
 
 ```sh
-bash ./gradlew --no-daemon :app:assembleDebug :app:lintDebug
+bash ./gradlew --no-daemon :app:assembleDebug :app:assembleRelease :app:lintDebug :app:lintRelease
 ```
 
 先准备Android SDK Platform35及Build-Tools34.0.0、35.0.0，再打印Java与Gradle版本。Gradle使用仓库Wrapper8.9及其分发包SHA-256校验，不使用runner预装的其他Gradle，也不为下载失败跳过哈希或证书验证。
@@ -18,10 +20,10 @@ SDK准备使用官方[sdkmanager命令](https://developer.android.com/tools/sdkm
 
 ## 结果如何解释
 
-- `assembleDebug`成功表示这次提交通过标准Android Gradle构建；不代表真机运行、广告跳过、长期后台或原生鸿蒙支持已经验证。
-- `lintDebug`按项目默认严重级别执行，没有`continue-on-error`、跳过检查、忽略错误或自动生成基线。若失败，应看具体错误并修正代码或配置；不能只移除lint任务换取绿灯。
-- 若失败时存在lint文本报告，流程将其打印到日志，便于审阅。报告可能涉及源码中的设置与资源路径，但不包含手机抓取、用户账号或私人设备记录，因为该流程不连接手机或读取这些数据。
-- 没有接入模拟器、Android仪器测试、真广告测试或多机型矩阵。纯Java策略检查仍由独立流程维护，二者的证据不互相替代。
+- `assembleDebug`／`assembleRelease`成功表示这次提交通过标准Android Gradle构建；不代表真机运行、广告跳过、长期后台或原生鸿蒙支持已经验证。
+- `lintDebug`／`lintRelease`按项目默认严重级别执行，没有`continue-on-error`、跳过检查、忽略错误或自动生成基线。若失败，应看具体错误并修正代码或配置；不能只移除lint任务换取绿灯。
+- 若失败时存在debug或release的lint文本报告，流程将其打印到日志，便于审阅。报告可能涉及源码中的设置与资源路径，但不包含手机抓取、用户账号或私人设备记录，因为该流程不连接手机或读取这些数据。
+- 标准release未配置维护者签名，生成的是未签名验证包，不能安装或直接分发。没有接入模拟器、Android仪器测试、真广告测试或多机型矩阵。纯Java策略检查仍由独立流程维护，二者的证据不互相替代。
 
 ## 权限与产物
 

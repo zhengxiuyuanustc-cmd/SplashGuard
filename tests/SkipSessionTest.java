@@ -139,6 +139,48 @@ public final class SkipSessionTest {
         s.reset();
         check("an explicit screen reset allows a new bounded session", s.observe("com.zhihu.android", 20000)
                 && s.deadline() == 32000 && s.begin("known", 20001) != null);
+        // Missing package metadata must preserve a previously observed foreground session.
+        s = start(100);
+        first = s.begin("skip", 200);
+        s.accepted(first);s.completed(first);
+        retry = s.begin("skip", 900);
+        originalDeadline = s.deadline();
+        before = snapshot(s);
+        check("unknown foreground cannot cancel an in-flight retry", !s.observe(null, 1000)
+                && s.current(retry) && before.equals(snapshot(s)));
+        check("empty foreground cannot replenish a spent budget", !s.observe("", 1100)
+                && s.attempts() == 2 && s.deadline() == originalDeadline && before.equals(snapshot(s)));
+        s.cancelled(retry); // An unverified gesture result is discarded, without a new window.
+        check("unknown foreground after expiry cannot renew", !s.observe(null, 20000)
+                && !s.observe("", 20001) && s.deadline() == originalDeadline && s.attempts() == 2);
+        check("same app reappearing after unknown stays expired", !s.observe("tv.danmaku.bili", 20002)
+                && s.begin("skip", 20002) == null && !s.active(20002));
+        check("a confirmed different app still changes foreground", s.observe("com.zhihu.android", 21000)
+                && s.deadline() == 33000 && s.attempts() == 0);
+
+        // Feedback interruption is a stop, never an explicit screen/application reset.
+        s = start(100);
+        first = s.begin("skip", 200);
+        s.accepted(first);s.completed(first);
+        retry = s.begin("skip", 900);
+        s.accepted(retry);
+        originalDeadline = s.deadline();
+        check("interruption scenario has spent both attempts", retry != null && s.attempts() == 2 && s.busy());
+        s.stop(); // SkipService.onInterrupt uses stop rather than reset.
+        check("feedback interruption preserves exhausted opening budget", s.deadline() == originalDeadline
+                && s.attempts() == 2 && "tv.danmaku.bili".equals(s.packageName()) && !s.busy());
+        before = snapshot(s);
+        check("interrupted result cannot report or mutate", !s.completed(retry) && !s.cancelled(retry)
+                && !s.accepted(retry) && !s.recordOnce(retry) && before.equals(snapshot(s)));
+        check("same-app event after interruption cannot replenish time or actions", !s.observe("tv.danmaku.bili", 1000)
+                && s.deadline() == originalDeadline && s.attempts() == 2 && s.begin("skip", 1000) == null);
+        s.stop(); // A second interruption still must not be interpreted as a new launch.
+        check("repeated interruption does not reopen an expired foreground", !s.observe("tv.danmaku.bili", 20000)
+                && s.deadline() == originalDeadline && s.attempts() == 2 && !s.active(20000));
+        check("confirmed departure starts another bounded session", s.observe("com.android.launcher", 21000)
+                && s.deadline() == 33000 && s.attempts() == 0);
+        check("return after real departure permits a new opening", s.observe("tv.danmaku.bili", 22000)
+                && s.deadline() == 34000 && s.begin("skip", 22001) != null);
         System.out.println("PASS " + passed + " session-state cases");
     }
 }

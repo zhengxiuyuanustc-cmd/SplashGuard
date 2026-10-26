@@ -14,7 +14,7 @@ git switch --detach origin/feature/simple-ui-onboarding
 git switch -c feature/short-description
 ```
 
-当前0.1.9候选的工作基线是 `origin/feature/simple-ui-onboarding`，当前 `main` 仍为旧版本。先显式检出工作基线，再创建你自己的贡献分支；不要把默认克隆得到的 `main` 当作最新候选。如果该工作分支尚未出现在远端，说明维护者还未推送此次候选，请等待分支公开后再按上述命令继续。公开安装包与网页上传状态以实际发行记录为准。
+当前0.1.12候选的工作基线是 `origin/feature/simple-ui-onboarding`，当前 `main` 仍为旧版本。先显式检出工作基线，再创建你自己的贡献分支；不要把默认克隆得到的 `main` 当作最新候选。如果该工作分支尚未出现在远端，说明维护者还未推送此次候选，请等待分支公开后再按上述命令继续。公开安装包与网页上传状态以实际发行记录为准。
 
 Android Studio 可直接打开项目根目录。命令行构建前，将 `JAVA_HOME` 指向你的 JDK 21，配置自己的 Android SDK 路径。可使用本机环境变量或被 Git 忽略的 `local.properties`；不要提交个人电脑路径。
 
@@ -30,11 +30,11 @@ macOS / Linux：
 ./gradlew :app:assembleDebug
 ```
 
-输出通常位于 `app/build/outputs/apk/debug/`。首次运行会下载 Wrapper 与构建依赖。Wrapper 已配置分发包 SHA-256；不要为绕过下载错误关闭证书或哈希验证。维护过程曾遇到 Gradle 分发包下载超时，已有验证记录不代表标准 Gradle 构建已成功；本轮 CI 也只运行下述纯 Java 检查。请如实报告自己的构建命令、版本和结果。
+输出通常位于 `app/build/outputs/apk/debug/`。首次运行会下载 Wrapper 与构建依赖。Wrapper 已配置分发包 SHA-256；不要为绕过下载错误关闭证书或哈希验证。维护过程曾遇到 Gradle 分发包下载超时，历史下载失败不覆盖后来通过的0.1.11标准构建，新增0.1.12任务仍须看对应提交；现有独立CI另执行debug/未签名release构建及对应lint，实际结果见[标准验证](GRADLE_VALIDATION.md)。请如实报告自己的构建命令、版本和结果。
 
 ## 先运行不依赖手机的检查
 
-本地0.1.9候选继续使用不依赖Android的纯Java策略检查，覆盖原规则、有限会话、引导、多候选、版本/祖先规则、动作策略、受限文件模型/解析、最小样本及机型分流。新增统一入口由SDK构建与CI复用，避免各处名单不一致：
+本地0.1.12候选继续使用不依赖Android的纯Java策略检查，覆盖原规则、有限会话、引导、多候选、版本/祖先规则、动作策略、受限文件模型/解析、最小样本及机型分流。新增统一入口由SDK构建与CI复用，避免各处名单不一致：
 
 ```powershell
 .\tools\test-local.ps1 -JdkRoot "C:\Program Files\Java\jdk-21" -OutDir ".\build\pure-tests"
@@ -42,7 +42,7 @@ macOS / Linux：
 
 `-JdkRoot`可使用自己的JDK目录；已正确设置`JAVA_HOME`时可省略。`-OutDir`省略时使用项目`build/pure-tests`。脚本内列出的源码和测试类是当前完整清单；新增策略类时需更新清单。非Windows环境可使用同一清单的`javac -encoding UTF-8 -d …`与对应`java -cp …`调用，CI配置记录具体调用环境。
 
-当前0.1.9已完成统一12个程序共598项纯Java检查与SDK 35整包构建/验签；开发分支598项远程纯Java CI亦通过；尚无本候选标准Gradle或实机通过，细目以[TESTING.md](../TESTING.md)为准。公开0.1.7的99项历史CI不覆盖新候选；0.1.8曾通过138项也不能当作最新源码已通过。纯Java检查不证明Android文件选择器、界面、长期后台、覆盖层或真实广告效果已验证。
+当前0.1.12共有16个纯Java程序862项本地通过；实际构建、签名与CI结果以[TESTING.md](../TESTING.md)对应源码为准。公开0.1.7的99项历史CI不覆盖新候选；0.1.8曾通过138项也不能当作最新源码已通过。纯Java检查不证明Android文件选择器、界面、长期后台、覆盖层或真实广告效果已验证。
 
 ## Windows SDK 备用构建
 
@@ -54,7 +54,7 @@ macOS / Linux：
 
 请将路径改为自己的实际安装位置。脚本按目录名选择可用的 SDK Platform 和 Build-Tools；重现某次结果时要记录并核对实际选中的版本，建议使用仅包含所需版本的专用 SDK 目录。
 
-这是开发预览构建路径，不是正式发行签名流程。脚本会启用调试并在输出目录创建或复用本地开发密钥；产生的 APK 不能因此称为稳定正式版，也不能把脚本成功写成标准 Gradle 路线已通过。
+默认Debug模式是开发预览构建路径，不是正式发行签名流程。该模式会启用调试并在输出目录创建或复用本地开发密钥；产生的 APK 不能因此称为稳定正式版，也不能把脚本成功写成标准 Gradle 路线已通过。
 
 ## 签名与可复现性
 
@@ -66,9 +66,9 @@ macOS / Linux：
 
 ## 本地文件与兼容帮助的验证
 
-0.1.9候选的`RuleSpec`/`RuleEvaluator`只接受编译期可信匹配定义；`OfflineRuleStore`/`RuleJsonCodec`接受的外部文件只有更严格的已有规则限制，不能从JSON导入新选择器或执行代码。`RuleData`连接手机私有偏好与运行时，损坏状态不能静默恢复宽松默认。具体格式和撤销语义见[离线规则与诊断](OFFLINE_RULES.md)。
+当前候选的`RuleSpec`/`RuleEvaluator`只接受编译期可信匹配定义；`OfflineRuleStore`/`RuleJsonCodec`接受的外部文件只有更严格的已有规则限制，不能从JSON导入新选择器或执行代码。`RuleData`连接手机私有偏好与运行时，损坏状态不能静默恢复宽松默认。具体格式和撤销语义见[离线规则与诊断](OFFLINE_RULES.md)。
 
-复核文件边界、无副作用取消、坏状态恢复、单步撤销、兼容设置废弃旧回调，以及规则恢复不改变`apps`/`enabled`/引导。最小样本复核不是屏幕回放或广告成功证明。样本只在内存暂存；实际文件导出和系统剪贴板均需用户主动操作。不要在测试输出或仓库加入私人偏好、手机原始树、完整应用列表、截图或签名密钥。
+复核文件边界、无副作用取消、坏状态恢复、单步撤销、兼容设置废弃旧回调，以及规则恢复不改变`apps`/`enabled`/引导。旧13字段最小样本复核不是屏幕回放或广告成功证明；另有真正重跑有限匹配的[节点夹具回放](RULE_REPLAY.md)，不执行Android动作。样本只在内存暂存；实际文件导出和系统剪贴板均需用户主动操作。不要在测试输出或仓库加入私人偏好、手机原始树、完整应用列表、截图或签名密钥。
 
 新增帮助页需验证返回设置保留家族选择与滚动、系统查询未知与未启用分开、服务实际连接单列、荣耀不误入华为路径。官方资料的适用范围不代替机型实测；参见[机型帮助](SETUP_HELP.md)和[官方核验](HUAWEI_COMPATIBILITY.md)。
 
@@ -92,3 +92,5 @@ macOS / Linux：
 | `.github/` | Issue / PR 模板与只读权限的测试 CI |
 
 网站位于单独的 [GitHub Pages 仓库](https://github.com/zhengxiuyuanustc-cmd/xiuyuanzheng.github.io/tree/main/splashguard)。修改网页时也要核对实际下载版本、签名说明及隐私表述，不把源码功能写成已公开安装包已经具备。
+
+0.1.12另有不接触密钥的UnsignedValidation与显式校验证书的NonDebugPreview。前者不可安装／发布；后者的实际签名仍需维护者明确配置，参见[非调试构建](NONDEBUG_PREVIEW.md)。兼容报告只在本人预览后复制／保存，见[字段边界](COMPATIBILITY_REPORT.md)。

@@ -2,7 +2,6 @@ package org.splashguard.app;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ResolveInfo;
@@ -168,19 +167,12 @@ public final class MainActivity extends Activity {
         button(privacy,"清除本地操作记录",false,v->clearRecords());
         LinearLayout control=card();title(control,"随时暂停或停用",21);body(control,"暂时不用：关闭首页“启用自动跳过”。彻底关闭：在系统无障碍设置中关闭本服务；也可直接卸载。");button(control,"打开系统无障碍设置",false,v->openAccessibility());
         disclosureSection(control,"background","后台运行说明","系统电池管理、划掉卡片、一键清理或重启可能关闭第三方无障碍服务。请按本机指引设置后，返回首页确认真实状态。\n\n“关闭首页，保留自动跳过”仅关闭界面；强行停止会停止服务。B站的广告专用开关保存在B站内，不依赖本工具后台维持。");button(control,"查看本机后台指引",false,v->backgroundGuide());
-        LinearLayout tools=card();title(tools,"兼容排查与离线工具",21);body(tools,"分别检查权限、实际服务连接和应用选择。高级工具支持规则限制、撤销与本人决定是否导出的最小判定样本。");button(tools,"检查本机设置与未跳过原因",false,v->SetupHelpActivity.open(this,"no_skip"));button(tools,"离线规则与诊断",false,v->OfflineToolsActivity.open(this));button(tools,"备份与恢复应用选择",false,v->ConfigBackupActivity.open(this));
+        LinearLayout tools=card();title(tools,"兼容排查与离线工具",21);body(tools,"分别检查权限、实际服务连接和应用选择。高级工具支持规则限制、撤销与本人决定是否导出的最小判定样本。");button(tools,"检查本机设置与未跳过原因",false,v->SetupHelpActivity.open(this,"no_skip"));button(tools,"离线规则与诊断",false,v->OfflineToolsActivity.open(this));button(tools,"备份与恢复应用选择",false,v->ConfigBackupActivity.open(this));button(tools,"生成兼容报告（先预览）",false,v->CompatibilityReportActivity.open(this));
         LinearLayout author=card();title(author,"作者与支持",21);body(author,"免费开源，全部功能无需付费。自愿打赏仅用于支持作者，不解锁功能。");button(author,"作者、网站与自愿支持",false,v->openWebsite("#support"));
         String version;try{version=getPackageManager().getPackageInfo(getPackageName(),0).versionName;}catch(Exception ignored){version="预览版";}
         gap(content,4);content.addView(text("SplashGuard "+version+" · MIT 开源预览版",14,MUTED));
     }
-    private DeviceGuidePolicy.ServiceState serviceState(){
-        try{String raw=Settings.Secure.getString(getContentResolver(),Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
-            if(raw==null)return DeviceGuidePolicy.ServiceState.UNKNOWN;
-            ComponentName own=new ComponentName(this,SkipService.class);
-            for(String value:raw.split(":"))if(own.equals(ComponentName.unflattenFromString(value)))return DeviceGuidePolicy.ServiceState.ON;
-            return DeviceGuidePolicy.ServiceState.OFF;
-        }catch(RuntimeException unavailable){return DeviceGuidePolicy.ServiceState.UNKNOWN;}
-    }
+    private DeviceGuidePolicy.ServiceState serviceState(){return ServiceStatus.query(this);}
     private boolean rulesValid(){try{RuleData.loadStore(this);return true;}catch(RuntimeException invalid){return false;}}
     private void refreshStatus(){
         SharedPreferences p=Prefs.get(this);boolean guideOnly=Prefs.guideOnly(this),enabled=Prefs.enabled(this),connected=SkipService.isConnected(),valid=rulesValid();
@@ -197,22 +189,26 @@ public final class MainActivity extends Activity {
         if(recordsSummary!=null)recordsSummary.setText("本地操作计数："+p.getInt("count",0)+" 次\n计数代表操作提交，不等于每次广告都消失。");
         if(stateTitle==null)return;
         stateTitle.setTextColor(Color.rgb(145,87,20));stateAction.setVisibility(View.VISIBLE);
-        if(guideOnly){stateTitle.setText("当前设为仅查看指引");stateBody.setText("这是你在本工具中的选择，自动跳过已暂停，无需反复尝试授权。仍可查看应用内防摇一摇设置；需要时可在本机帮助中重新检查并退出该模式。系统实际连接状态仍单独显示。");stateAction.setText("查看可用功能与模式");}
-        else if(!enabled){stateTitle.setText("自动跳过已暂停");stateBody.setText("开启开关后，仍需选择应用并由本人授权无障碍服务。");stateAction.setText("启用自动跳过");}
-        else if(!valid){stateTitle.setText("请检查本地规则");stateBody.setText("规则状态无法验证，当前已停止处理。可在离线工具中恢复内置规则。");stateAction.setText("检查规则状态");}
-        else if(permission==DeviceGuidePolicy.ServiceState.OFF){stateTitle.setText("还需开启无障碍服务");stateBody.setText("当前查询显示授权未开启，请到系统设置中核对。");stateAction.setText("设置无障碍服务");}
-        else if(!connected){stateTitle.setText(permission==DeviceGuidePolicy.ServiceState.UNKNOWN?"请核对服务状态":"等待服务连接");stateBody.setText("服务目前未连接。权限开关、功能开关和应用选择需要分别检查，无需开启所有权限。");stateAction.setText("检查服务与设置");}
-        else if(count==0){stateTitle.setText("还需选择应用");stateBody.setText("服务已连接；选择需要处理的应用后才会尝试跳过。");stateAction.setText("选择应用");}
-        else{stateTitle.setText("自动跳过已就绪");stateTitle.setTextColor(GREEN);stateBody.setText("服务已连接，将在所选应用的开屏时段尝试处理。不同广告样式可能漏过；操作提交不等于广告成功关闭。");stateAction.setVisibility(View.GONE);}
+        CompatibilityReport.Category reason=CompatibilityReport.category(guideOnly,enabled,valid,permission,connected,count);
+        stateTitle.setText(CompatibilityReport.title(reason));stateBody.setText(CompatibilityReport.guidance(reason,permission));
+        switch(reason){
+            case GUIDE_ONLY:stateAction.setText("查看可用功能与模式");break;
+            case PAUSED:stateAction.setText("启用自动跳过");break;
+            case RULES_UNAVAILABLE:stateAction.setText("检查规则状态");break;
+            case SERVICE_NOT_ENABLED:case SERVICE_NOT_CONNECTED:stateAction.setText("检查本机设置与连接");break;
+            case NO_APPS_SELECTED:stateAction.setText("选择应用");break;
+            default:stateTitle.setText("自动跳过已就绪");stateTitle.setTextColor(GREEN);stateAction.setVisibility(View.GONE);
+        }
     }
+
     private void repairStatus(){
         if(Prefs.guideOnly(this)){SetupHelpActivity.open(this,"accessibility");return;}
         if(!Prefs.enabled(this)){Prefs.get(this).edit().putBoolean("enabled",true).apply();refreshStatus();}
         else if(!rulesValid())OfflineToolsActivity.open(this);
-        else if(serviceState()==DeviceGuidePolicy.ServiceState.OFF||!SkipService.isConnected())SetupHelpActivity.open(this,"accessibility");
+        else if(!SkipService.isConnected())SetupHelpActivity.open(this,"accessibility");
         else chooseApps();
     }
-    private void closeHome(){if(Prefs.guideOnly(this)){finishAndRemoveTask();return;}if(Prefs.enabled(this)&&serviceState()!=DeviceGuidePolicy.ServiceState.OFF&&SkipService.isConnected()&&rulesValid()&&!Prefs.selected(this).isEmpty()){finishAndRemoveTask();return;}SetupHelpActivity.open(this,"background");}
+    private void closeHome(){if(Prefs.guideOnly(this)){finishAndRemoveTask();return;}if(Prefs.enabled(this)&&SkipService.isConnected()&&rulesValid()&&!Prefs.selected(this).isEmpty()){finishAndRemoveTask();return;}SetupHelpActivity.open(this,"background");}
 
     private void startWizard(){rememberScroll();onboarding=true;wizardStep=0;wizardScroll=0;persistWizard();render();}
     private void persistWizard(){Prefs.get(this).edit().putBoolean("setup_in_progress",true).putInt("setup_step",wizardStep).apply();}

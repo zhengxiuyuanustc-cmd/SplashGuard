@@ -104,7 +104,9 @@ public final class SkipService extends AccessibilityService implements SharedPre
         AccessibilityNodeInfo root = getRootInActiveWindow();
         if (root == null) { schedule(); return; }
         try {
-            String pkg = String.valueOf(root.getPackageName());
+            String pkg = str(root.getPackageName());
+            // A missing package is an unknown foreground, never a synthetic "null" app switch.
+            if(pkg.isEmpty()){schedule();return;}
             long now=SystemClock.elapsedRealtime();
             // End active diagnostics on any confirmed departure, before filtering selected applications.
             RuleData.observeReplayForeground(str(root.getPackageName()),now);
@@ -404,7 +406,13 @@ public final class SkipService extends AccessibilityService implements SharedPre
             return;
         }
         try {
-            String current=String.valueOf(root.getPackageName());
+            String current=str(root.getPackageName());
+            if(current.isEmpty()) {
+                session.cancelled(token);
+                reviewAt=SystemClock.elapsedRealtime()+350;
+                schedule();
+                return;
+            }
             if (!pkg.equals(current)) { session.observe(current,SystemClock.elapsedRealtime()); reviewAt=0; queueScan(40); return; }
         } finally { root.recycle(); }
         if (completed) {
@@ -508,7 +516,15 @@ public final class SkipService extends AccessibilityService implements SharedPre
         return true;
     }
     private static String str(CharSequence s) { return s == null ? "" : s.toString(); }
-    @Override public void onInterrupt() { resetSession(); }
+    @Override public void onInterrupt() {
+        // Android defines this as feedback interruption, not a new foreground opening:
+        // https://developer.android.com/reference/android/accessibilityservice/AccessibilityService#onInterrupt()
+        handler.removeCallbacks(scanTask);
+        scanQueued=false;
+        session.stop(); // Retain this package, deadline and spent attempts; invalidate old result tokens.
+        reviewAt=0;
+        RuleData.replayScreenOff(SystemClock.elapsedRealtime()); // Finish active capture, preserve waiting/held data.
+    }
     @Override public boolean onUnbind(Intent intent) {
         connected = false;
         resetSession();

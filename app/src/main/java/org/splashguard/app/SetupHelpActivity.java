@@ -1,15 +1,11 @@
 package org.splashguard.app;
 
-import android.accessibilityservice.AccessibilityServiceInfo;
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
-import android.content.pm.ResolveInfo;
-import android.content.pm.ServiceInfo;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -20,7 +16,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
 import android.view.View;
-import android.view.accessibility.AccessibilityManager;
 import android.widget.Button;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -135,7 +130,7 @@ public final class SetupHelpActivity extends Activity {
         gap(apps,10);apps.addView(text("百度与百度网盘是不同应用。分身、工作资料或兼容环境中的应用可能不在当前列表；请确认本工具与目标应用处在同一环境。未出现广告不算跳过失败。",16,MUTED));
         button(apps,"将上述已安装应用加入处理",v->addCommonApps());
         LinearLayout share=card(content,"复制最小自检摘要");share.addView(text("只复制品牌型号、Android运行环境、本工具版本、功能/服务状态和上述应用的版本与选择。不会包含账号界面、设备唯一标识或完整应用列表，也不会自动上传或发送。分享前请本人检查。",16,MUTED));
-        button(share,"复制自检摘要",v->copySummary());
+        button(share,"复制自检摘要",v->copySummary());button(share,"兼容报告：先预览再保存",v->CompatibilityReportActivity.open(this));
         notice=text("",15,MUTED);content.addView(notice);button(content,"返回",v->finish());
         setContentView(scroll);scroll.requestApplyInsets();refreshGuide();scroll.post(()->scroll.scrollTo(0,savedScroll));
     }
@@ -172,18 +167,7 @@ public final class SetupHelpActivity extends Activity {
         }
         appChecks.setText(rows.toString());
     }
-    private DeviceGuidePolicy.ServiceState queryEnabledService(){
-        try{
-            AccessibilityManager manager=(AccessibilityManager)getSystemService(ACCESSIBILITY_SERVICE);
-            if(manager==null)return DeviceGuidePolicy.ServiceState.UNKNOWN;
-            List<AccessibilityServiceInfo> enabled=manager.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK);
-            if(enabled==null)return DeviceGuidePolicy.ServiceState.UNKNOWN;
-            ComponentName wanted=new ComponentName(this,SkipService.class);
-            for(AccessibilityServiceInfo item:enabled){ResolveInfo resolve=item.getResolveInfo();ServiceInfo info=resolve==null?null:resolve.serviceInfo;
-                if(info!=null&&wanted.equals(new ComponentName(info.packageName,info.name)))return DeviceGuidePolicy.ServiceState.ON;}
-            return DeviceGuidePolicy.ServiceState.OFF;
-        }catch(RuntimeException unavailable){return DeviceGuidePolicy.ServiceState.UNKNOWN;}
-    }
+    private DeviceGuidePolicy.ServiceState queryEnabledService(){return ServiceStatus.query(this);}
     private String packageVersion(String pkg){try{PackageInfo p=getPackageManager().getPackageInfo(pkg,0);return safe(p.versionName)+" / code "+(Build.VERSION.SDK_INT>=28?p.getLongVersionCode():p.versionCode);}catch(Exception unavailable){return "暂时无法读取";}}
     private AppCheck checkApp(String pkg,String label,boolean selected){
         try{PackageInfo p=getPackageManager().getPackageInfo(pkg,0);return new AppCheck(pkg,label,true,safe(p.versionName)+" / code "+(Build.VERSION.SDK_INT>=28?p.getLongVersionCode():p.versionCode),selected);}
