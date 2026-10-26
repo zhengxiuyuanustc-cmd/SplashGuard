@@ -15,3 +15,5 @@
 因此不能回答“整份推进清单已经全部完成”。本轮补齐了可独立实现的备份、直观规则暂停、真实匹配回放和标准构建检查入口；未完成项仍明确保留。没有把原生鸿蒙指南或APK兼容运行写成原生功能。
 
 具体边界见[RULE_REPLAY](RULE_REPLAY.md)、[CONFIG_BACKUP](CONFIG_BACKUP.md)、[GRADLE_VALIDATION](GRADLE_VALIDATION.md)、[HARMONY_NATIVE_FEASIBILITY](HARMONY_NATIVE_FEASIBILITY.md)及[TESTING](../TESTING.md)。
+
+后续优先扩展其他设备，已有本机广告问题由用户确认解决。机型个案、用户报告与实机证据的区别见[兼容反馈与验收范围](COMPATIBILITY_CASES.md)；鸿蒙7反馈者已确认版本0.1.7，默认安装方式仍不足以判断运行环境。

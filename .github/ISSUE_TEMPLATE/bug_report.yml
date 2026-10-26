@@ -22,11 +22,22 @@ body:
       description: 不需要设备唯一标识；不愿公开的非必要细节可省略。
     validations:
       required: true
+  - type: input
+    id: runtime_environment
+    attributes:
+      label: 安装或运行方式（可选）
+      description: 仅填写已知信息，例如卓易通、出境易、分身或工作资料。按系统默认安装但不了解运行环境时，直接写“不清楚”，不必为此重复开权限。
+      placeholder: 不清楚／按系统默认方式安装
+  - type: input
+    id: target_environment
+    attributes:
+      label: 目标应用所在环境（可选）
+      description: 如已确认，请说明是原生鸿蒙版、Android版或分身；不清楚可留空。能打开本工具不代表能操作另一环境的应用。
   - type: textarea
     id: state
     attributes:
       label: 当前设置与服务状态
-      description: 功能开关、无障碍是否连接、是否选中目标应用、是否调整后台运行。
+      description: 功能开关、无障碍是否实际连接、是否选中目标应用、是否调整后台运行。系统明确提示不支持时，直接填写提示原文，未知状态可写“不清楚”。
     validations:
       required: true
   - type: dropdown
@@ -38,6 +49,7 @@ body:
         - 出现误触或不应发生的操作
         - 已出现广告且自动跳过，但仍有晃动跳转
         - 未出现广告，效果暂不能验证
+        - 系统明确提示不支持获取无障碍权限
         - 设置、引导或后台运行异常
         - 其他（在下方说明）
     validations:

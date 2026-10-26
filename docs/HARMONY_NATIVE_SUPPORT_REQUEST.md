@@ -14,4 +14,27 @@
 4. 用户授权、断开、后台生命周期、暂停与卸载有哪些规定？如何在合法开发环境先对独立离线测试App验证，避免访问真实账号页面？
 5. 若此用途不支持，请明确能力限制；我们将保留设置指引并准确标注原生自动跳过未支持，不虚报已适配。
 
-附官方出处与工程验证范围：HARMONY_NATIVE_FEASIBILITY.md、TESTING.md。用户报告的个案为Mate 80 Pro / 7.0.0.109 SP6，系统提示本应用暂不支持获取系统无障碍权限。我们没有读取该设备，尚不清楚其APK安装／兼容环境；请确认此限制与原生受支持能力的关系及正式解决途径。该个案不是本项目的原生实测；维护者目前没有纯血鸿蒙验证机，DevEco/SDK版本待建立合法验证环境后补充。
+附官方出处与工程验证范围：HARMONY_NATIVE_FEASIBILITY.md、TESTING.md。用户报告的个案为Mate 80 Pro / 7.0.0.109 SP6，开屏清净0.1.7，系统提示本应用暂不支持获取系统无障碍权限。我们没有读取该设备，用户仅表示“应该是默认的”安装方式，具体APK安装／兼容环境未知；请确认此限制与原生受支持能力的关系及正式解决途径。该个案不是本项目的原生实测；维护者目前没有纯血鸿蒙验证机，DevEco/SDK版本待建立合法验证环境后补充。
+
+## 官方联系入口（2026-10-26核查，尚未发送）
+
+首选[在线提单](https://developer.huawei.com/consumer/cn/support/feedback/)，这是[官方支持页](https://developer.huawei.com/consumer/cn/support/)“开始提单”的实际目标。如直达页未显示，返回支持页再点“在线提单”；登录等后续要求以页面实际提示为准。本次未登录查看工单表单，不能保证具体分类名称、账号资质要求或接入审批条件。描述中注明HarmonyOS / Accessibility Kit，请转相关技术团队。
+
+官方支持页标注在线提单通常1—2个工作日应答；不是本项目对解决时间的承诺。备用为官网公布邮箱devConnect@huawei.com，见[官方联系页](https://developer.huawei.com/consumer/cn/support/contactUs/)和[2026-09-28文档中心公告](https://developer.huawei.com/consumer/cn/notice/detail/?id=9002212768432948003)。这是开发者联盟联系邮箱，不声明为Accessibility Kit专属邮箱。也可在[官方社区](https://developer.huawei.com/consumer/cn/forum/)选择“我要提问题”；社区是公开交流渠道。
+
+## 可直接提交的短版
+
+标题：HarmonyOS 7原生跨应用无障碍能力咨询及APK授权不支持提示
+
+您好，我们维护免费开源工具开屏清净（SplashGuard）。当前Android版只在用户选定App的短暂开屏时段识别明确的跳过按钮，冲突拒点，可随时暂停，无联网权限。现计划评估原生HarmonyOS版本。
+
+用户报告Mate 80 Pro / HarmonyOS 7.0.0.109 SP6，运行开屏清净0.1.7时提示“为保障您的隐私安全，应用暂不支持获取系统无障碍权限”。安装／运行方式未知，仅称使用默认安装；我们未连接该机，未完成原生验证。
+
+请协助确认：
+1. 该提示对应怎样的能力限制？是否存在面向该APK运行环境的正式支持方式？
+2. 普通第三方原生HarmonyOS应用，是否有受支持的跨App前台节点读取和节点点击接口？请提供当前SDK及系统范围。
+3. 若能力受控开放，用户自愿授权的有限广告辅助用途能否申请，具体资格、申请入口、签名及上架条件是什么？若不支持，也请明确说明。
+4. 当前Accessibility Kit简介不支持节点查询，而旧AccessibilityExtensionContext读取／动作接口标记废弃；此用途是否存在正式迁移方案？
+
+项目：https://github.com/zhengxiuyuanustc-cmd/SplashGuard
+感谢，请转HarmonyOS / Accessibility Kit相关技术团队。
