@@ -62,4 +62,12 @@ try {
 
 本地0.1.12/code13的UnsignedValidation实际构建与862项纯检查通过，Manifest不可调试、无uses-permission；验证文件115367字节，SHA256 cf2a8e5ea2ad3219b9681de6c246953824c2dc36b1075703a4c65da80ad27062。此记录不包含签名、安装或正式发行，仍不可安装／发布。
 
-源码`26f63c5a0d7d2c6f1bb8708fedea1c4be230d45d`的[标准Gradle检查](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40331782330)也已实际成功，包含debug/未签名release和各自lint。它不含维护者私钥，也不改变当前本地可安装包尚未签名的状态。
+源码`26f63c5a0d7d2c6f1bb8708fedea1c4be230d45d`的[标准Gradle检查](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40331782330)也已实际成功，包含debug/未签名release和各自lint。CI不含维护者私钥；本地可安装包的签名另记录如下。
+
+## 本地可安装包的签名记录
+
+维护者明确同意本次使用现有本地配置及升级签名。为保持已检查内容，直接使用apksigner对上述UnsignedValidation原件签名，不重复编译；全部6个原始ZIP条目的解压字节保持一致，签后版本0.1.12/code13、min26/target35、不可调试且无uses-permission。
+
+签名APK为123511字节，SHA256 `7c53ab80f7b352c287002c61142f4a568cf17f107309e451f36aec298d9289eb`，证书SHA256 `48bba90fb630f2b95d30fe7d3420dd7e884fefbaac842f0416424ba42d2517c4`，与旧预览证书一致，v2/v3验签通过。密钥未上传，安装包尚未公开分发或做新一轮真机验收，官网默认未替换。
+
+本记录验证的是对既有验证产物直接签名及其结果；NonDebugPreview完整重建脚本不因本记录自动算作已经跑通。关闭调试与签名连续性不代表原生鸿蒙授权、应用市场审核或各机型效果通过。
