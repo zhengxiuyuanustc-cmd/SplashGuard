@@ -47,7 +47,7 @@ public final class OfflineToolsActivity extends Activity {
     }
     private LinearLayout content;
     private TextView ruleStatus,notice,rulePreview,samplePreview;
-    private Button applyButton,undoButton,restoreButton;
+    private Button applyButton,undoButton,restoreButton,pauseGeneric,pauseBili;
     private int restoreStep;
     private String error="";
 
@@ -94,11 +94,14 @@ public final class OfflineToolsActivity extends Activity {
         body(content,"日常使用无需操作本页。全部由本人选择文件，不会自动上传；恢复规则也不会改变应用选择或系统授权。");
         LinearLayout rules=card("规则限制");ruleStatus=text("",16,INK);rules.addView(ruleStatus);
         body(rules,"文件只能缩短识别时段、减少操作次数、限制版本或停用现有规则；不能新增点击位置、脚本、应用或识别条件。此功能不验证作者签名，请仅导入来源明确的文件。");
+        body(rules,"可先单独暂停某组规则，再确认应用。暂停通用规则后，B站专用规则仍可运行；暂停B站处理会限制该App内全部开屏规则。恢复可撤销最近一次修改，或明确恢复全部内置规则。");
+        pauseGeneric=button(rules,"暂停通用开屏规则（先预览）",v->previewPause(RuleCatalog.GENERIC));
+        pauseBili=button(rules,"暂停B站处理（先预览）",v->previewPause(RuleCatalog.BILI));
         button(rules,"导出当前限制模板",v->exportTemplate());
         button(rules,"选择规则文件，先预览",v->choose(IMPORT_RULES));
         rulePreview=text("尚未选择文件。",15,MUTED);rulePreview.setTextIsSelectable(true);rules.addView(rulePreview);
         applyButton=button(rules,"确认应用预览中的限制",v->applyPreview());
-        undoButton=button(rules,"撤销上次规则导入",v->mutate(context->RuleData.rollback(context)?"已撤销上次规则导入。":"没有可撤销的规则导入。"));
+        undoButton=button(rules,"撤销最近规则修改",v->mutate(context->RuleData.rollback(context)?"已撤销最近规则修改。":"没有可撤销的规则修改。"));
         restoreButton=button(rules,"恢复内置规则",v->{
             if(restoreStep==0){restoreStep=1;restoreButton.setText("再次点击，确认恢复内置规则");notice.setText("恢复会移除导入限制及撤销记录；应用选择、功能开关和系统权限保持原样。");}
             else{restoreStep=0;mutate(context->{RuleData.restoreBuiltIns(context);return "已恢复内置规则。";});}
@@ -114,16 +117,24 @@ public final class OfflineToolsActivity extends Activity {
         exportSampleButton=button(samples,"导出上方已预览的样本",v->{if(previewedSample==null){notice.setText("请先查看最近判定，再决定是否导出。");return;}requestExport(RuleJsonCodec.encodeSample(previewedSample),"SplashGuard-diagnostic.json");});
         button(samples,"选择样本文件，离线复核",v->choose(IMPORT_SAMPLE));
         body(samples,"离线复核只解释文件中的判定条件，不重建原始画面、不执行点击，也不能证明广告实际已关闭。文件保存位置由你选择；如选择云盘，其处理由对应服务负责。");
+        LinearLayout replay=card("开发者规则回放");body(replay,"主动记录一次脱敏候选和祖先夹具，再真正运行当前匹配器。与上方诊断结论解释是不同功能；不执行点击。");button(replay,"规则夹具与离线回放",v->RuleReplayActivity.open(this));
         notice=text("",16,GREEN);notice.setPadding(0,dp(18),0,dp(6));content.addView(notice);button(content,"返回",v->finish());
         setContentView(scroll);scroll.requestApplyInsets();
     }
     private void refresh(){
-        try{OfflineRuleStore store=RuleData.loadStore(this);OfflineRuleStore.Pack pack=store.currentPack();ruleStatus.setText(pack==null?"当前：内置规则":"当前限制包："+pack.id+" / 版本 "+pack.version);undoButton.setEnabled(store.canRollback()&&!work.busy&&!work.chooserOpen);error="";}
-        catch(RuntimeException invalid){error="本地规则无法验证，自动处理将停止。可恢复内置规则后再试。";ruleStatus.setText(error);undoButton.setEnabled(false);}
+        try{OfflineRuleStore store=RuleData.loadStore(this);OfflineRuleStore.Pack pack=store.currentPack();ruleStatus.setText(pack==null?"当前：内置规则":"当前限制包："+pack.id+" / 版本 "+pack.version);undoButton.setEnabled(store.canRollback()&&!work.busy&&!work.chooserOpen);pauseGeneric.setEnabled(store.effective(RuleCatalog.GENERIC).enabled&&!work.busy&&!work.chooserOpen);pauseBili.setEnabled(store.effective(RuleCatalog.BILI).enabled&&!work.busy&&!work.chooserOpen);ruleStatus.append("\n通用规则："+(store.effective(RuleCatalog.GENERIC).enabled?"启用":"暂停")+"；B站处理："+(store.effective(RuleCatalog.BILI).enabled?"启用":"暂停"));error="";}
+        catch(RuntimeException invalid){error="本地规则无法验证，自动处理将停止。可恢复内置规则后再试。";ruleStatus.setText(error);undoButton.setEnabled(false);pauseGeneric.setEnabled(false);pauseBili.setEnabled(false);}
         applyButton.setEnabled(work.pack!=null&&error.isEmpty()&&!work.busy&&!work.chooserOpen);
         restoreButton.setEnabled(!work.busy&&!work.chooserOpen);if(restoreStep==0)restoreButton.setText("恢复内置规则");
         if(work.pack!=null)rulePreview.setText(describe(work.pack));
         exportSampleButton.setEnabled(previewedSample!=null&&!work.busy&&!work.chooserOpen);
+    }
+    private void previewPause(String ruleId){
+        try{OfflineRuleStore store=RuleData.loadStore(this);OfflineRuleStore.RuleLimit rule=store.effective(ruleId);if(rule==null||!rule.enabled)return;
+            OfflineRuleStore.Pack current=store.currentPack();int revision=current!=null&&"local.controls".equals(current.id)?current.version+1:1;
+            OfflineRuleStore.RuleLimit paused=new OfflineRuleStore.RuleLimit(rule.id,rule.packageName,rule.minVersionCode,rule.maxVersionCode,rule.windowMs,rule.maxActions,false,rule.allowGesture);
+            OfflineRuleStore.Pack next=new OfflineRuleStore.Pack(1,"local.controls",revision,java.util.Collections.singletonList(paused));store.apply(next);work.pack=next;refresh();notice.setText("暂停设置尚未生效，请核对预览并确认。撤销最近规则修改可恢复上一状态。");
+        }catch(RuntimeException invalid){notice.setText("不能生成暂停预览，请检查当前规则状态；没有自动更改规则。");}
     }
     private void exportTemplate(){
         try{OfflineRuleStore store=RuleData.loadStore(this);OfflineRuleStore.Pack current=store.currentPack();int next=current!=null&&"local.restrictions".equals(current.id)?current.version+1:1;

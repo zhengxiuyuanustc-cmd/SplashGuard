@@ -6,7 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Small, bounded JSON codec for the two local data schemas, not a scripting engine. */
+/** Small, bounded JSON codec for fixed local data schemas, not a scripting engine. */
 public final class RuleJsonCodec {
     private RuleJsonCodec() {}
     public static final int MAX_DEPTH = 8;
@@ -63,6 +63,10 @@ public final class RuleJsonCodec {
     public static DiagnosticSample decodeSample(String text) {
         return DiagnosticSample.fromFields(object(new Parser(text).parse()));
     }
+
+    // Package-private boundaries for additional fixed local schemas. Each caller validates exact fields.
+    static Map<String,Object> readObject(String text) { return object(new Parser(text).parse()); }
+    static String writeObject(Map<String,?> fields) { return encode(fields); }
 
     private static String encode(Object value) {
         StringBuilder result = new StringBuilder();

@@ -164,7 +164,7 @@ public final class MainActivity extends Activity {
         button(privacy,"清除本地操作记录",false,v->clearRecords());
         LinearLayout control=card();title(control,"随时暂停或停用",21);body(control,"暂时不用：关闭首页“启用自动跳过”。彻底关闭：在系统无障碍设置中关闭本服务；也可直接卸载。");button(control,"打开系统无障碍设置",false,v->openAccessibility());
         disclosureSection(control,"background","后台运行说明","系统电池管理、划掉卡片、一键清理或重启可能关闭第三方无障碍服务。请按本机指引设置后，返回首页确认真实状态。\n\n“关闭首页，保留自动跳过”仅关闭界面；强行停止会停止服务。B站的广告专用开关保存在B站内，不依赖本工具后台维持。");button(control,"查看本机后台指引",false,v->backgroundGuide());
-        LinearLayout tools=card();title(tools,"兼容排查与离线工具",21);body(tools,"分别检查权限、实际服务连接和应用选择。高级工具支持规则限制、撤销与本人决定是否导出的最小判定样本。");button(tools,"检查本机设置与未跳过原因",false,v->SetupHelpActivity.open(this,"no_skip"));button(tools,"离线规则与诊断",false,v->OfflineToolsActivity.open(this));
+        LinearLayout tools=card();title(tools,"兼容排查与离线工具",21);body(tools,"分别检查权限、实际服务连接和应用选择。高级工具支持规则限制、撤销与本人决定是否导出的最小判定样本。");button(tools,"检查本机设置与未跳过原因",false,v->SetupHelpActivity.open(this,"no_skip"));button(tools,"离线规则与诊断",false,v->OfflineToolsActivity.open(this));button(tools,"备份与恢复应用选择",false,v->ConfigBackupActivity.open(this));
         LinearLayout author=card();title(author,"作者与支持",21);body(author,"免费开源，全部功能无需付费。自愿打赏仅用于支持作者，不解锁功能。");button(author,"作者、网站与自愿支持",false,v->openWebsite("#support"));
         String version;try{version=getPackageManager().getPackageInfo(getPackageName(),0).versionName;}catch(Exception ignored){version="预览版";}
         gap(content,4);content.addView(text("SplashGuard "+version+" · MIT 开源预览版",14,MUTED));

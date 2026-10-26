@@ -3,6 +3,8 @@
     <application android:label="开屏清净" android:icon="@drawable/ic_shield" android:theme="@style/AppTheme" android:allowBackup="false" android:supportsRtl="true">
         <activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>
         <activity android:name=".SetupHelpActivity" android:exported="false"/>
+        <activity android:name=".RuleReplayActivity" android:exported="false"/>
+        <activity android:name=".ConfigBackupActivity" android:exported="false"/>
         <activity android:name=".OfflineToolsActivity" android:exported="false"/>
         <service android:name=".SkipService" android:label="开屏清净 · 自动跳过" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" android:exported="true" android:stopWithTask="false">
             <intent-filter><action android:name="android.accessibilityservice.AccessibilityService"/></intent-filter>

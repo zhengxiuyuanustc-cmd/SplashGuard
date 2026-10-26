@@ -123,10 +123,15 @@ public final class SkipService extends AccessibilityService implements SharedPre
             int width=screen.right,height=screen.bottom;
             // Only act on a nearly full-screen foreground app, never on dialogs or keyboards.
             if (window.width() < screen.width() * .9 || window.height() < screen.height() * .85) { schedule(); return; }
+            boolean captureReplay=RuleData.wantsReplayCapture(pkg,now);
+            List<AccessibilityNodeInfo> replayIdentities=new ArrayList<>();
+            List<RuleReplay.Candidate> replayCandidates=new ArrayList<>();
+            boolean replayComplete=true;
             List<AccessibilityNodeInfo> nodes = new ArrayList<>();
             try {
                 if (!collect(root, nodes, 0)) {
                     session.stop();
+                    if(captureReplay)rememberReplayFrame(pkg,appVersion,width,height,false,false,false,replayCandidates);
                     remember(pkg,appVersion,null,null,DiagnosticSample.Reason.INCOMPLETE_SCAN,0,false);
                     diagnose(pkg,"界面扫描不完整，已停止本次自动点击");
                     return;
@@ -158,6 +163,12 @@ public final class SkipService extends AccessibilityService implements SharedPre
                     RuleEvaluator.Node snapshot=snapshot(n);
                     if(!biliHit&&!genericHit&&!RuleCatalog.knownBiliTarget(snapshot))continue;
                     Ancestry ancestry=ancestors(n);
+                    if(captureReplay){
+                        if(replayCandidates.size()>=RuleReplay.MAX_CANDIDATES)replayComplete=false;
+                        else try{int identity=replayIdentities.indexOf(n);if(identity<0){identity=replayIdentities.size();replayIdentities.add(n);}
+                            replayCandidates.add(RuleReplay.Candidate.capture(identity,snapshot,ancestry.nodes,ancestry.complete,r.left,r.top,r.right,r.bottom));
+                        }catch(RuntimeException unrepresentable){replayComplete=false;}
+                    }
                     RuleCatalog.Evaluation evaluation=RuleCatalog.evaluate(appVersion,snapshot,ancestry.nodes,
                             ancestry.complete,evidence,biliHit,genericHit);
                     if(!evaluation.matched) {
@@ -173,6 +184,7 @@ public final class SkipService extends AccessibilityService implements SharedPre
                         candidate=n; candidateBounds=r; candidateKey=key; candidateRule=evaluation;candidateSnapshot=snapshot;
                     }
                 }
+                if(captureReplay)rememberReplayFrame(pkg,appVersion,width,height,evidence,biliSplash,replayComplete,replayCandidates);
                 // Inspect all matching nodes before retry-key filtering or any click/gesture.
                 candidateCount=candidates.ambiguous()?Math.max(2,candidateCount):(candidate==null?0:1);
                 if (candidates.ambiguous()) {
@@ -421,6 +433,14 @@ public final class SkipService extends AccessibilityService implements SharedPre
         catch(IllegalStateException invalid) {
             session.stop();remember(pkg,appVersion,null,null,DiagnosticSample.Reason.SERVICE_NOT_READY,0,true);
             diagnose(pkg,"本地规则无法验证，请在离线工具中恢复内置规则");return null;
+        }
+    }
+    private void rememberReplayFrame(String pkg,RuleEvaluator.VersionInfo version,int width,int height,boolean evidence,boolean biliSplash,boolean complete,List<RuleReplay.Candidate> candidates){
+        // Diagnostics must never change matching, budgets or Android actions if their limits are exceeded.
+        try{RuleReplay.Frame frame=RuleReplay.capture(pkg,version,width,height,evidence,biliSplash,complete,candidates);
+            RuleReplay.encode(frame);RuleData.rememberReplay(pkg,frame,SystemClock.elapsedRealtime());
+        }catch(RuntimeException tooLarge){
+            try{RuleData.rememberReplay(pkg,RuleReplay.capture(pkg,version,width,height,evidence,biliSplash,false,java.util.Collections.emptyList()),SystemClock.elapsedRealtime());}catch(RuntimeException ignored){/* no sample for unsupported dimensions */}
         }
     }
     private static RuleEvaluator.Node snapshot(AccessibilityNodeInfo node) {

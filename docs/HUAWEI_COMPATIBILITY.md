@@ -43,11 +43,11 @@
 
 如果用户反馈是HarmonyOS 5/NEXT/6及以上，或通过兼容工具安装，应优先确认安装环境与目标应用属于哪个环境，不能继续套用4.x授权步骤或声称只要再开某个权限就一定能使用。广告专用开关指引可继续按目标应用的实际版本核对，不依赖给本工具更多权限。
 
-## 原生鸿蒙无障碍开发与发布资格：目前未核实完整条件
+## 原生鸿蒙：已核实当前公开Kit限制，不能称已支持
 
-华为[开发文档中心](https://developer.huawei.com/consumer/cn/doc/)列有Accessibility Kit；[DevEco Studio添加Ability说明](https://developer.huawei.com/consumer/cn/doc/doccenter-deveco-studio/ide-hmos-add-new-ability)列有Accessibility扩展场景。[AccessibilityExtensionAbility参考入口](https://developer.huawei.com/consumer/cn/doc/harmonyos-references/js-apis-application-accessibilityextensionability)属于另一套原生开发接口，不是现有Java `AccessibilityService`通过增加Android权限即可直接获得的能力。
+2026-10-26进一步取得官网动态正文后，当前Accessibility Kit简介明确只列状态查询与事件发送，不支持通过节点查询获取界面节点/屏幕内容；旧节点/动作及相关连接回调有API12废弃标记。ExtensionAbility总览的三方实现表格不能覆盖具体Kit的当前能力限制。
 
-本次公开读取该参考入口只得到动态文档壳，未能核验当前完整API限制、普通开发者的申请资格、设备侧授权与应用市场发布审核条件。没有据论坛转载断言“所有第三方都能用”或“只有系统应用能用”，也不能把API存在视为广告跳过用途已获发布许可。原生工程、接口资格、分发要求和实机能力需要单独确认；这一未知不阻止继续优化当前Android项目。
+因此当前APK及设置指南不代表纯血鸿蒙原生自动跳过，原生功能暂不支持；是否有适用于本用途的受控开放路径仍待华为正式确认。没有据此假定只要装DevEco或开发HAP即可解决。完整出处、元数据及已准备但未发送的咨询见[原生核验](HARMONY_NATIVE_FEASIBILITY.md)。用户目前没有纯血鸿蒙真机，不会把旧GOA-AL80/4.2当作原生5/6验证。
 
 ## 受限制设置与安全策略：只对实际提示给建议
 

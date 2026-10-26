@@ -87,6 +87,7 @@ public final class DeviceGuidePolicy {
                 +"没有可用入口时，请核对下载来源并查看官方说明；不要关闭全机安全保护，也不要用关闭整体方向或传感器权限代替广告专用设置。";
         String text;
         if ("shake".equals(topic(topic))) {
+            if(vendor==Vendor.HUAWEI)return "优先检查目标应用自己的广告专用开关。华为官方另列：HarmonyOS4.2／4.3可在应用和服务 → 权限管理 → 应用获取设备方向中按应用管理；HarmonyOS6.0.0.120及以上对应隐私和安全 → 应用获取设备方向；5.0至6.0.0.115不涉及此操作。\n\n该系统开关并未在官方说明中限定为只影响广告或只限开屏，可能涉及应用正常动作功能。按本工具保留正常方向／体感的原则，不作为默认关闭方案，不自动修改；不能把它当作OriginOS／Flyme的仅开屏选项。\n\n当前APK仍不是原生鸿蒙自动跳过版。"+common;
             return BrandGuides.shakeGuide(vendor)+common;
         }
         if (BrandGuides.handles(vendor)) {
@@ -105,7 +106,7 @@ public final class DeviceGuidePolicy {
                     +"后台：设置搜索“应用启动管理”，将本应用改为手动管理，按需允许自启动、关联启动、后台活动；必要时给多任务卡片加锁。"
                     +"返回本页检查服务实际连接。官方资料涵盖4.3，不表示本工具已在该机型实测；既有实机仅覆盖GOA-AL80／HarmonyOS 4.2。";
         } else if (vendor==Vendor.HUAWEI && family==Family.HARMONY_5_PLUS) {
-            text="你选择了HarmonyOS 5/NEXT/6及以上；当前Android APK在该环境的自动跳过能力尚未完成验证。\n\n"
+            text="你选择了HarmonyOS 5/NEXT/6及以上。当前是Android APK，并非原生鸿蒙自动跳过版；兼容环境与原生应用的能力不能混同。华为当前Accessibility Kit简介明确不支持通过无障碍节点查询界面及屏幕内容，旧读取／动作接口已标废弃；原生自动跳过暂不支持。\n\n"
                     +"华为官方说明：5及以上的部分原应用启动管理能力已由系统自动管理。找不到旧版三个开关不等于权限被拒，不必反复寻找旧入口。\n\n"
                     +"官方说明部分APK可以由卓易通／出境易提供服务，是否支持以实际环境为准。能安装或打开Android APK，不代表它能读取、点击原生鸿蒙应用。"
                     +"请确认本工具和目标应用是否处于同一运行环境；本页显示的是当前Android环境内的服务状态，不是跨环境能力证明。";
@@ -126,7 +127,7 @@ public final class DeviceGuidePolicy {
     }
 
     public static String officialUrl(Vendor vendor, Family family, String topic) {
-        if("shake".equals(topic(topic)))return BrandGuides.shakeUrl(vendor);
+        if("shake".equals(topic(topic)))return vendor==Vendor.HUAWEI?"https://consumer.huawei.com/cn/support/content/zh-cn16002151/":BrandGuides.shakeUrl(vendor);
         if(BrandGuides.handles(vendor))return BrandGuides.officialUrl(vendor,topic(topic));
         if (vendor==Vendor.HONOR) return "accessibility".equals(topic(topic))
                 ? "https://www.honor.com/cn/support/content/zh-cn15869276/"

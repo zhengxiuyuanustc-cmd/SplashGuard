@@ -1,5 +1,7 @@
 # 共同开发路线图
 
+已实施功能与未验收项请先看[推进清单实际状态](IMPLEMENTATION_STATUS.md)。原生鸿蒙当前公开能力的限制另见[原生核验](HARMONY_NATIVE_FEASIBILITY.md)，不将指南列为原生支持。
+
 路线图表示讨论方向，不是已实现功能、发布承诺或保证的时间表。当前公开下载版本以[下载站](https://zhengxiuyuanustc-cmd.github.io/xiuyuanzheng.github.io/splashguard/)和 GitHub Release 为准；工作分支或 PR 的功能不一定已包含在公开 APK 中。
 
 ## 当前维护范围

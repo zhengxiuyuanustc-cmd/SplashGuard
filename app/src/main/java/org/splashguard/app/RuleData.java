@@ -7,6 +7,8 @@ import android.content.SharedPreferences;
 final class RuleData {
     private static final String CURRENT="rules_current", PREVIOUS="rules_previous", UNDO="rules_undo", COMPAT="gesture_compatibility";
     private static volatile DiagnosticSample sample;
+    private static RuleReplay.Frame replay;
+    private static final ReplayCaptureSession captureSession=new ReplayCaptureSession();
     private RuleData() {}
 
     static synchronized OfflineRuleStore loadStore(Context context) {
@@ -52,5 +54,19 @@ final class RuleData {
     }
     static void rememberSample(DiagnosticSample value){sample=value;}
     static DiagnosticSample lastSample(){return sample;}
-    static void clearSample(){sample=null;}
+    static synchronized void clearSample(){sample=null;replay=null;captureSession.clear();}
+    static synchronized void requestReplayCapture(){replay=null;captureSession.arm(android.os.SystemClock.elapsedRealtime());}
+    static synchronized boolean wantsReplayCapture(String pkg,long now){return captureSession.accepts(pkg,now);}
+    static synchronized void rememberReplay(String pkg,RuleReplay.Frame value,long now){
+        if(!captureSession.accepts(pkg,now))return;
+        if(replay==null||!value.scanComplete||!value.candidates.isEmpty())replay=value;
+    }
+    static synchronized RuleReplay.Frame lastReplay(){captureSession.state(android.os.SystemClock.elapsedRealtime());return replay;}
+    static synchronized void clearReplay(){replay=null;captureSession.clear();}
+    static synchronized String replayStatus(){
+        ReplayCaptureSession.State state=captureSession.state(android.os.SystemClock.elapsedRealtime());
+        if(state==ReplayCaptureSession.State.WAITING)return "已准备：最多等待2分钟，在下一所选应用的短暂开屏时段记录。";
+        if(state==ReplayCaptureSession.State.CAPTURING)return "正在记录该应用本次开屏的匹配线索；不会延长自动点击时段。";
+        return replay==null?"暂无规则夹具；未主动准备时不会生成。":"已取得进程内规则夹具，可本人查看后决定是否导出。";
+    }
 }
