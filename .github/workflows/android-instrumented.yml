@@ -25,8 +25,6 @@ jobs:
       cancel-in-progress: true
     env:
       ANDROID_SERIAL: emulator-5554
-      ANDROID_AVD_HOME: ${{ runner.temp }}/splashguard-avd
-      ANDROID_USER_HOME: ${{ runner.temp }}/splashguard-android
     steps:
       - name: Check out source without persisted credentials
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -43,6 +41,10 @@ jobs:
           set -euo pipefail
           test -c /dev/kvm
           sudo chmod a+rw /dev/kvm
+          export ANDROID_AVD_HOME="$RUNNER_TEMP/splashguard-avd"
+          export ANDROID_USER_HOME="$RUNNER_TEMP/splashguard-android"
+          echo "ANDROID_AVD_HOME=$ANDROID_AVD_HOME" >> "$GITHUB_ENV"
+          echo "ANDROID_USER_HOME=$ANDROID_USER_HOME" >> "$GITHUB_ENV"
           mkdir -p "$ANDROID_AVD_HOME" "$ANDROID_USER_HOME" "$RUNNER_TEMP/emulator-evidence"
           manager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           "$manager" --sdk_root="$ANDROID_HOME" --licenses <<'LICENSES'
