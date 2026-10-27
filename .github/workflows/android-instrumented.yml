@@ -70,6 +70,7 @@ jobs:
           y
           LICENSES
           "$manager" --sdk_root="$ANDROID_HOME" 'platform-tools' 'emulator' 'platforms;android-35' 'build-tools;34.0.0' 'build-tools;35.0.0' 'system-images;android-${{ matrix.api }};google_apis;x86_64'
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
           echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --name splashguard-ci --package 'system-images;android-${{ matrix.api }};google_apis;x86_64' --device pixel_2
       - name: Start a fresh isolated emulator
         shell: bash
