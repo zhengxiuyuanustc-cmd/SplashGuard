@@ -1,5 +1,9 @@
 # 验证记录
 
+## 隔离模拟器验收入口（2026-10-27，待执行结果）
+
+新增API 26/35的系统DocumentsUI、签名预览/确认、Activity重建、重复文件无操作、真实SharedPreferences迁移及只读私有目录写入失败恢复测试。它们只允许专用模拟器执行，测试提供者/依赖只在测试APK；发行Manifest另行核对隔离。工作流与边界见[模拟器验收](docs/ANDROID_EMULATOR_ACCEPTANCE.md)。本段提交时尚无执行结果，不将1645项纯Java或历史CI当作这些Android流程已通过。App主代码与0.1.14已签名包未改变。
+
 ## 0.1.14候选：来源验签与独立历史（2026-10-27，未公开APK）
 
 21个共享纯Java程序1645项通过：沿用0.1.13的1319项，新增SignedRulePack137、RuleUpdateState80、RuleStateStorage92、RuleTrust17，共326项。验签测试使用临时RSA测试密钥；生产公钥整合检查只读取公开演示签名及载荷。32份合成广告匹配回放仍包含在总数，未新增真实广告样本。

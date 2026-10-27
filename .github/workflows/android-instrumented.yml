@@ -1,0 +1,124 @@
+name: Android isolated emulator acceptance
+
+on:
+  push:
+    paths:
+      - 'app/**'
+      - 'examples/offline-rules/**'
+      - 'gradle.properties'
+      - '.github/workflows/android-instrumented.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  emulator:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [26, 35]
+    concurrency:
+      group: emulator-${{ github.ref }}-${{ matrix.api }}
+      cancel-in-progress: true
+    env:
+      ANDROID_SERIAL: emulator-5554
+      ANDROID_AVD_HOME: ${{ runner.temp }}/splashguard-avd
+      ANDROID_USER_HOME: ${{ runner.temp }}/splashguard-android
+    steps:
+      - name: Check out source without persisted credentials
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: Set up JDK 21
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install official Android emulator and image
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -c /dev/kvm
+          sudo chmod a+rw /dev/kvm
+          mkdir -p "$ANDROID_AVD_HOME" "$ANDROID_USER_HOME" "$RUNNER_TEMP/emulator-evidence"
+          manager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          "$manager" --sdk_root="$ANDROID_HOME" --licenses <<'LICENSES'
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          y
+          LICENSES
+          "$manager" --sdk_root="$ANDROID_HOME" 'platform-tools' 'emulator' 'platforms;android-35' 'build-tools;34.0.0' 'build-tools;35.0.0' 'system-images;android-${{ matrix.api }};google_apis;x86_64'
+          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --name splashguard-ci --package 'system-images;android-${{ matrix.api }};google_apis;x86_64' --device pixel_2
+      - name: Start a fresh isolated emulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$ANDROID_HOME/emulator/emulator" -avd splashguard-ci -port 5554 -no-window -no-audio -no-boot-anim -no-snapshot -wipe-data -gpu swiftshader_indirect -accel on -memory 2048 >"$RUNNER_TEMP/emulator-evidence/emulator.log" 2>&1 &
+          emulator_pid=$!
+          timeout 180s adb -s "$ANDROID_SERIAL" wait-for-device
+          booted=false
+          for attempt in $(seq 1 180); do
+            if ! kill -0 "$emulator_pid" 2>/dev/null; then cat "$RUNNER_TEMP/emulator-evidence/emulator.log"; exit 1; fi
+            if [[ "$(adb -s "$ANDROID_SERIAL" shell getprop sys.boot_completed | tr -d '\r')" == 1 ]]; then booted=true; break; fi
+            sleep 2
+          done
+          test "$booted" = true
+          test "$(adb -s "$ANDROID_SERIAL" shell getprop ro.kernel.qemu | tr -d '\r')" = 1
+          adb -s "$ANDROID_SERIAL" shell input keyevent 82
+          adb -s "$ANDROID_SERIAL" shell settings put global window_animation_scale 0
+          adb -s "$ANDROID_SERIAL" shell settings put global transition_animation_scale 0
+          adb -s "$ANDROID_SERIAL" shell settings put global animator_duration_scale 0
+          adb -s "$ANDROID_SERIAL" shell getprop ro.build.fingerprint >"$RUNNER_TEMP/emulator-evidence/environment.txt"
+          adb -s "$ANDROID_SERIAL" shell getprop ro.build.version.sdk >>"$RUNNER_TEMP/emulator-evidence/environment.txt"
+      - name: Run real document-picker and persistence tests
+        shell: bash
+        run: bash ./gradlew --no-daemon :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.isolatedEmulator=true
+      - name: Verify test components stay out of the production APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash ./gradlew --no-daemon :app:assembleRelease
+          "$ANDROID_HOME/build-tools/35.0.0/aapt2" dump xmltree app/build/outputs/apk/release/app-release-unsigned.apk --file AndroidManifest.xml >"$RUNNER_TEMP/emulator-evidence/release-manifest.txt"
+          if rg -q 'FixtureDocumentsProvider|androidx.test|android.permission.INTERNET|android.permission.MANAGE_DOCUMENTS' "$RUNNER_TEMP/emulator-evidence/release-manifest.txt"; then
+            echo 'Unexpected test component or permission in production APK.'
+            exit 1
+          fi
+      - name: Collect only synthetic emulator evidence
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/emulator-evidence"
+          if adb -s "$ANDROID_SERIAL" shell test -d /sdcard/Android/data/org.splashguard.app/files/instrumentation; then
+            adb -s "$ANDROID_SERIAL" pull /sdcard/Android/data/org.splashguard.app/files/instrumentation "$RUNNER_TEMP/emulator-evidence/"
+          fi
+      - name: Upload emulator results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: emulator-api-${{ matrix.api }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            app/build/reports/androidTests/
+            app/build/outputs/androidTest-results/
+            ${{ runner.temp }}/emulator-evidence/
