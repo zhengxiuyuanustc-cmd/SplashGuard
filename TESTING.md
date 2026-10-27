@@ -1,5 +1,15 @@
 # 验证记录
 
+## 0.1.13候选：P0识别边界与回放语料（2026-10-27，未公开APK）
+
+17个共享纯Java程序共1319项通过：AdRules82、SkipSession67、Onboarding11、CandidateSelection24、RuleEvaluator46、ActionPolicy21、OfflineRuleStore69、DiagnosticSample46、RuleJsonCodec172、ConfigBackup77、DeviceGuidePolicy77、RuleCatalog36、RuleRuntime53、RuleReplay63、ReplayCaptureSession29、CompatibilityReport53、RuleReplayCorpus393。
+
+回放程序实际读取32份登记JSON，调用decode/evaluate/encode及再次回放；多候选身份、重叠、相反描述、错误/跨包/WebView祖先、不完整潜在线索的两种顺序、几何和无效格式都有预期结论。全部为合成帧；case01只借用历史B站摘录的目标/祖先/屏幕尺寸，摘录未枚举整页，不能证明当时唯一性或真实操作结果。没有编造数字版本码。
+
+本次SDK35资源链接、全部Java、D8、对齐和上述检查已通过。最终未签名验证文件116144字节，SHA256 `aef9bcc6abcd731b52a4bf248aaf981f04c9e4a6976e3816e535a243ad423465`，不可安装或分发；本次远程CI以实际记录为准；0.1.12的标准构建成功不能覆盖这次源码。当前仅执行控件点击，服务canPerformGestures=false；没有新增联网权限或交互窗口读取。
+
+未安装到手机，未新增真实双按钮、覆盖层、广告或长期后台/多机型验收。用户本机已解决，不要求重复本机广告测试。唯一匹配仍可能是伪装节点，系统接受控件动作不代表广告正确关闭；坐标暂停可能降低部分旧布局的跳过率。新UI及Schema 2文件选择器仍待设备验收。公开默认下载仍0.1.7。
+
 更新日期：2026-10-26。0.1.7 / versionCode 8 已通过[下载网站](https://zhengxiuyuanustc-cmd.github.io/xiuyuanzheng.github.io/splashguard/)公开开发预览包，免登录下载；网站文件与APK已匿名取回并逐项核对SHA-256。源码位于`feature/simple-ui-onboarding`，代码提交`ff2e8c10970835bda409fb909844e9c63031d94f`，由[PR #4](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/pull/4)保留人工审阅，尚未合并main。GitHub Release仍为0.1.4，与网站预览下载分别标注。
 
 本地SDK构建、验签及48项规则+40项会话+11项引导检查共99项通过；该代码提交的[push CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40172746441)和[PR CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40172749917)均成功。CI仅运行纯Java检查，不代表标准Gradle、Android界面或广告效果均已验证。用户手动确认App可打开，修正后重复点选只出现一个窗口，关闭后能重开；设备随后断开，最新候选未完成ADB版本和APK哈希回读。本轮核心沿用0.1.6，没有新增真实广告或物理晃动验收，该0.1.7阶段未取得标准Gradle成功记录。 下方0.1.6广告和安装回读仅是历史证据。

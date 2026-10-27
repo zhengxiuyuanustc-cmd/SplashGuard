@@ -106,10 +106,9 @@ public final class OfflineToolsActivity extends Activity {
             if(restoreStep==0){restoreStep=1;restoreButton.setText("再次点击，确认恢复内置规则");notice.setText("恢复会移除导入限制及撤销记录；应用选择、功能开关和系统权限保持原样。");}
             else{restoreStep=0;mutate(context->{RuleData.restoreBuiltIns(context);return "已恢复内置规则。";});}
         });
-        LinearLayout compatibility=card("旧版B站兼容（默认关闭）");
-        body(compatibility,"普通规则只调用按钮自身的点击动作。此开关仅允许已核对的B站9.15.0特定开屏布局，在按钮动作不可用时尝试触点；仍受布局、版本及次数限制。其他版本不因此获得坐标点击，未验证荣耀Android17效果。");
-        Switch compat=new Switch(this);compat.setText("允许已核对旧布局的触点兼容");compat.setTextSize(16);compat.setTextColor(INK);compat.setMinHeight(dp(60));compat.setChecked(RuleData.gestureCompatibilityEnabled(this));compatibility.addView(compat);
-        compat.setOnCheckedChangeListener((b,on)->{resetRestore();if(work.busy||work.chooserOpen){compat.setChecked(RuleData.gestureCompatibilityEnabled(this));return;}try{RuleData.setGestureCompatibility(this,on);notice.setText(on?"已启用特定旧布局的兼容尝试，不代表广告已经成功关闭。":"已关闭触点兼容，使用按钮动作。");}catch(RuntimeException failed){notice.setText("兼容设置未能保存，请重新打开本页检查。");}});
+        LinearLayout compatibility=card("触点兼容暂不可用");
+        body(compatibility,"当前仅使用按钮自身的点击动作。旧版B站触点方式尚缺可维护的数字版本证据与可靠的遮挡判断，已暂停；旧开关不会生效。今后只有补齐独立验证并重新由本人确认，才考虑恢复，不会自动沿用旧偏好。");
+        Switch compat=new Switch(this);compat.setText("坐标触点暂停，保留按钮动作");compat.setTextSize(16);compat.setTextColor(INK);compat.setMinHeight(dp(60));compat.setChecked(false);compat.setEnabled(false);compatibility.addView(compat);
         LinearLayout samples=card("最小诊断样本");
         body(samples,"只暂存本次进程内最近一次判定：固定原因、规则编号、应用类别、版本数字和候选数量等。没有截图、完整页面、原始按钮文字或设备标识；关闭进程后会消失。导出前可在下方检查内容。");
         button(samples,"查看最近判定",v->previewLatest());
@@ -191,7 +190,7 @@ public final class OfflineToolsActivity extends Activity {
     }
     private void previewLatest(){previewedSample=RuleData.lastSample();work.preview=previewedSample;samplePreview.setText(previewedSample==null?"暂无判定样本。请先在服务已连接时打开所选应用，且确认确实出现广告。":describe(previewedSample)+"\n\n"+RuleJsonCodec.encodeSample(previewedSample));refresh();}
     private String describe(OfflineRuleStore.Pack pack){StringBuilder text=new StringBuilder("待确认：").append(pack.id).append(" / 版本 ").append(pack.version);
-        for(OfflineRuleStore.RuleLimit r:pack.rules)text.append("\n\n").append(r.id).append("\n").append(r.packageName).append("\n版本数字：").append(r.minVersionCode).append("—").append(r.maxVersionCode).append("\n识别时段：").append(r.windowMs).append("毫秒；最多").append(r.maxActions).append("轮尝试\n").append(r.enabled?"保留规则":"停用规则").append(r.allowGesture?"；保留内置兼容上限（仍需版本与开关）":"；禁止触点兼容");return text.toString();}
+        for(OfflineRuleStore.RuleLimit r:pack.rules)text.append("\n\n").append(r.id).append("\n").append(r.packageName).append("\n版本数字：").append(r.minVersionCode).append("—").append(r.maxVersionCode).append("\n识别时段：").append(r.windowMs).append("毫秒；最多").append(r.maxActions).append("轮尝试\n").append(r.enabled?"保留规则":"停用规则").append(r.allowGesture?"；保留旧格式能力字段，当前坐标动作仍暂停":"；禁止触点兼容");return text.toString();}
     private String describe(DiagnosticSample value){return "原因："+value.reason.name()+"\n候选数量："+value.candidateCount+"；扫描"+(value.scanComplete?"完整":"不完整")+"\n复核："+decision(value.replay())+"\n以下仅为最小判定数据，不证明广告已关闭。";}
     private String decision(DiagnosticSample.ReplayDecision value){switch(value){
         case STOP_INCOMPLETE_SCAN:return "扫描不完整，应停止";case STOP_MULTIPLE_CANDIDATES:return "多个候选冲突，应停止";case STOP_EXCLUDED:return "命中排除条件，应停止";

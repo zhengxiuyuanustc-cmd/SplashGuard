@@ -48,7 +48,7 @@ public final class RuleReplayTest {
         check("unknown class not promoted to TextView",RuleReplay.evaluate(f(wrongClass)).outcome==RuleReplay.Outcome.NO_MATCH);
         List<RuleEvaluator.Node> deep=new ArrayList<>();for(int i=0;i<33;i++)deep.add(parent());
         RuleReplay.Candidate truncated=RuleReplay.Candidate.capture(0,node(BILI,BILI+":id/countdown_title","android.widget.TextView","跳过5",""),deep,true,700,20,950,80);
-        check("deep ancestor list becomes incomplete",!truncated.ancestorsComplete&&RuleReplay.evaluate(f(truncated)).outcome==RuleReplay.Outcome.NO_MATCH);
+        check("deep ancestor list becomes incomplete",!truncated.ancestorsComplete&&RuleReplay.evaluate(f(truncated)).outcome==RuleReplay.Outcome.INCOMPLETE_SCAN);
         String privatePkg="private.user.selected";RuleReplay.Candidate sdk=RuleReplay.Candidate.capture(0,node(privatePkg,"private:id/tt_splash_skip_btn","private.user.Widget","会员账号13800000000",""),Collections.emptyList(),true,700,20,950,80);
         RuleReplay.Frame redacted=RuleReplay.capture(privatePkg,new RuleEvaluator.VersionInfo(-1,"private-version"),1000,2000,true,false,true,Collections.singletonList(sdk));
         String sanitized=RuleReplay.encode(redacted);
@@ -58,8 +58,8 @@ public final class RuleReplayTest {
         check("no raw ID in sanitized generic frame",!sanitized.contains("tt_splash_skip_btn"));
         RuleReplay.Candidate wrongPackage=RuleReplay.Candidate.capture(0,node("org.other.app",BILI+":id/countdown_title","android.widget.TextView","跳过5",""),Collections.singletonList(parent()),true,700,20,950,80);
         check("cross-package target cannot match",RuleReplay.evaluate(f(wrongPackage)).outcome==RuleReplay.Outcome.NO_MATCH);
-        rejects("unknown root field",()->RuleReplay.decode(json.replace("\"schemaVersion\":1","\"schemaVersion\":1,\"upload\":true")));
-        rejects("precomputed verdict rejected",()->RuleReplay.decode(json.replace("\"schemaVersion\":1","\"schemaVersion\":1,\"reason\":\"MATCH_VERIFIED\"")));
+        rejects("unknown root field",()->RuleReplay.decode(json.replace("\"schemaVersion\":2","\"schemaVersion\":2,\"upload\":true")));
+        rejects("precomputed verdict rejected",()->RuleReplay.decode(json.replace("\"schemaVersion\":2","\"schemaVersion\":2,\"reason\":\"MATCH_VERIFIED\"")));
         rejects("arbitrary raw label rejected",()->RuleReplay.decode(json.replace("跳过5","秘密账户信息")));
         rejects("unknown kind rejected",()->RuleReplay.decode(json.replace("TEXT_VIEW","PrivateClass")));
         rejects("fractional coordinate rejected",()->RuleReplay.decode(json.replace("[700,20,950,80]","[700.1,20,950,80]")));
@@ -67,7 +67,7 @@ public final class RuleReplayTest {
         List<RuleReplay.Candidate> tooMany=new ArrayList<>();for(int i=0;i<65;i++)tooMany.add(real);
         rejects("more than64 inputs rejected",()->RuleReplay.capture(BILI,OLD,1000,2000,true,true,true,tooMany));
         rejects("invalid native-like identity rejected",()->c(64000,"跳过5","",Collections.singletonList(parent())));
-        rejects("future schema rejected",()->RuleReplay.decode(json.replace("\"schemaVersion\":1","\"schemaVersion\":2")));
+        rejects("future schema rejected",()->RuleReplay.decode(json.replace("\"schemaVersion\":2","\"schemaVersion\":3")));
         rejects("wrong type boolean rejected",()->RuleReplay.decode(json.replace("\"evidence\":true","\"evidence\":\"true\"")));
         check("no candidate is not success",RuleReplay.evaluate(f()).outcome==RuleReplay.Outcome.NO_MATCH);
         char[] labelChars=new char[RuleReplay.MAX_SOURCE_LABEL_CHARS];Arrays.fill(labelChars,'x');String bounded=new String(labelChars);
@@ -94,6 +94,35 @@ public final class RuleReplayTest {
         check("lossy candidate does not silently select another identity",RuleReplay.evaluate(f(longDescription,sameMeta)).outcome==RuleReplay.Outcome.INCOMPLETE_SCAN);
         char[] spaces=new char[RuleReplay.MAX_SOURCE_LABEL_CHARS+1];Arrays.fill(spaces,' ');
         check("capture bounds input before whitespace normalization",!f(c(0,new String(spaces)+"跳过5","",Collections.singletonList(parent()))).scanComplete);
+        RuleEvaluator.Node nativeHost=node(privatePkg,"host:id/root","android.widget.FrameLayout","","");
+        RuleEvaluator.Node sdkNode=node(privatePkg,"private:id/tt_splash_skip_btn","android.widget.Button","","");
+        RuleReplay.Candidate nativeSdk=RuleReplay.Candidate.capture(0,sdkNode,Collections.singletonList(nativeHost),true,700,20,950,80);
+        RuleReplay.Frame nativeSdkFrame=RuleReplay.capture(privatePkg,OLD,1000,2000,true,false,true,Collections.singletonList(nativeSdk));
+        check("generic native context survives real replay",RuleReplay.evaluate(nativeSdkFrame).outcome==RuleReplay.Outcome.UNIQUE_RULE_MATCH);
+        check("generic native context survives file roundtrip",RuleReplay.evaluate(RuleReplay.decode(RuleReplay.encode(nativeSdkFrame))).outcome==RuleReplay.Outcome.UNIQUE_RULE_MATCH);
+        RuleEvaluator.Node webHost=node(privatePkg,"host:id/web","android.webkit.WebView","","");
+        RuleReplay.Candidate webSdk=RuleReplay.Candidate.capture(0,sdkNode,Arrays.asList(webHost,nativeHost),true,700,20,950,80);
+        RuleReplay.Frame webSdkFrame=RuleReplay.capture(privatePkg,OLD,1000,2000,true,false,true,Collections.singletonList(webSdk));
+        check("generic WebView context rejected by real replay",RuleReplay.evaluate(webSdkFrame).outcome==RuleReplay.Outcome.NO_MATCH);
+        check("generic WebView rejection survives file roundtrip",RuleReplay.evaluate(RuleReplay.decode(RuleReplay.encode(webSdkFrame))).outcome==RuleReplay.Outcome.NO_MATCH);
+        RuleReplay.Candidate partialSdk=RuleReplay.Candidate.capture(0,sdkNode,Collections.singletonList(nativeHost),false,700,20,950,80);
+        check("generic partial ancestry stops whole frame",RuleReplay.evaluate(RuleReplay.capture(privatePkg,OLD,1000,2000,true,false,true,Collections.singletonList(partialSdk))).outcome==RuleReplay.Outcome.INCOMPLETE_SCAN);
+        RuleEvaluator.Node alien=node("other.source", "other:id/root","android.widget.FrameLayout","","");
+        RuleReplay.Candidate foreignSdk=RuleReplay.Candidate.capture(0,sdkNode,Collections.singletonList(alien),true,700,20,950,80);
+        check("generic foreign ancestry scope preserved",RuleReplay.evaluate(RuleReplay.capture(privatePkg,OLD,1000,2000,true,false,true,Collections.singletonList(foreignSdk))).outcome==RuleReplay.Outcome.NO_MATCH);
+        RuleReplay.Candidate deceptiveId=RuleReplay.Candidate.capture(0,node(privatePkg,"host:id/not_really_splash_skip_offer","android.widget.Button","",""),Collections.singletonList(nativeHost),true,700,20,950,80);
+        RuleReplay.Frame deceptiveFrame=RuleReplay.capture(privatePkg,OLD,1000,2000,true,false,true,Collections.singletonList(deceptiveId));
+        check("false SDK substring not promoted in capture",RuleReplay.evaluate(deceptiveFrame).outcome==RuleReplay.Outcome.NO_MATCH);
+        check("false SDK substring remains rejected after roundtrip",RuleReplay.evaluate(RuleReplay.decode(RuleReplay.encode(deceptiveFrame))).outcome==RuleReplay.Outcome.NO_MATCH);
+        RuleReplay.Candidate secondNative=RuleReplay.Candidate.capture(1,sdkNode,Collections.singletonList(nativeHost),true,700,20,950,80);
+        check("two supported generic native identities remain ambiguous",RuleReplay.evaluate(RuleReplay.capture(privatePkg,OLD,1000,2000,true,false,true,Arrays.asList(nativeSdk,secondNative))).outcome==RuleReplay.Outcome.MULTIPLE_CANDIDATES);
+        RuleReplay.Candidate unknownContext=RuleReplay.Candidate.capture(1,node(BILI,BILI+":id/count_down","android.widget.TextView","跳过5",""),Collections.singletonList(parent()),false,700,20,950,80);
+        check("uncertain later candidate blocks otherwise unique first",RuleReplay.evaluate(f(real,unknownContext)).outcome==RuleReplay.Outcome.INCOMPLETE_SCAN);
+        check("uncertain first candidate cannot leave a later unique one",RuleReplay.evaluate(f(unknownContext,real)).outcome==RuleReplay.Outcome.INCOMPLETE_SCAN);
+        check("uncertain context sets whole-frame completeness false",!f(real,unknownContext).scanComplete);
+        check("replay encoder identifies exact-ID semantics version",json.contains("\"schemaVersion\":2"));
+        try{RuleReplay.decode(json.replace("\"schemaVersion\":2","\"schemaVersion\":1"));throw new AssertionError("legacy alias schema accepted");}
+        catch(RuleReplay.UnsupportedSchemaException expected){passed++;}
         System.out.println("RuleReplayTest: "+passed+" checks passed");
     }
 }

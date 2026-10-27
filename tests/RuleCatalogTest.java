@@ -20,7 +20,7 @@ public final class RuleCatalogTest {
     }
     public static void main(String[] args) {
         RuleCatalog.Evaluation known=evaluate(VERIFIED,SKIP,PARENTS,true,true,true);
-        check("reviewed version preserves exact compatibility",known.matched&&known.result.versionVerified&&known.result.gestureAllowed);
+        check("named-version match does not authorize coordinates",known.matched&&known.result.versionVerified&&!known.result.gestureAllowed);
         check("known Bili selector is not generic",known.ruleId.equals(RuleCatalog.BILI)&&known.knownBiliTarget);
         check("reviewed actual ancestor is recorded",known.sceneMatched&&known.targetMatched);
         RuleCatalog.Evaluation newer=evaluate(new RuleEvaluator.VersionInfo(100,"9.16.0"),SKIP,PARENTS,true,true,true);
@@ -55,6 +55,22 @@ public final class RuleCatalogTest {
         check("Bili capability is an upper bound only",store.effective(RuleCatalog.BILI).allowGesture);
         check("hard action limit retained",store.effective(RuleCatalog.BILI).maxActions==2);
         check("hard time limit retained",store.effective(RuleCatalog.BILI).windowMs==12000);
+        RuleEvaluator.Node nativeParent=node(generic.packageName,"host:id/splash","android.widget.FrameLayout","","");
+        RuleEvaluator.Node genericWeb=node(generic.packageName,"host:id/creative","android.webkit.WebView","","");
+        RuleEvaluator.Node foreignParent=node("org.foreign.app","other:id/root","android.widget.FrameLayout","","");
+        check("generic complete native ancestry retains node-only match",evaluate(VERIFIED,generic,Arrays.asList(nativeParent),true,false,true).matched);
+        RuleCatalog.Evaluation partial=evaluate(VERIFIED,generic,Arrays.asList(nativeParent),false,false,true);
+        check("generic incomplete ancestry veto",!partial.matched&&partial.reason==RuleEvaluator.Reason.ANCESTORS_INCOMPLETE);
+        check("generic context veto has no actionable result",partial.result==null&&!partial.sceneMatched);
+        check("generic missing ancestor list veto",evaluate(VERIFIED,generic,null,true,false,true).reason==RuleEvaluator.Reason.ANCESTORS_INCOMPLETE);
+        List<RuleEvaluator.Node> tooDeep=new java.util.ArrayList<>();for(int i=0;i<33;i++)tooDeep.add(nativeParent);
+        check("generic oversized ancestry veto",evaluate(VERIFIED,generic,tooDeep,true,false,true).reason==RuleEvaluator.Reason.ANCESTORS_INCOMPLETE);
+        check("generic foreign ancestor veto",evaluate(VERIFIED,generic,Arrays.asList(foreignParent),true,false,true).reason==RuleEvaluator.Reason.ANCESTOR_MISMATCH);
+        check("generic missing ancestor entry veto",evaluate(VERIFIED,generic,Arrays.asList(nativeParent,null),true,false,true).reason==RuleEvaluator.Reason.ANCESTOR_MISMATCH);
+        check("generic WebView ancestor unsupported",evaluate(VERIFIED,generic,Arrays.asList(genericWeb,nativeParent),true,false,true).reason==RuleEvaluator.Reason.EXCLUDED);
+        check("generic WebView target unsupported",evaluate(VERIFIED,node(generic.packageName,generic.viewId,"android.webkit.WebView",generic.text,""),Arrays.asList(nativeParent),true,false,true).reason==RuleEvaluator.Reason.EXCLUDED);
+        check("noncandidate not upgraded by complete context",!evaluate(VERIFIED,generic,Arrays.asList(nativeParent),true,false,false).matched);
+        check("unknown version does not elevate generic action",!evaluate(null,generic,Arrays.asList(nativeParent),true,false,true).result.gestureAllowed);
         System.out.println("RuleCatalogTest: "+passed+" checks passed");
     }
 }

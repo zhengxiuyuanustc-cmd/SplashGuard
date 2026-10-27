@@ -14,7 +14,7 @@ git switch --detach origin/feature/simple-ui-onboarding
 git switch -c feature/short-description
 ```
 
-当前0.1.12候选的工作基线是 `origin/feature/simple-ui-onboarding`，当前 `main` 仍为旧版本。先显式检出工作基线，再创建你自己的贡献分支；不要把默认克隆得到的 `main` 当作最新候选。如果该工作分支尚未出现在远端，说明维护者还未推送此次候选，请等待分支公开后再按上述命令继续。公开安装包与网页上传状态以实际发行记录为准。
+当前0.1.13候选的工作基线是 `origin/feature/simple-ui-onboarding`，当前 `main` 仍为旧版本。先显式检出工作基线，再创建你自己的贡献分支；不要把默认克隆得到的 `main` 当作最新候选。如果该工作分支尚未出现在远端，说明维护者还未推送此次候选，请等待分支公开后再按上述命令继续。公开安装包与网页上传状态以实际发行记录为准。
 
 Android Studio 可直接打开项目根目录。命令行构建前，将 `JAVA_HOME` 指向你的 JDK 21，配置自己的 Android SDK 路径。可使用本机环境变量或被 Git 忽略的 `local.properties`；不要提交个人电脑路径。
 
@@ -34,7 +34,7 @@ macOS / Linux：
 
 ## 先运行不依赖手机的检查
 
-本地0.1.12候选继续使用不依赖Android的纯Java策略检查，覆盖原规则、有限会话、引导、多候选、版本/祖先规则、动作策略、受限文件模型/解析、最小样本及机型分流。新增统一入口由SDK构建与CI复用，避免各处名单不一致：
+当前0.1.13候选继续使用不依赖Android的纯Java策略检查，覆盖原规则、有限会话、引导、多候选、版本/祖先规则、动作策略、受限文件模型/解析、最小样本及机型分流。新增统一入口由SDK构建与CI复用，避免各处名单不一致：
 
 ```powershell
 .\tools\test-local.ps1 -JdkRoot "C:\Program Files\Java\jdk-21" -OutDir ".\build\pure-tests"
@@ -42,7 +42,7 @@ macOS / Linux：
 
 `-JdkRoot`可使用自己的JDK目录；已正确设置`JAVA_HOME`时可省略。`-OutDir`省略时使用项目`build/pure-tests`。脚本内列出的源码和测试类是当前完整清单；新增策略类时需更新清单。非Windows环境可使用同一清单的`javac -encoding UTF-8 -d …`与对应`java -cp …`调用，CI配置记录具体调用环境。
 
-当前0.1.12共有16个纯Java程序862项本地通过；实际构建、签名与CI结果以[TESTING.md](../TESTING.md)对应源码为准。公开0.1.7的99项历史CI不覆盖新候选；0.1.8曾通过138项也不能当作最新源码已通过。纯Java检查不证明Android文件选择器、界面、长期后台、覆盖层或真实广告效果已验证。
+当前0.1.13共有17个纯Java程序1319项本地通过（包括32份合成回放JSON）；实际构建、签名与CI结果以[TESTING.md](../TESTING.md)对应源码为准。公开0.1.7的99项历史CI不覆盖新候选；0.1.8曾通过138项也不能当作最新源码已通过。纯Java检查不证明Android文件选择器、界面、长期后台、覆盖层或真实广告效果已验证。
 
 ## Windows SDK 备用构建
 

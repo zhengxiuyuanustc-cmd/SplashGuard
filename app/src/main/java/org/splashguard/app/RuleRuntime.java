@@ -20,7 +20,7 @@ public final class RuleRuntime {
         OfflineRuleStore.RuleLimit limit=store.effective(evaluation.ruleId);
         if(!scope(limit,pkg))return deny(DiagnosticSample.Reason.STOPPED,0,0);
         int window=limit.windowMs,actions=limit.maxActions;
-        boolean gesture=limit.allowGesture;
+        boolean gesture=ActionPolicy.gesturesAvailable()&&limit.allowGesture;
         DiagnosticSample.Reason blocked=restriction(limit,versionCode);
         // A generic label in Bili must not bypass disabled or narrowed Bili restrictions.
         if(RuleCatalog.BILI_PACKAGE.equals(pkg)&&!RuleCatalog.BILI.equals(evaluation.ruleId)) {

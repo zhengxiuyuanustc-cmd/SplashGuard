@@ -13,7 +13,12 @@ import java.util.Set;
 /** Bounded, sanitized matcher fixtures. Re-evaluates rules; never executes Android actions. */
 public final class RuleReplay {
     private RuleReplay(){}
-    public static final int MAX_CANDIDATES=64, MAX_SIZE=8192;
+    public static final int MAX_CANDIDATES=64, MAX_SIZE=8192, SCHEMA_VERSION=2;
+    /** Schema 1 SDK_SKIP included substring IDs; its category cannot prove the new exact-ID boundary. */
+    public static final class UnsupportedSchemaException extends IllegalArgumentException {
+        private static final long serialVersionUID=1L;
+        private UnsupportedSchemaException(){super("回放格式已更新，请使用新版重新准备样本；不能只修改旧文件的版本号。");}
+    }
     /** Bound diagnostic work before normalization; it does not truncate live matching inputs. */
     public static final int MAX_SOURCE_LABEL_CHARS=1024;
     public enum Target { BILI,ZHIHU,OTHER_SELECTED }
@@ -60,7 +65,7 @@ public final class RuleReplay {
             if(target==null||name==null||code< -1||width<1||width>MAX_SIZE||height<1||height>MAX_SIZE||candidates==null||candidates.size()>MAX_CANDIDATES)throw invalid();
             this.packageCategory=target;versionCode=code;versionName=name;this.width=width;this.height=height;this.evidence=evidence;this.biliSplash=biliSplash;
             boolean complete=scanComplete;List<Candidate> safe=new ArrayList<>();Map<Integer,Map<String,Object>> aliases=new HashMap<>();
-            for(Candidate item:candidates){if(item==null)throw invalid();Candidate bound=item.bind(packageText(target));if(!bound.sourceRepresented())complete=false;Map<String,Object> fields=bound.fields();Map<String,Object> before=aliases.put(bound.identity,fields);if(before!=null&&!before.equals(fields))throw invalid();safe.add(bound);}
+            for(Candidate item:candidates){if(item==null)throw invalid();Candidate bound=item.bind(packageText(target));if(!bound.sourceRepresented()||!bound.ancestorsComplete)complete=false;Map<String,Object> fields=bound.fields();Map<String,Object> before=aliases.put(bound.identity,fields);if(before!=null&&!before.equals(fields))throw invalid();safe.add(bound);}
             this.scanComplete=complete;this.candidates=Collections.unmodifiableList(safe);
         }
     }
@@ -95,8 +100,8 @@ public final class RuleReplay {
         if(selection.ambiguous())return new Result(Outcome.MULTIPLE_CANDIDATES,frame.candidates.size(),identities.size(),-1,"none",false,results);
         Integer identity=selection.unique();return new Result(identity==null?Outcome.NO_MATCH:Outcome.UNIQUE_RULE_MATCH,frame.candidates.size(),identities.size(),identity==null?-1:identity,identity==null?"none":unique.ruleId,identity!=null&&unique.result.versionVerified,results);
     }
-    public static String encode(Frame frame){if(frame==null)throw invalid();Map<String,Object> m=new LinkedHashMap<>();m.put("schemaVersion",1);m.put("packageCategory",frame.packageCategory.name());m.put("versionCode",frame.versionCode);m.put("versionName",frame.versionName.name());m.put("width",frame.width);m.put("height",frame.height);m.put("evidence",frame.evidence);m.put("biliSplash",frame.biliSplash);m.put("scanComplete",frame.scanComplete);List<Object> items=new ArrayList<>();for(Candidate c:frame.candidates)items.add(c.fields());m.put("candidates",items);return RuleJsonCodec.writeObject(m);}
-    public static Frame decode(String json){Map<String,Object> m=RuleJsonCodec.readObject(json);exact(m,"schemaVersion","packageCategory","versionCode","versionName","width","height","evidence","biliSplash","scanComplete","candidates");if(integer(m.get("schemaVersion"))!=1)throw invalid();List<Candidate> candidates=new ArrayList<>();
+    public static String encode(Frame frame){if(frame==null)throw invalid();Map<String,Object> m=new LinkedHashMap<>();m.put("schemaVersion",SCHEMA_VERSION);m.put("packageCategory",frame.packageCategory.name());m.put("versionCode",frame.versionCode);m.put("versionName",frame.versionName.name());m.put("width",frame.width);m.put("height",frame.height);m.put("evidence",frame.evidence);m.put("biliSplash",frame.biliSplash);m.put("scanComplete",frame.scanComplete);List<Object> items=new ArrayList<>();for(Candidate c:frame.candidates)items.add(c.fields());m.put("candidates",items);return RuleJsonCodec.writeObject(m);}
+    public static Frame decode(String json){Map<String,Object> m=RuleJsonCodec.readObject(json);exact(m,"schemaVersion","packageCategory","versionCode","versionName","width","height","evidence","biliSplash","scanComplete","candidates");if(integer(m.get("schemaVersion"))!=SCHEMA_VERSION)throw new UnsupportedSchemaException();List<Candidate> candidates=new ArrayList<>();
         for(Object item:list(m.get("candidates"))){Map<String,Object> c=object(item);exact(c,"identity","node","ancestors","ancestorsComplete","bounds");List<Value> parents=new ArrayList<>();for(Object p:list(c.get("ancestors")))parents.add(value(object(p)));List<?> b=list(c.get("bounds"));if(b.size()!=4)throw invalid();candidates.add(new Candidate(number(c.get("identity")),value(object(c.get("node"))),parents,bool(c.get("ancestorsComplete")),number(b.get(0)),number(b.get(1)),number(b.get(2)),number(b.get(3))));}
         return new Frame(token(Target.class,m.get("packageCategory")),integer(m.get("versionCode")),token(VersionName.class,m.get("versionName")),number(m.get("width")),number(m.get("height")),bool(m.get("evidence")),bool(m.get("biliSplash")),bool(m.get("scanComplete")),candidates);
     }

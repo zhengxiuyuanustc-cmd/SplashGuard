@@ -44,9 +44,11 @@ final class RuleData {
         if(pack==null)edit.remove(key);else edit.putString(key,RuleJsonCodec.encodePack(pack));
     }
     static boolean gestureCompatibilityEnabled(Context context) {
-        try{return Prefs.get(context).getBoolean(COMPAT,false);}catch(RuntimeException invalid){return false;}
+        // Legacy opt-in is never sufficient for a future coordinate implementation.
+        return false;
     }
     static void setGestureCompatibility(Context context,boolean enabled) {
+        if(enabled)throw new IllegalStateException("触点兼容暂不可用，请使用按钮动作。若将来恢复，需重新确认。");
         if(!Prefs.get(context).edit().putBoolean(COMPAT,enabled).commit())throw new IllegalStateException("兼容设置保存失败，请重新检查。");
     }
     static boolean affectsRuntime(String key) {

@@ -61,7 +61,7 @@ public final class RuleReplayActivity extends Activity {
     @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);if(request!=IMPORT&&request!=EXPORT)return;state.chooser=false;String outgoing=state.outgoing;state.outgoing=null;
         if(result!=RESULT_OK||data==null||data.getData()==null){refresh();notice.setText("已取消文件操作。");return;}final Uri uri=data.getData();final State job=state;final Context app=getApplicationContext();job.busy=true;refresh();notice.setText("正在处理所选文件…");
         job.io.execute(()->{try{if(request==EXPORT){LocalJsonFiles.write(app.getContentResolver(),uri,outgoing);job.done(new Result(null,"夹具已保存到所选位置，没有自动上传。"));}else{RuleReplay.Frame frame=RuleReplay.decode(LocalJsonFiles.read(app.getContentResolver(),uri));RuleReplay.evaluate(frame);job.done(new Result(frame,"已用当前内置规则重新匹配，没有执行Android动作。"));}}
-            catch(Exception invalid){job.done(new Result(null,"文件操作未完成，格式／大小或读写不符合要求，没有改变规则或执行点击。"));}});
+            catch(Exception invalid){job.done(new Result(null,invalid instanceof RuleReplay.UnsupportedSchemaException?"回放格式已更新，请用新版重新准备样本。旧文件的ID类别不能证明精确标识，不能只改版本号。":"文件操作未完成，格式／大小或读写不符合要求，没有改变规则或执行点击。"));}});
     }
     private void deliver(){if(isFinishing()||isDestroyed()||state.owner!=this||state.pending==null)return;Result result=state.pending;state.pending=null;if(result.frame!=null)state.preview=result.frame;refresh();notice.setText(result.message);}
 }

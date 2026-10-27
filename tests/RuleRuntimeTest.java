@@ -40,10 +40,10 @@ public final class RuleRuntimeTest {
         RuleRuntime.Gate unknownCode=gate(store,VERIFIED,PKG,-1,1100,0,true);
         check("known version name with unknown code remains node-only",unknownCode.allowed&&!unknownCode.gestureAllowed);
         RuleRuntime.Gate compat=gate(store,VERIFIED,PKG,100,1100,0,true);
-        check("explicit reviewed compatibility allows gestures",compat.allowed&&compat.gestureAllowed);
+        check("a nonnegative code and old opt-in cannot authorize gestures",compat.allowed&&!compat.gestureAllowed);
         check("compatibility first tries native clickable node",action(VERIFIED,compat,true,false,1)==ActionPolicy.Action.NODE);
-        check("compatibility rejected native can gesture",action(VERIFIED,compat,true,true,1)==ActionPolicy.Action.GESTURE);
-        check("compatibility second round can gesture",action(VERIFIED,compat,true,false,2)==ActionPolicy.Action.GESTURE);
+        check("legacy native rejection cannot dispatch coordinates",action(VERIFIED,compat,true,true,1)==ActionPolicy.Action.NONE);
+        check("legacy second round remains native",action(VERIFIED,compat,true,false,2)==ActionPolicy.Action.NODE);
         RuleRuntime.Gate unverified=gate(store,UNVERIFIED,PKG,100,1100,0,true);
         check("newer version cannot use opted-in gesture",unverified.allowed&&!unverified.gestureAllowed);
         check("newer version retry is still native",action(UNVERIFIED,unverified,true,false,2)==ActionPolicy.Action.NODE);
@@ -98,6 +98,8 @@ public final class RuleRuntimeTest {
         check("reserved token uses its previous consumed count",RuleRuntime.gate(shortWindow,VERIFIED,PKG,100,1200,session.deadline(),token.attempt-1,true).allowed);
         session.stop();long deadline=session.deadline();session.observe(PKG,1500);
         check("stopping a gate never re-arms same package",!session.active(1500)&&session.deadline()==deadline&&session.attempts()==1);
+        check("arbitrary large version code does not become evidence",!gate(store,VERIFIED,PKG,Long.MAX_VALUE,1100,0,true).gestureAllowed);
+        check("legacy opt-in cannot act on nonclickable node",action(VERIFIED,compat,false,false,1)==ActionPolicy.Action.NONE);
         System.out.println("RuleRuntimeTest: "+passed+" checks passed");
     }
 }

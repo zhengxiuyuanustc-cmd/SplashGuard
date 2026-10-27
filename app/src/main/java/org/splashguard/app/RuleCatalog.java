@@ -18,7 +18,7 @@ public final class RuleCatalog {
                 .requireAdEvidence(false);
     }
     private static final RuleSpec BILI_VERIFIED=biliBuilder().versionNames("9.15.0")
-            .verifiedGestureCompatibility(true).build();
+            .verifiedGestureCompatibility(false).build();
     private static final RuleSpec BILI_NODE=biliBuilder().build();
     private RuleCatalog() {}
 
@@ -59,7 +59,21 @@ public final class RuleCatalog {
             return new Evaluation(hit?result:null,BILI,reason,hit,true,scene,true);
         }
         RuleEvaluator.Result result=RuleEvaluator.genericCandidate(genericLegacyHit,node);
+        if(result.matched) {
+            RuleEvaluator.Reason context=genericContext(node,ancestors,complete);
+            if(context!=null)return new Evaluation(null,GENERIC,context,false,false,false,genericLegacyHit);
+        }
         return new Evaluation(result,GENERIC,result.reason,result.matched,false,evidence,genericLegacyHit);
+    }
+    /** Unsupported generic context is a veto, not a claim that a WebView or a node is fake. */
+    private static RuleEvaluator.Reason genericContext(RuleEvaluator.Node node,List<RuleEvaluator.Node> parents,boolean complete) {
+        if(!complete||parents==null||parents.size()>RuleSpec.MAX_ANCESTORS)return RuleEvaluator.Reason.ANCESTORS_INCOMPLETE;
+        for(RuleEvaluator.Node parent:parents)
+            if(parent==null||!node.packageName.equals(parent.packageName))return RuleEvaluator.Reason.ANCESTOR_MISMATCH;
+        if(node.className.equals("android.webkit.WebView"))return RuleEvaluator.Reason.EXCLUDED;
+        for(RuleEvaluator.Node parent:parents)
+            if(parent.className.equals("android.webkit.WebView"))return RuleEvaluator.Reason.EXCLUDED;
+        return null;
     }
     private static boolean hasSplashAncestor(List<RuleEvaluator.Node> parents) {
         if(parents==null)return false;

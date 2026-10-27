@@ -31,14 +31,17 @@ public final class ActionPolicyTest {
         check("generic rejected node stops",choose(generic,true,true,1)==ActionPolicy.Action.NONE);
         check("generic nonclickable target stops",choose(generic,false,false,1)==ActionPolicy.Action.NONE);
         check("verified compatibility still starts with a node",choose(compat,true,false,1)==ActionPolicy.Action.NODE);
-        check("verified compatibility explicitly allows rejected-node fallback",choose(compat,true,true,1)==ActionPolicy.Action.GESTURE);
-        check("verified compatibility permits a bounded gesture retry",choose(compat,true,false,2)==ActionPolicy.Action.GESTURE);
-        check("verified nonclickable target may use declared compatibility",choose(compat,false,false,1)==ActionPolicy.Action.GESTURE);
+        check("legacy metadata cannot enable rejected-node coordinates",choose(compat,true,true,1)==ActionPolicy.Action.NONE);
+        check("legacy compatibility retry stays native",choose(compat,true,false,2)==ActionPolicy.Action.NODE);
+        check("legacy nonclickable target cannot request coordinates",choose(compat,false,false,1)==ActionPolicy.Action.NONE);
         check("zero attempt is invalid",choose(compat,true,false,0)==ActionPolicy.Action.NONE);
         check("negative attempt is invalid",choose(compat,true,false,-1)==ActionPolicy.Action.NONE);
         check("third attempt cannot bypass external budget",choose(compat,true,false,3)==ActionPolicy.Action.NONE);
         check("null match cannot authorize any action",choose(null,true,false,1)==ActionPolicy.Action.NONE);
         check("a failed match cannot authorize a gesture",choose(RuleEvaluator.genericCandidate(false,label),true,true,1)==ActionPolicy.Action.NONE);
+        check("coordinate implementation not available",!ActionPolicy.gesturesAvailable());
+        check("legacy second-round rejection still stops",choose(compat,true,true,2)==ActionPolicy.Action.NONE);
+        check("legacy second-round nonclickable stops",choose(compat,false,false,2)==ActionPolicy.Action.NONE);
         System.out.println("ActionPolicy: "+passed+" checks passed");
     }
 }

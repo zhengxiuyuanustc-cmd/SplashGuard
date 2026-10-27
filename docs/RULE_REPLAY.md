@@ -1,6 +1,14 @@
 # 用户主动的脱敏规则夹具与真实离线回放
 
-本页对应0.1.11候选。与DiagnosticSample.replay的结论解释不同，RuleReplay.evaluate会重新调用AdRules、RuleCatalog／RuleEvaluator和CandidateSelection，检查在当前内置匹配规则下是否无匹配、唯一匹配、身份冲突或输入扫描不完整。它不授予Android动作权限，不验证真实广告已关闭，不重建原页面。
+## 当前文件格式：Schema 2
+
+0.1.13的SDK_SKIP类别只表示精确白名单原始标识。Schema 1中同一类别可能来自任意包含子串的标识，脱敏后无法证明原始ID符合新边界，因此解码器明确拒绝旧格式，界面提示重新准备/采集。不能仅改schemaVersion来迁移旧证据。限制规则、备份和旧诊断结论的格式不随本次更改。
+
+任何潜在候选的ancestorsComplete=false都会让整个Frame成为INCOMPLETE_SCAN，即使另一个节点符合规则；不能在过滤未知线索后声称唯一。versionVerified只反映内置版本名称范围，数字版本证据仍可能未知；坐标动作当前暂停。
+
+[固定语料目录](../tests/fixtures/rule-replay/README.md)的32份合成JSON均须登记index.tsv，RuleReplayCorpusTest实际逐一解码、评估、序列化及再次评估；未登记、缺失、预期不符均失败。统一tools/test-local.ps1与CI运行该程序。根目录历史过滤样本仍是人工证据，不能视作完整自动扫描事实。
+
+本页对应0.1.13候选（功能自0.1.11加入）。与DiagnosticSample.replay的结论解释不同，RuleReplay.evaluate会重新调用AdRules、RuleCatalog／RuleEvaluator和CandidateSelection，检查在当前内置匹配规则下是否无匹配、唯一匹配、身份冲突或输入扫描不完整。它不授予Android动作权限，不验证真实广告已关闭，不重建原页面。
 
 ## 从手机取得夹具
 

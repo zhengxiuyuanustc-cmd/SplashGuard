@@ -12,10 +12,10 @@ if($JdkRoot){
 }
 # All files here are Android-independent. Keep local and CI checks on the same list.
 $policies=@('AdRules','SkipSession','OnboardingPolicy','CandidateSelection','RuleSpec','RuleEvaluator','ActionPolicy','OfflineRuleStore','DiagnosticSample','RuleJsonCodec','ConfigBackup','DeviceGuidePolicy','BrandGuides','RuleCatalog','RuleRuntime','RuleReplay','ReplayCaptureSession','CompatibilityReport')
-$checks=@('AdRulesTest','SkipSessionTest','OnboardingPolicyTest','CandidateSelectionTest','RuleEvaluatorTest','ActionPolicyTest','OfflineRuleStoreTest','DiagnosticSampleTest','RuleJsonCodecTest','ConfigBackupTest','DeviceGuidePolicyTest','RuleCatalogTest','RuleRuntimeTest','RuleReplayTest','ReplayCaptureSessionTest','CompatibilityReportTest')
+$checks=@('AdRulesTest','SkipSessionTest','OnboardingPolicyTest','CandidateSelectionTest','RuleEvaluatorTest','ActionPolicyTest','OfflineRuleStoreTest','DiagnosticSampleTest','RuleJsonCodecTest','ConfigBackupTest','DeviceGuidePolicyTest','RuleCatalogTest','RuleRuntimeTest','RuleReplayTest','ReplayCaptureSessionTest','CompatibilityReportTest','RuleReplayCorpusTest')
 $sources=@($policies | ForEach-Object {Join-Path $project "app/src/main/java/org/splashguard/app/$_.java"})+@($checks | ForEach-Object {Join-Path $project "tests/$_.java"})
 foreach($source in $sources){if(!(Test-Path -LiteralPath $source)){throw "Missing safety check source: $source"}}
 & $javac -encoding UTF-8 -d $OutDir @sources
 if($LASTEXITCODE -ne 0){throw 'Pure Java compilation failed'}
-foreach($check in $checks){& $java -cp $OutDir $check;if($LASTEXITCODE -ne 0){throw "Safety checks failed: $check"}}
+foreach($check in $checks){& $java ("-Dsplashguard.fixtureRoot="+(Join-Path $project "tests/fixtures/rule-replay")) -cp $OutDir $check;if($LASTEXITCODE -ne 0){throw "Safety checks failed: $check"}}
 Write-Output "Completed $($checks.Count) pure Java test programs."
