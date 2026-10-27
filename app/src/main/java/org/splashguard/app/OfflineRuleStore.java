@@ -141,17 +141,24 @@ public final class OfflineRuleStore {
         requireCanonical(savedCurrent);
         requireCanonical(savedPrevious);
         OfflineRuleStore restored = new OfflineRuleStore(new ArrayList<>(builtIns.values()));
-        if (hasPrevious && savedPrevious != null) restored.apply(savedPrevious);
-        if (savedCurrent != null) restored.apply(savedCurrent);
+        // Persisted canonical snapshots may follow an authenticated channel revision that is
+        // below unrelated local metadata. Restore restrictions, not an import version claim.
+        if (hasPrevious && savedPrevious != null) restored.applyAuthenticated(savedPrevious);
+        if (savedCurrent != null) restored.applyAuthenticated(savedCurrent);
         if (!hasPrevious) restored.previous = null;
         current = restored.current;
         previous = restored.previous;
     }
 
     /** Atomic: no state changes occur if any rule is invalid or would loosen an existing limit. */
-    public synchronized void apply(Pack pack) {
+    public synchronized void apply(Pack pack) { applyRestrictions(pack, true); }
+
+    /** Only the authenticated channel planner may replace untrusted local revision metadata. */
+    synchronized void applyAuthenticated(Pack pack) { applyRestrictions(pack, false); }
+
+    private void applyRestrictions(Pack pack, boolean checkLocalRevision) {
         if (pack == null) throw invalid("pack");
-        if (current.pack != null && current.pack.id.equals(pack.id) && pack.version <= current.pack.version)
+        if (checkLocalRevision && current.pack != null && current.pack.id.equals(pack.id) && pack.version <= current.pack.version)
             throw invalid("pack must have a newer version");
         LinkedHashMap<String, RuleLimit> next = new LinkedHashMap<>(current.effective);
         for (RuleLimit limit : pack.rules) {

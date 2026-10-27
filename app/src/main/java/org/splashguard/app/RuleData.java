@@ -11,38 +11,40 @@ final class RuleData {
     private static final ReplayCaptureSession captureSession=new ReplayCaptureSession();
     private RuleData() {}
 
-    static synchronized OfflineRuleStore loadStore(Context context) {
-        SharedPreferences prefs=Prefs.get(context);
-        try {
-            String current=prefs.getString(CURRENT,null), previous=prefs.getString(PREVIOUS,null);
-            boolean undo=prefs.getBoolean(UNDO,false);
-            OfflineRuleStore store=new OfflineRuleStore(RuleCatalog.builtInLimits());
-            store.restoreValidatedState(current==null?null:RuleJsonCodec.decodePack(current),
-                    previous==null?null:RuleJsonCodec.decodePack(previous),undo);
-            return store;
-        } catch(RuntimeException invalid) { throw new IllegalStateException("本地规则状态无法验证，请在离线工具中恢复内置规则。",invalid); }
+    private static final String STATE="rules_state_v2", AUTH_BLOCKED="rules_auth_blocked", QUARANTINE="rules_auth_quarantine";
+    private static RuleStateStorage persistence;
+    private static synchronized RuleStateStorage storage(Context context){
+        if(persistence==null){final Context app=context.getApplicationContext();
+            persistence=new RuleStateStorage(new RuleStateStorage.Backend(){
+                @Override public RuleStateStorage.Record read(){
+                    SharedPreferences prefs=Prefs.get(app);
+                    try{return new RuleStateStorage.Record(prefs.getString(STATE,null),prefs.getString(CURRENT,null),
+                            prefs.getString(PREVIOUS,null),prefs.getBoolean(UNDO,false),prefs.getBoolean(AUTH_BLOCKED,false),prefs.getString(QUARANTINE,null));}
+                    catch(RuntimeException invalid){return new RuleStateStorage.Record("!invalid-local-state",null,null,false,true,"local-state-invalid");}
+                }
+                @Override public boolean commit(String state,boolean blocked,String quarantine){
+                    SharedPreferences.Editor edit=Prefs.get(app).edit().putString(STATE,state).putBoolean(AUTH_BLOCKED,blocked)
+                            .remove(CURRENT).remove(PREVIOUS).remove(UNDO);
+                    if(quarantine==null)edit.remove(QUARANTINE);else edit.putString(QUARANTINE,quarantine);
+                    return edit.commit();
+                }
+            });
+        }
+        return persistence;
     }
-    static synchronized void apply(Context context,OfflineRuleStore.Pack pack) {
-        OfflineRuleStore store=loadStore(context);store.apply(pack);save(context,store);
+    static synchronized OfflineRuleStore loadStore(Context context){return storage(context).load().store();}
+    static synchronized String sourceDescription(Context context){
+        RuleStateStorage local=storage(context);
+        return local.load().currentSourceDescription()+(local.authBlocked()?"\n认证导入已暂停：历史状态曾损坏，恢复内置不会清除该保护。":"");
     }
-    static synchronized boolean rollback(Context context) {
-        OfflineRuleStore store=loadStore(context);
-        if(!store.rollback())return false;
-        save(context,store);return true;
+    static synchronized RuleUpdateState.Plan previewSigned(Context context,SignedRulePack.VerifiedPack verified){return storage(context).previewSigned(verified);}
+    static synchronized boolean applySigned(Context context,String originalEnvelope){
+        // Never trust a preview's parsed Pack. Re-authenticate the exact original bytes, then read current state.
+        return storage(context).applySigned(RuleTrust.verify(originalEnvelope));
     }
-    static synchronized void restoreBuiltIns(Context context) {
-        // This explicit recovery works even if the previous data cannot be decoded.
-        boolean saved=Prefs.get(context).edit().remove(CURRENT).remove(PREVIOUS).remove(UNDO).commit();
-        if(!saved)throw new IllegalStateException("规则保存失败，请重试并重新检查状态。");
-    }
-    private static void save(Context context,OfflineRuleStore store) {
-        SharedPreferences.Editor edit=Prefs.get(context).edit();
-        putPack(edit,CURRENT,store.currentPack());putPack(edit,PREVIOUS,store.previousPack());
-        if(!edit.putBoolean(UNDO,store.canRollback()).commit())throw new IllegalStateException("规则保存失败，请重试并重新检查状态。");
-    }
-    private static void putPack(SharedPreferences.Editor edit,String key,OfflineRuleStore.Pack pack) {
-        if(pack==null)edit.remove(key);else edit.putString(key,RuleJsonCodec.encodePack(pack));
-    }
+    static synchronized void apply(Context context,OfflineRuleStore.Pack pack){storage(context).applyLocal(pack);}
+    static synchronized boolean rollback(Context context){return storage(context).rollback();}
+    static synchronized void restoreBuiltIns(Context context){storage(context).restoreBuiltIns();}
     static boolean gestureCompatibilityEnabled(Context context) {
         // Legacy opt-in is never sufficient for a future coordinate implementation.
         return false;
@@ -52,7 +54,7 @@ final class RuleData {
         if(!Prefs.get(context).edit().putBoolean(COMPAT,enabled).commit())throw new IllegalStateException("兼容设置保存失败，请重新检查。");
     }
     static boolean affectsRuntime(String key) {
-        return key==null||CURRENT.equals(key)||PREVIOUS.equals(key)||UNDO.equals(key)||COMPAT.equals(key);
+        return key==null||STATE.equals(key)||AUTH_BLOCKED.equals(key)||QUARANTINE.equals(key)||CURRENT.equals(key)||PREVIOUS.equals(key)||UNDO.equals(key)||COMPAT.equals(key);
     }
     static void rememberSample(DiagnosticSample value){sample=value;}
     static DiagnosticSample lastSample(){return sample;}

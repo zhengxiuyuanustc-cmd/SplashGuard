@@ -1,5 +1,17 @@
 # 验证记录
 
+## 0.1.14候选：来源验签与独立历史（2026-10-27，未公开APK）
+
+21个共享纯Java程序1645项通过：沿用0.1.13的1319项，新增SignedRulePack137、RuleUpdateState80、RuleStateStorage92、RuleTrust17，共326项。验签测试使用临时RSA测试密钥；生产公钥整合检查只读取公开演示签名及载荷。32份合成广告匹配回放仍包含在总数，未新增真实广告样本。
+
+新检查覆盖原始字节签名/摘要、规范base64url、头字段/URL注入、严格UTF8、版本历史、同版本同内容不写入、未认证高版本不污染可信渠道、撤销/重置/重启、旧状态迁移、损坏隔离，以及模拟后端在内存先变化但磁盘提交失败时的暂停/恢复。故障检查使用假保存后端，不是Android磁盘故障实测；没有宣称提交失败一定不改变SharedPreferences内存。
+
+SDK35资源、全Java、D8、对齐及上述21程序已通过。未签名验证文件126767字节，SHA256 `b8f0a3b6b0321d9615f48528b36fe6d1d6ed8d19abe26e658403d7f21a177384`，不可安装/分发；本次标准远程检查与APK签名以本节后续实际结果为准，0.1.13结果不覆盖本次源码。
+
+维护者专用作者工具在Windows/PowerShell7.6.5生成的签名已用编译公钥验证；工具声明最低7.6，输出CreateNew避免覆盖已有文件。新3072位规则私钥由Windows DPAPI CurrentUser保护，留在忽略目录；只将公钥、工具和演示文件纳入源码，未读取APK私钥用于规则签名。
+
+新导入界面、文件提供者、旋转/进程重建、真实保存故障、多机型广告和长期后台尚未验收；原生鸿蒙仍不支持。程序未安装到手机，网站默认0.1.7与GitHub Release0.1.4未替换。普通用户无需导入演示文件。
+
 ## 0.1.13候选：P0识别边界与回放语料（2026-10-27，未公开APK）
 
 17个共享纯Java程序共1319项通过：AdRules82、SkipSession67、Onboarding11、CandidateSelection24、RuleEvaluator46、ActionPolicy21、OfflineRuleStore69、DiagnosticSample46、RuleJsonCodec172、ConfigBackup77、DeviceGuidePolicy77、RuleCatalog36、RuleRuntime53、RuleReplay63、ReplayCaptureSession29、CompatibilityReport53、RuleReplayCorpus393。

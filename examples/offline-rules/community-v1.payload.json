@@ -1,0 +1,1 @@
+{"schemaVersion":1,"id":"splashguard.community","version":1,"rules":[{"id":"generic.splash","packageName":"@selected","minVersionCode":0,"maxVersionCode":9223372036854775807,"windowMs":12000,"maxActions":2,"enabled":true,"allowGesture":false}]}

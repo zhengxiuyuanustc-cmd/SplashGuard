@@ -29,20 +29,22 @@ import java.util.concurrent.Executors;
 
 /** User-controlled, bounded local files. No network, background upload or executable rules. */
 public final class OfflineToolsActivity extends Activity {
-    private static final int IMPORT_RULES=201,IMPORT_SAMPLE=202,EXPORT=203;
+    private static final int IMPORT_RULES=201,IMPORT_SAMPLE=202,EXPORT=203,IMPORT_SIGNED=204;
     private static final int INK=Color.rgb(28,46,41),GREEN=Color.rgb(18,104,89),MUTED=Color.rgb(90,107,100);
     private WorkState work;
     private DiagnosticSample previewedSample;
     private Button exportSampleButton;
     private static final class Delivery {
         final String message;final int kind;final OfflineRuleStore.Pack pack;final DiagnosticSample sample;final boolean clearPreview;
-        Delivery(String message,int kind,OfflineRuleStore.Pack pack,DiagnosticSample sample,boolean clearPreview){this.message=message;this.kind=kind;this.pack=pack;this.sample=sample;this.clearPreview=clearPreview;}
+        final SignedRulePack.VerifiedPack verified;final boolean alreadyAccepted;
+        Delivery(String message,int kind,OfflineRuleStore.Pack pack,DiagnosticSample sample,boolean clearPreview){this(message,kind,pack,sample,clearPreview,null,false);}
+        Delivery(String message,int kind,OfflineRuleStore.Pack pack,DiagnosticSample sample,boolean clearPreview,SignedRulePack.VerifiedPack verified,boolean alreadyAccepted){this.message=message;this.kind=kind;this.pack=pack;this.sample=sample;this.clearPreview=clearPreview;this.verified=verified;this.alreadyAccepted=alreadyAccepted;}
     }
     /** Retains IO and its result across rotation, without retaining the previous screen. */
     private static final class WorkState {
         final ExecutorService io=Executors.newSingleThreadExecutor();
         final Handler main=new Handler(Looper.getMainLooper());
-        OfflineToolsActivity owner;boolean busy,chooserOpen;Delivery pending;DiagnosticSample preview;String export;OfflineRuleStore.Pack pack;
+        OfflineToolsActivity owner;boolean busy,chooserOpen;Delivery pending;DiagnosticSample preview;String export;OfflineRuleStore.Pack pack;SignedRulePack.VerifiedPack verified;boolean alreadyAccepted;
         void complete(Delivery value){main.post(()->{busy=false;pending=value;if(owner!=null)owner.deliverPending();});}
     }
     private LinearLayout content;
@@ -62,10 +64,10 @@ public final class OfflineToolsActivity extends Activity {
         if(saved!=null){
             if(retained==null){
                 work.chooserOpen=saved.getBoolean("chooser");
-                String preview=saved.getString("pack");if(preview!=null)try{work.pack=RuleJsonCodec.decodePack(preview);}catch(RuntimeException invalid){work.pack=null;}
             }
         }
         render();refresh();
+        if(saved!=null&&retained==null&&saved.getBoolean("hadPreview"))notice.setText("进程重建后已清除文件预览，请重新选择；不会恢复认证或自动应用。");
         if(saved!=null&&retained==null&&saved.getBoolean("inFlight"))notice.setText("上次文件或保存操作已中断。当前规则已重新读取，请检查状态后重试；不会自动重放操作。");
         if(work.busy)notice.setText("正在完成上次本地操作，请稍候…");
         if(previewedSample!=null)samplePreview.setText(describe(previewedSample)+"\n\n"+RuleJsonCodec.encodeSample(previewedSample));
@@ -73,9 +75,9 @@ public final class OfflineToolsActivity extends Activity {
     }
     @Override public Object onRetainNonConfigurationInstance(){return work;}
     @Override protected void onSaveInstanceState(Bundle out){
-        // Diagnostic previews and pending exports stay in retained memory, never in saved-state files.
-        out.putBoolean("chooser",work.chooserOpen);out.putBoolean("inFlight",work.busy);
-        if(work.pack!=null)out.putString("pack",RuleJsonCodec.encodePack(work.pack));super.onSaveInstanceState(out);
+        // Original signed bytes, parsed packs and previews stay only in retained process memory.
+        out.putBoolean("chooser",work.chooserOpen);out.putBoolean("inFlight",work.busy);out.putBoolean("hadPreview",work.pack!=null);
+        super.onSaveInstanceState(out);
     }
     @Override protected void onPause(){resetRestore();super.onPause();}
     @Override protected void onDestroy(){if(work.owner==this)work.owner=null;if(!isChangingConfigurations())work.io.shutdownNow();super.onDestroy();}
@@ -93,17 +95,18 @@ public final class OfflineToolsActivity extends Activity {
         TextView h=text("离线规则与诊断",27,INK);h.setTypeface(null,Typeface.BOLD);content.addView(h);
         body(content,"日常使用无需操作本页。全部由本人选择文件，不会自动上传；恢复规则也不会改变应用选择或系统授权。");
         LinearLayout rules=card("规则限制");ruleStatus=text("",16,INK);rules.addView(ruleStatus);
-        body(rules,"文件只能缩短识别时段、减少操作次数、限制版本或停用现有规则；不能新增点击位置、脚本、应用或识别条件。此功能不验证作者签名，请仅导入来源明确的文件。");
+        body(rules,"文件只能缩短识别时段、减少操作次数、限制版本或停用现有规则；不能新增点击位置、脚本、应用或识别条件。作者签名文件会核对内置信任公钥及历史版本；普通本地文件会明确标记为未认证。签名不证明按钮真实或广告效果。");
         body(rules,"可先单独暂停某组规则，再确认应用。暂停通用规则后，B站专用规则仍可运行；暂停B站处理会限制该App内全部开屏规则。恢复可撤销最近一次修改，或明确恢复全部内置规则。");
         pauseGeneric=button(rules,"暂停通用开屏规则（先预览）",v->previewPause(RuleCatalog.GENERIC));
         pauseBili=button(rules,"暂停B站处理（先预览）",v->previewPause(RuleCatalog.BILI));
         button(rules,"导出当前限制模板",v->exportTemplate());
-        button(rules,"选择规则文件，先预览",v->choose(IMPORT_RULES));
+        button(rules,"选择作者签名文件（先预览）",v->choose(IMPORT_SIGNED));
+        button(rules,"选择普通本地限制（未认证）",v->choose(IMPORT_RULES));
         rulePreview=text("尚未选择文件。",15,MUTED);rulePreview.setTextIsSelectable(true);rules.addView(rulePreview);
         applyButton=button(rules,"确认应用预览中的限制",v->applyPreview());
         undoButton=button(rules,"撤销最近规则修改",v->mutate(context->RuleData.rollback(context)?"已撤销最近规则修改。":"没有可撤销的规则修改。"));
         restoreButton=button(rules,"恢复内置规则",v->{
-            if(restoreStep==0){restoreStep=1;restoreButton.setText("再次点击，确认恢复内置规则");notice.setText("恢复会移除导入限制及撤销记录；应用选择、功能开关和系统权限保持原样。");}
+            if(restoreStep==0){restoreStep=1;restoreButton.setText("再次点击，确认恢复内置规则");notice.setText("恢复会移除当前限制及撤销记录，保留已接收的签名版本历史；历史损坏时认证导入仍暂停。应用选择、功能开关和系统权限保持原样。");}
             else{restoreStep=0;mutate(context->{RuleData.restoreBuiltIns(context);return "已恢复内置规则。";});}
         });
         LinearLayout compatibility=card("触点兼容暂不可用");
@@ -121,18 +124,18 @@ public final class OfflineToolsActivity extends Activity {
         setContentView(scroll);scroll.requestApplyInsets();
     }
     private void refresh(){
-        try{OfflineRuleStore store=RuleData.loadStore(this);OfflineRuleStore.Pack pack=store.currentPack();ruleStatus.setText(pack==null?"当前：内置规则":"当前限制包："+pack.id+" / 版本 "+pack.version);undoButton.setEnabled(store.canRollback()&&!work.busy&&!work.chooserOpen);pauseGeneric.setEnabled(store.effective(RuleCatalog.GENERIC).enabled&&!work.busy&&!work.chooserOpen);pauseBili.setEnabled(store.effective(RuleCatalog.BILI).enabled&&!work.busy&&!work.chooserOpen);ruleStatus.append("\n通用规则："+(store.effective(RuleCatalog.GENERIC).enabled?"启用":"暂停")+"；B站处理："+(store.effective(RuleCatalog.BILI).enabled?"启用":"暂停"));error="";}
+        try{OfflineRuleStore store=RuleData.loadStore(this);OfflineRuleStore.Pack pack=store.currentPack();ruleStatus.setText(pack==null?"当前：内置规则":"当前限制包："+pack.id+" / 版本 "+pack.version);undoButton.setEnabled(store.canRollback()&&!work.busy&&!work.chooserOpen);pauseGeneric.setEnabled(store.effective(RuleCatalog.GENERIC).enabled&&!work.busy&&!work.chooserOpen);pauseBili.setEnabled(store.effective(RuleCatalog.BILI).enabled&&!work.busy&&!work.chooserOpen);ruleStatus.append("\n"+RuleData.sourceDescription(this));ruleStatus.append("\n通用规则："+(store.effective(RuleCatalog.GENERIC).enabled?"启用":"暂停")+"；B站处理："+(store.effective(RuleCatalog.BILI).enabled?"启用":"暂停"));error="";}
         catch(RuntimeException invalid){error="本地规则无法验证，自动处理将停止。可恢复内置规则后再试。";ruleStatus.setText(error);undoButton.setEnabled(false);pauseGeneric.setEnabled(false);pauseBili.setEnabled(false);}
-        applyButton.setEnabled(work.pack!=null&&error.isEmpty()&&!work.busy&&!work.chooserOpen);
+        applyButton.setEnabled(work.pack!=null&&!work.alreadyAccepted&&error.isEmpty()&&!work.busy&&!work.chooserOpen);
         restoreButton.setEnabled(!work.busy&&!work.chooserOpen);if(restoreStep==0)restoreButton.setText("恢复内置规则");
-        if(work.pack!=null)rulePreview.setText(describe(work.pack));
+        if(work.pack!=null){String origin=work.verified==null?"普通本地限制：未验证发布者签名":"发布者签名已验证："+work.verified.publisher+" / "+work.verified.channel+"\n密钥："+work.verified.kid+"\n"+(work.alreadyAccepted?"该版本与内容已接收过，不会重新应用或改变撤销记录。":"签名仅认证本次文件，尚未应用；确认时会重新验签并核对当前限制。");rulePreview.setText(origin+"\n\n"+describe(work.pack));}
         exportSampleButton.setEnabled(previewedSample!=null&&!work.busy&&!work.chooserOpen);
     }
     private void previewPause(String ruleId){
         try{OfflineRuleStore store=RuleData.loadStore(this);OfflineRuleStore.RuleLimit rule=store.effective(ruleId);if(rule==null||!rule.enabled)return;
             OfflineRuleStore.Pack current=store.currentPack();int revision=current!=null&&"local.controls".equals(current.id)?current.version+1:1;
             OfflineRuleStore.RuleLimit paused=new OfflineRuleStore.RuleLimit(rule.id,rule.packageName,rule.minVersionCode,rule.maxVersionCode,rule.windowMs,rule.maxActions,false,rule.allowGesture);
-            OfflineRuleStore.Pack next=new OfflineRuleStore.Pack(1,"local.controls",revision,java.util.Collections.singletonList(paused));store.apply(next);work.pack=next;refresh();notice.setText("暂停设置尚未生效，请核对预览并确认。撤销最近规则修改可恢复上一状态。");
+            OfflineRuleStore.Pack next=new OfflineRuleStore.Pack(1,"local.controls",revision,java.util.Collections.singletonList(paused));store.apply(next);work.pack=next;work.verified=null;work.alreadyAccepted=false;refresh();notice.setText("暂停设置尚未生效，请核对预览并确认。撤销最近规则修改可恢复上一状态。");
         }catch(RuntimeException invalid){notice.setText("不能生成暂停预览，请检查当前规则状态；没有自动更改规则。");}
     }
     private void exportTemplate(){
@@ -141,18 +144,24 @@ public final class OfflineToolsActivity extends Activity {
             requestExport(RuleJsonCodec.encodePack(new OfflineRuleStore.Pack(1,"local.restrictions",next,store.effectiveRules())),"SplashGuard-rule-limits.json");
         }catch(RuntimeException invalid){notice.setText("无法生成限制模板。请检查规则状态；版本号达到上限时需重新命名限制包。");}
     }
-    private void applyPreview(){final OfflineRuleStore.Pack pack=work.pack;if(pack==null)return;mutate(context->{RuleData.apply(context,pack);return "限制已应用。已停止当前识别时段，后续重新进入应用时生效。";});}
+    private void applyPreview(){
+        final OfflineRuleStore.Pack pack=work.pack;if(pack==null||work.alreadyAccepted)return;
+        final String envelope=work.verified==null?null:work.verified.originalEnvelope;
+        mutate(context->{if(envelope!=null&&!RuleData.applySigned(context,envelope))return "此文件已接收过，没有重新应用或修改撤销记录。";
+            if(envelope==null)RuleData.apply(context,pack);
+            return "限制已应用。已停止当前识别时段，后续重新进入应用时生效。";});
+    }
     private interface Change{String run(Context context);}
     private void mutate(Change change){
         final WorkState task=work;final Context app=getApplicationContext();task.busy=true;refresh();notice.setText("正在保存本地设置…");
-        task.io.execute(()->{String result;boolean saved=false;try{result=change.run(app);saved=true;}catch(RuntimeException invalid){result="未能保存或规则不符合限制要求，设置未确认。请重新检查当前状态；不会自动放宽规则。";}
+        task.io.execute(()->{String result;boolean saved=false;try{result=change.run(app);saved=true;}catch(RuntimeException invalid){result="保存未确认或限制不符合要求。保存出错时本次进程会暂停规则处理；请检查状态，必要时明确恢复内置规则。";}
             task.complete(new Delivery(result,0,null,null,saved));});
     }
     private void deliverPending(){
         if(isFinishing()||isDestroyed()||work.owner!=this||work.pending==null)return;
         Delivery result=work.pending;work.pending=null;
-        if(result.clearPreview){work.pack=null;rulePreview.setText("尚未选择文件。");}
-        if(result.kind==IMPORT_RULES){work.pack=result.pack;if(work.pack==null)rulePreview.setText("没有可应用的预览。");}
+        if(result.clearPreview){work.pack=null;work.verified=null;work.alreadyAccepted=false;rulePreview.setText("尚未选择文件。");}
+        if(result.kind==IMPORT_RULES||result.kind==IMPORT_SIGNED){work.pack=result.pack;work.verified=result.verified;work.alreadyAccepted=result.alreadyAccepted;if(work.pack==null)rulePreview.setText("没有可应用的预览。");}
         if(result.sample!=null){previewedSample=result.sample;work.preview=previewedSample;samplePreview.setText(describe(previewedSample)+"\n\n"+RuleJsonCodec.encodeSample(previewedSample));}
         refresh();notice.setText(result.message);
     }
@@ -166,20 +175,29 @@ public final class OfflineToolsActivity extends Activity {
         catch(RuntimeException unavailable){work.chooserOpen=false;work.export=null;refresh();notice.setText("系统文件保存入口不可用，没有导出或上传。");}
     }
     @Override protected void onActivityResult(int request,int result,Intent data){
-        super.onActivityResult(request,result,data);if(request!=IMPORT_RULES&&request!=IMPORT_SAMPLE&&request!=EXPORT)return;
+        super.onActivityResult(request,result,data);if(request!=IMPORT_RULES&&request!=IMPORT_SIGNED&&request!=IMPORT_SAMPLE&&request!=EXPORT)return;
         work.chooserOpen=false;String outgoing=work.export;work.export=null;
         if(result!=RESULT_OK||data==null||data.getData()==null){refresh();notice.setText("已取消文件操作。");return;}
         final Uri uri=data.getData();final WorkState task=work;final Context app=getApplicationContext();final ContentResolver resolver=app.getContentResolver();task.busy=true;refresh();notice.setText("正在处理所选文件…");
         task.io.execute(()->{
-            OfflineRuleStore.Pack pack=null;DiagnosticSample value=null;String message;
+            OfflineRuleStore.Pack pack=null;DiagnosticSample value=null;String message;SignedRulePack.VerifiedPack verified=null;boolean alreadyAccepted=false;
             try{
                 if(request==EXPORT){if(outgoing==null)throw new IllegalStateException();byte[] bytes=outgoing.getBytes(StandardCharsets.UTF_8);OfflineRuleStore.requireInputSize(bytes.length);
                     try(OutputStream stream=resolver.openOutputStream(uri,"wt")){if(stream==null)throw new IllegalStateException();stream.write(bytes);}message="文件已保存到你选择的位置，没有自动上传或发送。";
                 }else if(request==IMPORT_RULES){OfflineRuleStore.Pack decoded=RuleJsonCodec.decodePack(read(resolver,uri));OfflineRuleStore preview=RuleData.loadStore(app);preview.apply(decoded);pack=decoded;message="文件符合限制要求，尚未生效。检查预览后再确认。";}
+                else if(request==IMPORT_SIGNED){verified=RuleTrust.verify(read(resolver,uri));RuleUpdateState.Plan plan=RuleData.previewSigned(app,verified);pack=verified.pack;alreadyAccepted=plan.alreadyAccepted;message=alreadyAccepted?"此版本与内容已接收过，不会重新应用。":"发布者签名已验证，尚未生效。检查限制预览后再确认。";}
                 else{value=RuleJsonCodec.decodeSample(read(resolver,uri));message="离线复核完成，仅解释文件中的条件，没有执行点击。";}
-            }catch(Exception invalid){message="文件操作未完成：文件格式、大小或规则限制不符合要求，或系统无法读写。没有自动应用规则。";}
-            task.complete(new Delivery(message,request,pack,value,false));
+            }catch(SignedRulePack.Failure invalid){message=authenticationError(invalid.reason);pack=null;verified=null;}
+            catch(Exception invalid){message=verified==null?"文件操作未完成：文件格式、大小或规则限制不符合要求，或系统无法读写。没有自动应用规则。":"文件未应用：签名通过，但历史版本、限制或本地状态不符合要求。请检查当前状态。";pack=null;verified=null;}
+            task.complete(new Delivery(message,request,pack,value,false,verified,alreadyAccepted));
         });
+    }
+    private static String authenticationError(SignedRulePack.Reason reason){
+        switch(reason){case UNTRUSTED_KEY:return "文件未应用：签名者不在内置信任列表中。";
+            case SIGNATURE:return "文件未应用：签名验证失败，内容可能被修改或签名不匹配。";
+            case PACK_SCOPE:return "文件未应用：此发布者未获准发布该限制包。";
+            case CRYPTO_UNAVAILABLE:case TRUST_CONFIGURATION:return "认证配置暂不可用，没有应用文件。";
+            default:return "文件未应用：签名格式、大小或载荷不符合要求。";}
     }
     private static String read(ContentResolver resolver,Uri uri)throws Exception{
         ByteArrayOutputStream bytes=new ByteArrayOutputStream();byte[] buffer=new byte[4096];
