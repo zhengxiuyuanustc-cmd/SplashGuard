@@ -109,7 +109,15 @@ public final class OfflineRuleInstrumentedTest {
     private interface BackgroundCondition{boolean check();}
     private void awaitBackground(String label,BackgroundCondition condition){
         long until=SystemClock.elapsedRealtime()+12000;
-        while(SystemClock.elapsedRealtime()<until){if(condition.check())return;SystemClock.sleep(100);}fail(label);
+        while(SystemClock.elapsedRealtime()<until){if(condition.check())return;SystemClock.sleep(100);}captureActiveFailure(label);fail(label);
+    }
+    private void captureActiveFailure(String label){
+        try{File directory=new File(app.getExternalFilesDir(null),"instrumentation");directory.mkdirs();
+            String name=label.replaceAll("[^A-Za-z0-9]+","_");
+            device.dumpWindowHierarchy(new File(directory,name+"-active.xml"));device.takeScreenshot(new File(directory,name+"-active.png"));
+            DiagnosticSample value=RuleData.lastSample();String details="foreground="+device.getCurrentPackageName()+"\nserviceConnected="+SkipService.isConnected()+"\ncount="+Prefs.get(app).getInt("count",0)+"\nsample="+(value==null?"none":value.reason.name())+"\ndiagnostic="+Prefs.get(app).getString("diagnostic","");
+            try(java.io.FileOutputStream output=new java.io.FileOutputStream(new File(directory,name+"-state.txt"))){output.write(details.getBytes(StandardCharsets.UTF_8));}
+        }catch(Exception unavailable){/* Preserve the original assertion. Only synthetic emulator data is read. */}
     }
     private void enableActualService()throws Exception{
         String fixture=InstrumentationRegistry.getInstrumentation().getContext().getPackageName();
@@ -121,7 +129,7 @@ public final class OfflineRuleInstrumentedTest {
         awaitBackground("System must actually connect the service",SkipService::isConnected);
     }
     private void startSyntheticSplash(String mode)throws Exception{
-        device.executeShellCommand("am start -W -n org.splashguard.app.test/org.splashguard.app.fixture.SyntheticSplashActivity --es fixtureMode "+mode);
+        device.executeShellCommand("am start -W -f 0x10008000 -n org.splashguard.app.test/org.splashguard.app.fixture.SyntheticSplashActivity --es fixtureMode "+mode);
     }
     @Test public void actualServiceClicksOneExplicitSyntheticSkip()throws Exception{
         enableActualService();startSyntheticSplash("unique");

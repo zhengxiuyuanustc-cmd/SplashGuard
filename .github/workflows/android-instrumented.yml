@@ -97,9 +97,17 @@ jobs:
           test "$booted" = true
           test "$(adb -s "$ANDROID_SERIAL" shell getprop ro.kernel.qemu | tr -d '\r')" = 1
           adb -s "$ANDROID_SERIAL" shell input keyevent 82
-          adb -s "$ANDROID_SERIAL" shell settings put global window_animation_scale 0
-          adb -s "$ANDROID_SERIAL" shell settings put global transition_animation_scale 0
-          adb -s "$ANDROID_SERIAL" shell settings put global animator_duration_scale 0
+          settings_ready=false
+          for attempt in $(seq 1 30); do
+            if adb -s "$ANDROID_SERIAL" shell settings put global window_animation_scale 0 &&
+               adb -s "$ANDROID_SERIAL" shell settings put global transition_animation_scale 0 &&
+               adb -s "$ANDROID_SERIAL" shell settings put global animator_duration_scale 0; then
+              settings_ready=true
+              break
+            fi
+            sleep 2
+          done
+          test "$settings_ready" = true
           adb -s "$ANDROID_SERIAL" shell getprop ro.build.fingerprint >"$RUNNER_TEMP/emulator-evidence/environment.txt"
           adb -s "$ANDROID_SERIAL" shell getprop ro.build.version.sdk >>"$RUNNER_TEMP/emulator-evidence/environment.txt"
       - name: Run real document-picker and persistence tests
@@ -120,6 +128,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p "$RUNNER_TEMP/emulator-evidence"
+          adb -s "$ANDROID_SERIAL" logcat -d -t 700 >"$RUNNER_TEMP/emulator-evidence/boot-logcat.txt" 2>&1 || true
           if adb -s "$ANDROID_SERIAL" shell test -d /sdcard/Android/data/org.splashguard.app/files/instrumentation; then
             adb -s "$ANDROID_SERIAL" pull /sdcard/Android/data/org.splashguard.app/files/instrumentation "$RUNNER_TEMP/emulator-evidence/"
           fi
