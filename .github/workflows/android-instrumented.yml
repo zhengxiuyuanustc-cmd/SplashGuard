@@ -81,6 +81,12 @@ jobs:
           "$manager" --sdk_root="$ANDROID_HOME" 'platform-tools' 'emulator' 'platforms;android-35' 'build-tools;34.0.0' 'build-tools;35.0.0' 'system-images;${{ matrix.image }};google_apis;x86_64'
           echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
           echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --name splashguard-ci --package 'system-images;${{ matrix.image }};google_apis;x86_64' --device pixel_2
+          # A fresh Android 17 Google image fills the old device's default /data.
+          # Configure only this disposable AVD before its first wipe-data boot.
+          avd_config="$ANDROID_AVD_HOME/splashguard-ci.avd/config.ini"
+          test -f "$avd_config"
+          sed -i '/^disk.dataPartition.size[[:space:]]*=/d' "$avd_config"
+          echo 'disk.dataPartition.size=6G' >> "$avd_config"
       - name: Start a fresh isolated emulator
         shell: bash
         run: |
@@ -108,6 +114,19 @@ jobs:
             sleep 2
           done
           test "$settings_ready" = true
+          package_ready=false
+          for attempt in $(seq 1 30); do
+            if adb -s "$ANDROID_SERIAL" shell pm path android | grep -q '^package:'; then
+              package_ready=true
+              break
+            fi
+            sleep 2
+          done
+          test "$package_ready" = true
+          adb -s "$ANDROID_SERIAL" shell df -k /data >"$RUNNER_TEMP/emulator-evidence/data-space.txt"
+          available_kb=$(awk 'END {print $4}' "$RUNNER_TEMP/emulator-evidence/data-space.txt" | tr -d '\r')
+          [[ "$available_kb" =~ ^[0-9]+$ ]]
+          test "$available_kb" -ge 1048576
           adb -s "$ANDROID_SERIAL" shell getprop ro.build.fingerprint >"$RUNNER_TEMP/emulator-evidence/environment.txt"
           adb -s "$ANDROID_SERIAL" shell getprop ro.build.version.sdk >>"$RUNNER_TEMP/emulator-evidence/environment.txt"
       - name: Run real document-picker and persistence tests
