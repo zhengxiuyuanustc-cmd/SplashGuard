@@ -1,6 +1,6 @@
 # 标准Gradle构建与Android lint验证
 
-0.1.14已通过21程序/1645项与SDK整包构建。新来源验签和保存逻辑的标准Gradle及lint需看本次提交的远程结果，见[TESTING](../TESTING.md)；下述0.1.13为历史记录。
+准确源码`20227dcc14329e393fd83369a67049650eb25429`的[标准debug/未签名release与双lint](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40453437474)成功，job122021188350完成四个任务；[共享纯Java CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40453437447)成功，job122021188221日志核对21程序/1645项及新326项。两次run的head_sha已核对；旧源码结果不覆盖本次实现。 本地SDK整包及同证书非调试签名另行核对，完整边界见[TESTING](../TESTING.md)；下述0.1.13为历史记录。
 
 0.1.13准确源码`6aab64bc20d098ae18cac4784a7342383aeb8268`的[标准Gradle检查](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40441424714)成功：assembleDebug、assembleRelease、lintDebug、lintRelease均执行，job121982434750。对应[纯Java CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40441424691)完成17程序/1319项，包含32份合成回放语料393项。运行head_sha及日志已核对；完整构建、签名与未验收范围见[TESTING](../TESTING.md)。下述0.1.12及0.1.11为历史记录。
 

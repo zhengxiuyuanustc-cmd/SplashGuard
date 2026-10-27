@@ -1,14 +1,24 @@
 # 非调试预览构建准备
 
+## 0.1.14候选实际记录（2026-10-27，未公开分发）
+
+准确源码`20227dcc14329e393fd83369a67049650eb25429`的[标准debug/未签名release与双lint](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40453437474)成功，job122021188350完成四个任务；[共享纯Java CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40453437447)成功，job122021188221日志核对21程序/1645项及新326项。两次run的head_sha已核对；旧源码结果不覆盖本次实现。
+
+SDK未签名验证文件126767字节，SHA256 `b8f0a3b6b0321d9615f48528b36fe6d1d6ed8d19abe26e658403d7f21a177384`。直接沿用已授权的现有APK升级签名签署原件，不重新编译或生成APK密钥。全部6个原始ZIP条目的解压字节不变；可安装非调试测试包135797字节，SHA256 `1bf8732b99219d460872406b8ca287241a59c80d3cf73c59fae70bb22a5d9aab`。
+
+v2/v3通过，单一证书SHA256 `48bba90fb630f2b95d30fe7d3420dd7e884fefbaac842f0416424ba42d2517c4`与旧预览一致。二进制Manifest核对0.1.14/code15、min26/target35、debuggable=false、无uses-permission、canPerformGestures=false、flags0x10。
+
+规则作者验签另用新建的独立3072位规则密钥，由维护者本机Windows DPAPI CurrentUser保护；APK只含公钥。未将APK升级密钥用于规则签名。正式密钥备份/轮换治理仍待完善，不把本地非调试包视为正式稳定发行。包未安装、未公开分发或替换默认下载；手机文件流程、多机型广告和真实保存故障仍待验收。
+
 ## 0.1.13候选实际记录（2026-10-27，未公开分发）
 
 准确源码6aab64bc20d098ae18cac4784a7342383aeb8268的标准debug/未签名release及双lint成功；17程序1319项本地/远程检查通过。最终SDK未签名验证文件116144字节，SHA256 `aef9bcc6abcd731b52a4bf248aaf981f04c9e4a6976e3816e535a243ad423465`。
 
 沿用维护者已授权的本地配置和升级密钥，直接签署上述原件，没有重新编译或生成新密钥。签后全部6个原始ZIP条目的解压字节相同；测试包123508字节，SHA256 `a2d589d434735c720b585756f44bb74d19c53737cc8f13204b4797b9ff2dae5c`。v2/v3验证通过，单一证书SHA256 `48bba90fb630f2b95d30fe7d3420dd7e884fefbaac842f0416424ba42d2517c4`与旧预览一致。
 
-二进制Manifest核对0.1.13/code14、min26/target35、debuggable=false、无uses-permission；服务canPerformGestures=false，accessibilityFlags仍仅0x10。不联网不等于不需要无障碍授权；不可调试不等于系统允许或多机型通过。包仅保存在维护者本地，未上传、未安装、未替换网站默认下载。没有用APK私钥签署规则文件；规则验签仍只是独立设计。CI链接及边界见[TESTING](../TESTING.md)。
+二进制Manifest核对0.1.13/code14、min26/target35、debuggable=false、无uses-permission；服务canPerformGestures=false，accessibilityFlags仍仅0x10。不联网不等于不需要无障碍授权；不可调试不等于系统允许或多机型通过。包仅保存在维护者本地，未上传、未安装、未替换网站默认下载。没有用APK私钥签署规则文件；0.1.13时规则验签仍只是独立设计，0.1.14已另行实现。CI链接及边界见[TESTING](../TESTING.md)。
 
-本页描述显式的本地非调试预览路径。脚本和CI配置已准备，不表示本次提交已构建、真机验收、正式发行或替换官网下载。原生鸿蒙能力也不由构建模式改变。
+本页描述显式的本地非调试预览路径。构建和签名结果以上方对应版本的实际记录为准；脚本配置本身不代表真机验收、正式发行或替换官网下载。原生鸿蒙能力也不由构建模式改变。
 
 ## 备用SDK构建模式
 

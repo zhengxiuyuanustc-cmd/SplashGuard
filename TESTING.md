@@ -6,9 +6,11 @@
 
 新检查覆盖原始字节签名/摘要、规范base64url、头字段/URL注入、严格UTF8、版本历史、同版本同内容不写入、未认证高版本不污染可信渠道、撤销/重置/重启、旧状态迁移、损坏隔离，以及模拟后端在内存先变化但磁盘提交失败时的暂停/恢复。故障检查使用假保存后端，不是Android磁盘故障实测；没有宣称提交失败一定不改变SharedPreferences内存。
 
-SDK35资源、全Java、D8、对齐及上述21程序已通过。未签名验证文件126767字节，SHA256 `b8f0a3b6b0321d9615f48528b36fe6d1d6ed8d19abe26e658403d7f21a177384`，不可安装/分发；本次标准远程检查与APK签名以本节后续实际结果为准，0.1.13结果不覆盖本次源码。
+SDK35资源、全Java、D8、对齐及上述21程序已通过。未签名验证文件126767字节，SHA256 `b8f0a3b6b0321d9615f48528b36fe6d1d6ed8d19abe26e658403d7f21a177384`，不可安装/分发；准确源码`20227dcc14329e393fd83369a67049650eb25429`的[标准debug/未签名release与双lint](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40453437474)成功，job122021188350完成四个任务；[共享纯Java CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40453437447)成功，job122021188221日志核对21程序/1645项及新326项。两次run的head_sha已核对；旧源码结果不覆盖本次实现。
 
 维护者专用作者工具在Windows/PowerShell7.6.5生成的签名已用编译公钥验证；工具声明最低7.6，输出CreateNew避免覆盖已有文件。新3072位规则私钥由Windows DPAPI CurrentUser保护，留在忽略目录；只将公钥、工具和演示文件纳入源码，未读取APK私钥用于规则签名。
+
+维护者既有同意范围内沿用APK升级签名，直接签署已核验的未签名原件，全部6个原始ZIP条目的解压字节相同。可安装本地测试包135797字节，SHA256 `1bf8732b99219d460872406b8ca287241a59c80d3cf73c59fae70bb22a5d9aab`；单一证书`48bba90fb630f2b95d30fe7d3420dd7e884fefbaac842f0416424ba42d2517c4`与旧预览一致，v2/v3通过。二进制Manifest为0.1.14/code15、min26/target35、不可调试、无uses-permission；服务canPerformGestures=false、flags仍0x10。APK签名与新规则签名使用独立密钥。包未安装、未上传或替换默认下载。
 
 新导入界面、文件提供者、旋转/进程重建、真实保存故障、多机型广告和长期后台尚未验收；原生鸿蒙仍不支持。程序未安装到手机，网站默认0.1.7与GitHub Release0.1.4未替换。普通用户无需导入演示文件。
 
