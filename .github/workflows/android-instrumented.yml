@@ -78,9 +78,14 @@ jobs:
           y
           y
           LICENSES
+          "$manager" --sdk_root="$ANDROID_HOME" 'cmdline-tools;22.0'
+          manager="$ANDROID_HOME/cmdline-tools/22.0/bin/sdkmanager"
+          test -x "$manager"
           "$manager" --sdk_root="$ANDROID_HOME" 'platform-tools' 'emulator' 'platforms;android-35' 'build-tools;34.0.0' 'build-tools;35.0.0' 'system-images;${{ matrix.image }};google_apis;x86_64'
           echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
-          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --name splashguard-ci --package 'system-images;${{ matrix.image }};google_apis;x86_64' --device pixel_2
+          echo no | "$ANDROID_HOME/cmdline-tools/22.0/bin/avdmanager" create avd --name splashguard-ci --package 'system-images;${{ matrix.image }};google_apis;x86_64' --device pixel_2
+          grep -Fx 'target=${{ matrix.image }}' "$ANDROID_AVD_HOME/splashguard-ci.ini"
+          cp "$ANDROID_AVD_HOME/splashguard-ci.ini" "$RUNNER_TEMP/emulator-evidence/avd-target.ini"
           # A fresh Android 17 Google image fills the old device's default /data.
           # Configure only this disposable AVD before its first wipe-data boot.
           avd_config="$ANDROID_AVD_HOME/splashguard-ci.avd/config.ini"
@@ -91,7 +96,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          "$ANDROID_HOME/emulator/emulator" -avd splashguard-ci -port 5554 -no-window -no-audio -no-boot-anim -no-snapshot -wipe-data -gpu swiftshader_indirect -accel on -memory ${{ matrix.memory }} >"$RUNNER_TEMP/emulator-evidence/emulator.log" 2>&1 &
+          "$ANDROID_HOME/emulator/emulator" -avd splashguard-ci -port 5554 -no-window -no-audio -no-boot-anim -no-snapshot -wipe-data -gpu software -accel on -memory ${{ matrix.memory }} >"$RUNNER_TEMP/emulator-evidence/emulator.log" 2>&1 &
           emulator_pid=$!
           timeout 180s adb -s "$ANDROID_SERIAL" wait-for-device
           booted=false

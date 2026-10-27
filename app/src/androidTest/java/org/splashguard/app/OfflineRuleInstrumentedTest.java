@@ -54,7 +54,12 @@ public final class OfflineRuleInstrumentedTest {
         Configurator.getInstance().setUiAutomationFlags(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES);
         device=UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         assertEquals("Refusing to alter a physical phone","1",device.executeShellCommand("getprop ro.kernel.qemu").trim());
-        isolated=true;app=InstrumentationRegistry.getInstrumentation().getTargetContext();
+        app=InstrumentationRegistry.getInstrumentation().getTargetContext();
+        android.os.UserManager users=app.getSystemService(android.os.UserManager.class);
+        long unlockDeadline=SystemClock.elapsedRealtime()+20000;
+        while(!users.isUserUnlocked()&&SystemClock.elapsedRealtime()<unlockDeadline)SystemClock.sleep(100);
+        assertTrue("The disposable emulator user must be unlocked before preference tests",users.isUserUnlocked());
+        isolated=true;
         assertEquals("Acceptance target must be non-debuggable",0,app.getApplicationInfo().flags&ApplicationInfo.FLAG_DEBUGGABLE);
         assertTrue("Reset only the empty emulator fixture preferences",Prefs.get(app).edit().clear().commit());
         RuleData.clearSample();
