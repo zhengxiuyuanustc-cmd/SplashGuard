@@ -19,7 +19,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        api: [26, 35]
+        include:
+          - api: 26
+            image: android-26
+            memory: 2048
+          - api: 35
+            image: android-35
+            memory: 2048
+          - api: 37
+            image: android-37.0
+            memory: 4096
     concurrency:
       group: emulator-${{ github.ref }}-${{ matrix.api }}
       cancel-in-progress: true
@@ -69,14 +78,14 @@ jobs:
           y
           y
           LICENSES
-          "$manager" --sdk_root="$ANDROID_HOME" 'platform-tools' 'emulator' 'platforms;android-35' 'build-tools;34.0.0' 'build-tools;35.0.0' 'system-images;android-${{ matrix.api }};google_apis;x86_64'
+          "$manager" --sdk_root="$ANDROID_HOME" 'platform-tools' 'emulator' 'platforms;android-35' 'build-tools;34.0.0' 'build-tools;35.0.0' 'system-images;${{ matrix.image }};google_apis;x86_64'
           echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
-          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --name splashguard-ci --package 'system-images;android-${{ matrix.api }};google_apis;x86_64' --device pixel_2
+          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --name splashguard-ci --package 'system-images;${{ matrix.image }};google_apis;x86_64' --device pixel_2
       - name: Start a fresh isolated emulator
         shell: bash
         run: |
           set -euo pipefail
-          "$ANDROID_HOME/emulator/emulator" -avd splashguard-ci -port 5554 -no-window -no-audio -no-boot-anim -no-snapshot -wipe-data -gpu swiftshader_indirect -accel on -memory 2048 >"$RUNNER_TEMP/emulator-evidence/emulator.log" 2>&1 &
+          "$ANDROID_HOME/emulator/emulator" -avd splashguard-ci -port 5554 -no-window -no-audio -no-boot-anim -no-snapshot -wipe-data -gpu swiftshader_indirect -accel on -memory ${{ matrix.memory }} >"$RUNNER_TEMP/emulator-evidence/emulator.log" 2>&1 &
           emulator_pid=$!
           timeout 180s adb -s "$ANDROID_SERIAL" wait-for-device
           booted=false
@@ -95,14 +104,14 @@ jobs:
           adb -s "$ANDROID_SERIAL" shell getprop ro.build.version.sdk >>"$RUNNER_TEMP/emulator-evidence/environment.txt"
       - name: Run real document-picker and persistence tests
         shell: bash
-        run: bash ./gradlew --no-daemon :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.isolatedEmulator=true
+        run: bash ./gradlew --no-daemon :app:connectedAcceptanceAndroidTest -Pandroid.testInstrumentationRunnerArguments.isolatedEmulator=true
       - name: Verify test components stay out of the production APK
         shell: bash
         run: |
           set -euo pipefail
           bash ./gradlew --no-daemon :app:assembleRelease
           "$ANDROID_HOME/build-tools/35.0.0/aapt2" dump xmltree app/build/outputs/apk/release/app-release-unsigned.apk --file AndroidManifest.xml >"$RUNNER_TEMP/emulator-evidence/release-manifest.txt"
-          if rg -q 'FixtureDocumentsProvider|androidx.test|android.permission.INTERNET|android.permission.MANAGE_DOCUMENTS' "$RUNNER_TEMP/emulator-evidence/release-manifest.txt"; then
+          if rg -q 'org.splashguard.app.fixture|androidx.test|android.permission.INTERNET|android.permission.MANAGE_DOCUMENTS' "$RUNNER_TEMP/emulator-evidence/release-manifest.txt"; then
             echo 'Unexpected test component or permission in production APK.'
             exit 1
           fi

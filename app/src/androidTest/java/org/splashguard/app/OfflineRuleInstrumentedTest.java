@@ -2,6 +2,8 @@ package org.splashguard.app;
 
 import static org.junit.Assert.*;
 import android.app.Activity;
+import android.app.UiAutomation;
+import android.content.pm.ApplicationInfo;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -15,6 +17,7 @@ import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
+import androidx.test.uiautomator.Configurator;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.Until;
@@ -36,7 +39,7 @@ import org.junit.runner.RunWith;
 @RunWith(AndroidJUnit4.class)
 public final class OfflineRuleInstrumentedTest {
     private static final String PICK_SIGNED="选择作者签名文件（先预览）",CONFIRM="确认应用预览中的限制";
-    private Context app;private UiDevice device;private ActivityScenario<OfflineToolsActivity> screen;private boolean isolated;
+    private Context app;private UiDevice device;private ActivityScenario<OfflineToolsActivity> screen;private boolean isolated,serviceTouched;
     @Rule public final TestWatcher evidence=new TestWatcher(){
         @Override protected void failed(Throwable failure,Description description){
             if(!isolated||device==null)return;
@@ -48,14 +51,20 @@ public final class OfflineRuleInstrumentedTest {
     };
     @Before public void prepare()throws Exception{
         assertEquals("Tests must be explicitly opted into an isolated emulator","true",InstrumentationRegistry.getArguments().getString("isolatedEmulator"));
+        Configurator.getInstance().setUiAutomationFlags(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES);
         device=UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         assertEquals("Refusing to alter a physical phone","1",device.executeShellCommand("getprop ro.kernel.qemu").trim());
         isolated=true;app=InstrumentationRegistry.getInstrumentation().getTargetContext();
+        assertEquals("Acceptance target must be non-debuggable",0,app.getApplicationInfo().flags&ApplicationInfo.FLAG_DEBUGGABLE);
         assertTrue("Reset only the empty emulator fixture preferences",Prefs.get(app).edit().clear().commit());
+        RuleData.clearSample();
         device.pressHome();
     }
     @After public void clean()throws Exception{
         if(!isolated)return;
+        device.pressHome();
+        assertTrue(Prefs.get(app).edit().putBoolean("enabled",false).commit());
+        if(serviceTouched){device.executeShellCommand("settings put secure enabled_accessibility_services ''");device.executeShellCommand("settings put secure accessibility_enabled 0");}
         File directory=new File(app.getApplicationInfo().dataDir,"shared_prefs");directory.setWritable(true,true);
         if(screen!=null){screen.close();screen=null;}
         RuleData.restoreBuiltIns(app);assertTrue(Prefs.get(app).edit().clear().commit());
@@ -96,6 +105,34 @@ public final class OfflineRuleInstrumentedTest {
             byte[] buffer=new byte[2048];int n;while((n=stream.read(buffer))!=-1)bytes.write(buffer,0,n);
         }
         return RuleTrust.verify(new String(bytes.toByteArray(),StandardCharsets.US_ASCII));
+    }
+    private interface BackgroundCondition{boolean check();}
+    private void awaitBackground(String label,BackgroundCondition condition){
+        long until=SystemClock.elapsedRealtime()+12000;
+        while(SystemClock.elapsedRealtime()<until){if(condition.check())return;SystemClock.sleep(100);}fail(label);
+    }
+    private void enableActualService()throws Exception{
+        String fixture=InstrumentationRegistry.getInstrumentation().getContext().getPackageName();
+        assertTrue(Prefs.get(app).edit().putStringSet("apps",Collections.singleton(fixture)).putBoolean("enabled",true).commit());
+        serviceTouched=true;
+        if(android.os.Build.VERSION.SDK_INT>=33)device.executeShellCommand("appops set org.splashguard.app ACCESS_RESTRICTED_SETTINGS allow");
+        device.executeShellCommand("settings put secure enabled_accessibility_services org.splashguard.app/org.splashguard.app.SkipService");
+        device.executeShellCommand("settings put secure accessibility_enabled 1");
+        awaitBackground("System must actually connect the service",SkipService::isConnected);
+    }
+    private void startSyntheticSplash(String mode)throws Exception{
+        device.executeShellCommand("am start -W -n org.splashguard.app.test/org.splashguard.app.fixture.SyntheticSplashActivity --es fixtureMode "+mode);
+    }
+    @Test public void actualServiceClicksOneExplicitSyntheticSkip()throws Exception{
+        enableActualService();startSyntheticSplash("unique");
+        assertTrue("Real accessibility node action exits the synthetic ad",device.wait(Until.hasObject(By.text("FIXTURE_CONTENT")),10000));
+        awaitBackground("One accepted operation recorded",()->Prefs.get(app).getInt("count",0)==1);
+    }
+    @Test public void actualServiceStopsOnTwoSyntheticSkipCandidates()throws Exception{
+        enableActualService();startSyntheticSplash("ambiguous");
+        awaitBackground("Actual service observes the conflict",()->RuleData.lastSample()!=null&&RuleData.lastSample().reason==DiagnosticSample.Reason.MULTIPLE_CANDIDATES);
+        assertEquals(2,device.findObjects(By.text("跳过广告")).size());assertEquals(0,Prefs.get(app).getInt("count",0));
+        assertFalse(device.hasObject(By.text("FIXTURE_CONTENT")));
     }
     @Test public void realPreferencesMigrateAndKeepAcceptedHistory()throws Exception{
         OfflineRuleStore store=new OfflineRuleStore(RuleCatalog.builtInLimits());

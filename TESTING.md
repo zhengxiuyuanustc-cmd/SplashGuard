@@ -1,8 +1,10 @@
 # 验证记录
 
-## 隔离模拟器验收入口（2026-10-27，待执行结果）
+## 隔离模拟器验收（2026-10-27）
 
-新增API 26/35的系统DocumentsUI、签名预览/确认、Activity重建、重复文件无操作、真实SharedPreferences迁移及只读私有目录写入失败恢复测试。它们只允许专用模拟器执行，测试提供者/依赖只在测试APK；发行Manifest另行核对隔离。工作流与边界见[模拟器验收](docs/ANDROID_EMULATOR_ACCEPTANCE.md)。本段提交时尚无执行结果，不将1645项纯Java或历史CI当作这些Android流程已通过。App主代码与0.1.14已签名包未改变。
+源码`2caf6578f138ec6a85348330291f3f3ffc3b75c5`的[首轮模拟器工作流](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40515660065)已成功：API26与35各实际启动6项Android仪器测试，均通过，另核对正式APK无测试组件/联网权限。它覆盖真正DocumentsUI的URI授权、签名预览/确认、Activity重建、取消/重复导入、SharedPreferences迁移及应用私有目录只读引发的实际写入失败恢复。此前两次配置失败分别为工作流上下文和adb运行路径，已修复，没有把跳过执行当成通过。
+
+本次进一步增加与release一致的不可调试验收变体、真实SkipService对独立测试APK合成按钮的动作和冲突拒点，以及官方Android17/API37.0镜像。新增范围等待本次提交实际结果，首轮6项不能覆盖新8项；测试只允许专用模拟器。详见[隔离边界与命令](docs/ANDROID_EMULATOR_ACCEPTANCE.md)。App主代码与已签名0.1.14包未改变，仍没有新增厂商真机、真实广告或物理晃动验收。
 
 ## 0.1.14候选：来源验签与独立历史（2026-10-27，未公开APK）
 
