@@ -1,6 +1,6 @@
 # Android隔离模拟器验收
 
-本套检查补充纯Java规则测试，针对Android系统文件选择器、URI读权限、Activity重建、SharedPreferences保存和写入失败恢复。首轮源码2caf657的API26/35各6项已实际通过（工作流40515660065）。现增加不可调试验收变体、真实服务合成按钮场景和API37，新增范围须看新提交实际结果，不能沿用首轮成功。
+源码`9fd308b1798394c95904066ace295084849fcca5`的[不可调试目标模拟器验收](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40526038212)已通过：Android8/API26、Android15/API35和Android17/API37各8项，JUnit报告均为8 tests / 0 failures / 0 errors / 0 skipped，另核对正式APK不含测试组件或联网权限。 它补充纯Java规则测试，并实际覆盖系统文件选择器、URI读权限、Activity重建、SharedPreferences保存/写入失败恢复、系统服务绑定及独立合成页面的单按钮操作和双候选拒点。首轮2caf657的API26/35各6项为历史基础检查。
 
 检查在新建的API 26、35和37 Google APIs x86_64模拟器运行，覆盖最低Android版本和当前targetSdk和Android17系统。API37的官方包名为android-37.0，采用至少4GiB内存，见[官方模拟器版本说明](https://developer.android.com/studio/releases/emulator)。它不代表华为、荣耀等厂商系统或原生鸿蒙，也不验证真实广告、长期后台、进程被杀或所有磁盘故障。
 
@@ -32,3 +32,11 @@ bash ./gradlew --no-daemon :app:connectedAcceptanceAndroidTest -Pandroid.testIns
 测试使用固定版本AndroidX Test/UiAutomator，参见[官方测试运行器](https://developer.android.com/training/testing/instrumented-tests/androidx-test-libraries/runner)和[DocumentsProvider说明](https://developer.android.com/guide/topics/providers/create-document-provider)。模拟器启动参数参考[Android官方命令行说明](https://developer.android.com/studio/run/emulator-commandline)。
 
 失败时仅保留新建模拟器的合成页面截图、界面树、环境和测试报告，作为工作流附件保留7天；不采集用户手机、账号或广告现场。完整验证状态见[TESTING](../TESTING.md)。
+
+## 测试环境修复记录
+
+最初扩展中，API26/35的单按钮动作已通过，双按钮测试却复用了先前测试Activity的任务。测试现在显式用NEW_TASK|CLEAR_TASK创建新页面，未修改广告匹配范围。API37先因旧设备默认数据分区耗尽导致系统服务错误，扩大为6GiB并检查至少1GiB可用空间；随后发现旧命令行工具不能正确生成37.0镜像目标，且图形服务发生hasReadColorBufferDma断言崩溃。现固定官方cmdline-tools22.0、核对目标版本，使用当前软件渲染并在改写偏好前确认模拟器用户已解锁。此前失败保留，不计入通过数量。
+
+模拟器数据分区配置见[Google工具源定义](https://android.googlesource.com/platform/prebuilts/android-emulator/+/master/linux-x86_64/lib/hardware-properties.ini)，工具安装见[官方sdkmanager说明](https://developer.android.com/tools/sdkmanager)，图形模式见[官方加速说明](https://developer.android.com/studio/run/emulator-acceleration)。所有设置仅在新建CI模拟器，不操作用户手机或绕过厂商授权。App主代码、生产权限和既有签名0.1.14包均未因此改变。
+
+Activity.recreate不等于进程被杀；只读私有目录不是全部磁盘故障。服务由隔离模拟器shell配置，不等于各厂商授权向导通过。单一合成按钮通过不证明能辨认全部伪装按钮，两个候选拒点也不证明覆盖层或真实广告已经验收。

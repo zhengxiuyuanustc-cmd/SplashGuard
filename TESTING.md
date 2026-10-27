@@ -2,11 +2,11 @@
 
 ## 隔离模拟器验收（2026-10-27）
 
-源码`2caf6578f138ec6a85348330291f3f3ffc3b75c5`的[首轮模拟器工作流](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40515660065)已成功：API26与35各实际启动6项Android仪器测试，均通过，另核对正式APK无测试组件/联网权限。它覆盖真正DocumentsUI的URI授权、签名预览/确认、Activity重建、取消/重复导入、SharedPreferences迁移及应用私有目录只读引发的实际写入失败恢复。此前两次配置失败分别为工作流上下文和adb运行路径，已修复，没有把跳过执行当成通过。
+源码`9fd308b1798394c95904066ace295084849fcca5`的[不可调试目标模拟器验收](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40526038212)已通过：Android8/API26、Android15/API35和Android17/API37各8项，JUnit报告均为8 tests / 0 failures / 0 errors / 0 skipped，另核对正式APK不含测试组件或联网权限。 实际系统绑定SkipService，独立测试APK的单按钮导致内容页出现且只计一次；双候选保持原样并报告冲突。其他六项覆盖真正DocumentsUI的URI授权、签名预览/确认、Activity重建、取消/重复导入、SharedPreferences迁移和私有目录只读的实际保存失败恢复。标准构建、双lint及1645项纯Java检查仍通过。
 
-本次进一步增加与release一致的不可调试验收变体、真实SkipService对独立测试APK合成按钮的动作和冲突拒点，以及官方Android17/API37.0镜像。新增范围等待本次提交实际结果，首轮6项不能覆盖新8项；测试只允许专用模拟器。详见[隔离边界与命令](docs/ANDROID_EMULATOR_ACCEPTANCE.md)。App主代码与已签名0.1.14包未改变，仍没有新增厂商真机、真实广告或物理晃动验收。
+测试只允许新建的专用模拟器，测试目标不可调试并使用runner临时证书；正式APK无测试组件。此前工作流上下文、adb路径、复用测试任务、数据分区及37.0镜像工具/渲染配置失败均保留，详见[隔离边界与修复记录](docs/ANDROID_EMULATOR_ACCEPTANCE.md)。App主代码与已签名0.1.14包未改变；模拟器通过不代表荣耀等厂商授权、真实广告、物理晃动或长期后台验收。Activity重建不是进程被杀恢复。
 
-## 0.1.14候选：来源验签与独立历史（2026-10-27，未公开APK）
+## 0.1.14候选：来源验签与独立历史（2026-10-27）
 
 21个共享纯Java程序1645项通过：沿用0.1.13的1319项，新增SignedRulePack137、RuleUpdateState80、RuleStateStorage92、RuleTrust17，共326项。验签测试使用临时RSA测试密钥；生产公钥整合检查只读取公开演示签名及载荷。32份合成广告匹配回放仍包含在总数，未新增真实广告样本。
 
@@ -16,9 +16,9 @@ SDK35资源、全Java、D8、对齐及上述21程序已通过。未签名验证�
 
 维护者专用作者工具在Windows/PowerShell7.6.5生成的签名已用编译公钥验证；工具声明最低7.6，输出CreateNew避免覆盖已有文件。新3072位规则私钥由Windows DPAPI CurrentUser保护，留在忽略目录；只将公钥、工具和演示文件纳入源码，未读取APK私钥用于规则签名。
 
-维护者既有同意范围内沿用APK升级签名，直接签署已核验的未签名原件，全部6个原始ZIP条目的解压字节相同。可安装本地测试包135797字节，SHA256 `1bf8732b99219d460872406b8ca287241a59c80d3cf73c59fae70bb22a5d9aab`；单一证书`48bba90fb630f2b95d30fe7d3420dd7e884fefbaac842f0416424ba42d2517c4`与旧预览一致，v2/v3通过。二进制Manifest为0.1.14/code15、min26/target35、不可调试、无uses-permission；服务canPerformGestures=false、flags仍0x10。APK签名与新规则签名使用独立密钥。包未安装、未上传或替换默认下载。
+维护者既有同意范围内沿用APK升级签名，直接签署已核验的未签名原件，全部6个原始ZIP条目的解压字节相同。可安装本地测试包135797字节，SHA256 `1bf8732b99219d460872406b8ca287241a59c80d3cf73c59fae70bb22a5d9aab`；单一证书`48bba90fb630f2b95d30fe7d3420dd7e884fefbaac842f0416424ba42d2517c4`与旧预览一致，v2/v3通过。二进制Manifest为0.1.14/code15、min26/target35、不可调试、无uses-permission；服务canPerformGestures=false、flags仍0x10。APK签名与新规则签名使用独立密钥。包未安装到用户手机；已增加独立兼容试用入口，默认下载仍为0.1.7。
 
-新导入界面、文件提供者、旋转/进程重建、真实保存故障、多机型广告和长期后台尚未验收；原生鸿蒙仍不支持。程序未安装到手机，网站默认0.1.7与GitHub Release0.1.4未替换。普通用户无需导入演示文件。
+系统文件选择、Activity重建和只读目录保存故障的隔离模拟器验收见上；厂商文件提供者、大字体/旋转、进程被杀、多机型真实广告和长期后台仍待验收。原生鸿蒙仍不支持。[兼容试用与免登录反馈](https://zhengxiuyuanustc-cmd.github.io/xiuyuanzheng.github.io/splashguard/testing/)提供独立0.1.14候选，网站默认0.1.7与GitHub Release0.1.4未替换。普通用户无需导入演示文件。
 
 ## 0.1.13候选：P0识别边界与回放语料（2026-10-27，未公开APK）
 
