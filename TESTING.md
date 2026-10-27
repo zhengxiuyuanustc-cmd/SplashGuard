@@ -6,11 +6,13 @@
 
 回放程序实际读取32份登记JSON，调用decode/evaluate/encode及再次回放；多候选身份、重叠、相反描述、错误/跨包/WebView祖先、不完整潜在线索的两种顺序、几何和无效格式都有预期结论。全部为合成帧；case01只借用历史B站摘录的目标/祖先/屏幕尺寸，摘录未枚举整页，不能证明当时唯一性或真实操作结果。没有编造数字版本码。
 
-本次SDK35资源链接、全部Java、D8、对齐和上述检查已通过。最终未签名验证文件116144字节，SHA256 `aef9bcc6abcd731b52a4bf248aaf981f04c9e4a6976e3816e535a243ad423465`，不可安装或分发；本次远程CI以实际记录为准；0.1.12的标准构建成功不能覆盖这次源码。当前仅执行控件点击，服务canPerformGestures=false；没有新增联网权限或交互窗口读取。
+本次SDK35资源链接、全部Java、D8、对齐和上述检查已通过。最终未签名验证文件116144字节，SHA256 `aef9bcc6abcd731b52a4bf248aaf981f04c9e4a6976e3816e535a243ad423465`，不可安装或分发；准确源码`6aab64bc20d098ae18cac4784a7342383aeb8268`的[标准debug/未签名release及双lint](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40441424714)成功，job121982434750对应四项任务均完成；[共享纯Java CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40441424691)成功，job121982434961日志核对17程序/1319项及32份夹具393项。两次run的head_sha均已核对；旧版结果不代替本次源码。当前仅执行控件点击，服务canPerformGestures=false；没有新增联网权限或交互窗口读取。
+
+维护者既有同意范围内沿用升级签名，直接为已检查的未签名原件签名，全部6个原始ZIP条目字节不变；本地可安装测试包123508字节，SHA256 `a2d589d434735c720b585756f44bb74d19c53737cc8f13204b4797b9ff2dae5c`，证书`48bba90fb630f2b95d30fe7d3420dd7e884fefbaac842f0416424ba42d2517c4`与旧预览一致，v2/v3通过，非调试、无uses-permission、服务坐标能力为false。未上传安装包或替换默认下载。
 
 未安装到手机，未新增真实双按钮、覆盖层、广告或长期后台/多机型验收。用户本机已解决，不要求重复本机广告测试。唯一匹配仍可能是伪装节点，系统接受控件动作不代表广告正确关闭；坐标暂停可能降低部分旧布局的跳过率。新UI及Schema 2文件选择器仍待设备验收。公开默认下载仍0.1.7。
 
-更新日期：2026-10-26。0.1.7 / versionCode 8 已通过[下载网站](https://zhengxiuyuanustc-cmd.github.io/xiuyuanzheng.github.io/splashguard/)公开开发预览包，免登录下载；网站文件与APK已匿名取回并逐项核对SHA-256。源码位于`feature/simple-ui-onboarding`，代码提交`ff2e8c10970835bda409fb909844e9c63031d94f`，由[PR #4](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/pull/4)保留人工审阅，尚未合并main。GitHub Release仍为0.1.4，与网站预览下载分别标注。
+更新日期：2026-10-27。0.1.7 / versionCode 8 已通过[下载网站](https://zhengxiuyuanustc-cmd.github.io/xiuyuanzheng.github.io/splashguard/)公开开发预览包，免登录下载；网站文件与APK已匿名取回并逐项核对SHA-256。源码位于`feature/simple-ui-onboarding`，代码提交`ff2e8c10970835bda409fb909844e9c63031d94f`，由[PR #4](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/pull/4)保留人工审阅，尚未合并main。GitHub Release仍为0.1.4，与网站预览下载分别标注。
 
 本地SDK构建、验签及48项规则+40项会话+11项引导检查共99项通过；该代码提交的[push CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40172746441)和[PR CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40172749917)均成功。CI仅运行纯Java检查，不代表标准Gradle、Android界面或广告效果均已验证。用户手动确认App可打开，修正后重复点选只出现一个窗口，关闭后能重开；设备随后断开，最新候选未完成ADB版本和APK哈希回读。本轮核心沿用0.1.6，没有新增真实广告或物理晃动验收，该0.1.7阶段未取得标准Gradle成功记录。 下方0.1.6广告和安装回读仅是历史证据。
 

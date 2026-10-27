@@ -1,6 +1,6 @@
 # 开屏清净 · SplashGuard
 
-0.1.13 / versionCode 14候选继续推进真假按钮保护：SDK标识改为精确白名单，通用候选检查完整同包祖先并排除已识别WebView；任一潜在候选的祖先不完整时整帧停止。坐标触点已暂停，保留控件点击；旧兼容开关不能恢复坐标能力。新增32份合成[回放语料](tests/fixtures/rule-replay/README.md)，17个纯Java程序共1319项通过。本次构建、远程检查和未验收范围见[验证记录](TESTING.md)。官网下载默认仍0.1.7，原生鸿蒙仍待官方能力答复。
+0.1.13 / versionCode 14候选继续推进真假按钮保护：SDK标识改为精确白名单，通用候选检查完整同包祖先并排除已识别WebView；任一潜在候选的祖先不完整时整帧停止。坐标触点已暂停，保留控件点击；旧兼容开关不能恢复坐标能力。新增32份合成[回放语料](tests/fixtures/rule-replay/README.md)，17个纯Java程序共1319项通过。对应源码6aab64b的标准Android构建、双lint与纯Java CI均通过；本地非调试兼容包已签名，未公开分发，尚缺其他机型实测。详情见[验证记录](TESTING.md)。官网下载默认仍0.1.7，原生鸿蒙仍待官方能力答复。
 
 **当前不支持纯血鸿蒙原生自动跳过。** 华为当前公开Kit明确限制界面节点查询，旧相关接口有废弃标记；APK兼容运行和鸿蒙指南不代表原生支持。见[原生核验](docs/HARMONY_NATIVE_FEASIBILITY.md)及[推进清单实际状态](docs/IMPLEMENTATION_STATUS.md)。
 
