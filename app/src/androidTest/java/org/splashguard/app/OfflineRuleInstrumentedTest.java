@@ -147,6 +147,30 @@ public final class OfflineRuleInstrumentedTest {
         assertEquals(2,device.findObjects(By.text("跳过广告")).size());assertEquals(0,Prefs.get(app).getInt("count",0));
         assertFalse(device.hasObject(By.text("FIXTURE_CONTENT")));
     }
+    @Test public void actualServiceHandlesWarmReturnWithoutRecreatingFixture()throws Exception{
+        enableActualService();startSyntheticSplash("warm");
+        UiObject2 initial=device.wait(Until.findObject(By.text("FIXTURE_WARM_CONTENT")),5000);assertNotNull(initial);
+        String instance=initial.getContentDescription();assertNotNull(instance);
+        SystemClock.sleep(SkipSession.WINDOW_MS+300);assertEquals(0,Prefs.get(app).getInt("count",0));
+        device.executeShellCommand("am start -W -a android.settings.SETTINGS");
+        assertTrue(device.wait(Until.hasObject(By.pkg("com.android.settings")),5000));SystemClock.sleep(500);
+        // No force-stop, clear task, new instance, or preference reset between background and return.
+        device.executeShellCommand("am start -W -n org.splashguard.app.test/org.splashguard.app.fixture.SyntheticSplashActivity");
+        UiObject2 content=device.wait(Until.findObject(By.text("FIXTURE_CONTENT")),10000);
+        assertNotNull("A warm-resume synthetic ad is actually closed",content);
+        assertEquals("The original Activity and process were retained",instance,content.getContentDescription());
+        awaitBackground("Warm return records one accepted operation",()->Prefs.get(app).getInt("count",0)==1);
+    }
+    @Test public void actualServiceDoesNotReopenForSameAppDialogAfterExpiry()throws Exception{
+        enableActualService();startSyntheticSplash("late_dialog");
+        assertTrue(device.wait(Until.hasObject(By.text("FIXTURE_WARM_CONTENT")),5000));
+        SystemClock.sleep(SkipSession.WINDOW_MS+300);
+        device.findObject(By.text("显示同应用对话框")).click();
+        UiObject2 show=device.wait(Until.findObject(By.text("显示测试广告")),5000);assertNotNull(show);show.click();
+        assertTrue(device.wait(Until.hasObject(By.text("跳过广告")),5000));SystemClock.sleep(2200);
+        assertTrue("An internal dialog cannot restart the expired action window",device.hasObject(By.text("跳过广告")));
+        assertFalse(device.hasObject(By.text("FIXTURE_CONTENT")));assertEquals(0,Prefs.get(app).getInt("count",0));
+    }
     @Test public void realPreferencesMigrateAndKeepAcceptedHistory()throws Exception{
         OfflineRuleStore store=new OfflineRuleStore(RuleCatalog.builtInLimits());
         OfflineRuleStore.Pack legacy=new OfflineRuleStore.Pack(1,"local.legacy",1,store.effectiveRules());store.apply(legacy);

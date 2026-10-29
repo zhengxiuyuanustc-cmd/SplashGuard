@@ -1,6 +1,6 @@
 package org.splashguard.app.fixture;
-
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.graphics.Color;
 import android.view.Gravity;
@@ -8,20 +8,39 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
-/** Test APK only. An independently rendered foreground window for real accessibility actions. */
+/** Test APK only: independent ad window, including a retained task returning from background. */
 public final class SyntheticSplashActivity extends Activity {
-    private FrameLayout root;
+    private FrameLayout root;private String mode,instance;private int resumes;
     @Override public void onCreate(Bundle saved){
         super.onCreate(saved);if(getActionBar()!=null)getActionBar().hide();
         root=new FrameLayout(this);root.setBackgroundColor(Color.WHITE);setContentView(root);
+        mode=getIntent().getStringExtra("fixtureMode");
+        instance="INSTANCE_"+android.os.Process.myPid()+"_"+android.os.SystemClock.elapsedRealtime();
+        if("warm".equals(mode)||"late_dialog".equals(mode)){
+            content("FIXTURE_WARM_CONTENT");
+            if("late_dialog".equals(mode)){
+                Button show=new Button(this);show.setText("显示同应用对话框");
+                FrameLayout.LayoutParams params=new FrameLayout.LayoutParams(-2,-2,Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL);params.bottomMargin=dp(80);root.addView(show,params);
+                show.setOnClickListener(view->new AlertDialog.Builder(this).setMessage("FIXTURE_DIALOG")
+                        .setPositiveButton("显示测试广告",(dialog,which)->ad()).show());
+            }
+        }else ad();
+    }
+    @Override protected void onResume(){super.onResume();resumes++;if("warm".equals(mode)&&resumes>1)ad();}
+    private void ad(){
+        root.removeAllViews();
         TextView label=new TextView(this);label.setText("广告（合成测试）");label.setTextSize(20);label.setTextColor(Color.BLACK);
-        FrameLayout.LayoutParams labelParams=new FrameLayout.LayoutParams(-2,-2,Gravity.TOP|Gravity.LEFT);labelParams.leftMargin=dp(16);labelParams.topMargin=dp(200);root.addView(label,labelParams);
-        addSkip(48);if("ambiguous".equals(getIntent().getStringExtra("fixtureMode")))addSkip(112);
+        FrameLayout.LayoutParams params=new FrameLayout.LayoutParams(-2,-2,Gravity.TOP|Gravity.LEFT);params.leftMargin=dp(16);params.topMargin=dp(200);root.addView(label,params);
+        addSkip(48);if("ambiguous".equals(mode))addSkip(112);
+    }
+    private void content(String value){
+        root.removeAllViews();TextView text=new TextView(this);text.setText(value);text.setContentDescription(instance);
+        text.setTextSize(22);text.setTextColor(Color.BLACK);text.setGravity(Gravity.CENTER);root.addView(text,new FrameLayout.LayoutParams(-1,-1));
     }
     private void addSkip(int top){
         Button skip=new Button(this);skip.setText("跳过广告");skip.setTextSize(18);skip.setAllCaps(false);
         FrameLayout.LayoutParams params=new FrameLayout.LayoutParams(dp(148),dp(48),Gravity.TOP|Gravity.RIGHT);params.topMargin=dp(top);params.rightMargin=dp(12);root.addView(skip,params);
-        skip.setOnClickListener(view->{root.removeAllViews();TextView content=new TextView(this);content.setText("FIXTURE_CONTENT");content.setTextSize(22);content.setTextColor(Color.BLACK);content.setGravity(Gravity.CENTER);root.addView(content,new FrameLayout.LayoutParams(-1,-1));});
+        skip.setOnClickListener(view->content("FIXTURE_CONTENT"));
     }
     private int dp(int value){return Math.round(value*getResources().getDisplayMetrics().density);}
 }

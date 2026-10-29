@@ -29,6 +29,8 @@ public final class SkipService extends AccessibilityService implements SharedPre
     public static boolean isConnected() { return connected; }
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final SkipSession session = new SkipSession();
+    private final ForegroundWatch foregroundWatch=new ForegroundWatch();
+    private final Runnable foregroundTask=this::probeForeground;
     private long reviewAt;
     private boolean receiverRegistered;
     private Set<String> selected;
@@ -42,7 +44,7 @@ public final class SkipService extends AccessibilityService implements SharedPre
             if (Intent.ACTION_SCREEN_OFF.equals(intent.getAction())) {
                 RuleData.replayScreenOff(SystemClock.elapsedRealtime());resetSession();
             }
-            else queueScan(40); // Waking/unlocking requests a scan; it never renews a session.
+            else {requestForegroundWatch();queueScan(40);} // Only a confirmed foreground change renews a session.
         }
     };
 
@@ -58,7 +60,7 @@ public final class SkipService extends AccessibilityService implements SharedPre
             else registerReceiver(screenReceiver, filter);
             receiverRegistered = true;
         }
-        queueScan(40);
+        requestForegroundWatch();queueScan(40);
     }
     @Override public void onSharedPreferenceChanged(SharedPreferences p, String key) {
         if (!"apps".equals(key) && !"enabled".equals(key) && !RuleData.affectsRuntime(key)) return;
@@ -71,8 +73,50 @@ public final class SkipService extends AccessibilityService implements SharedPre
         queueScan(40);
     }
     @Override public void onAccessibilityEvent(AccessibilityEvent event) {
+        // Read the actual root before coalescing window events: a quick departure can otherwise
+        // disappear before the delayed scan. Event package/class names never arm a session.
+        if(event!=null&&(event.getEventType()==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+                ||event.getEventType()==AccessibilityEvent.TYPE_WINDOWS_CHANGED))requestForegroundWatch();
         // Do not postpone an already queued scan when animations keep emitting events.
         queueScan(40);
+    }
+    private void requestForegroundWatch(){
+        if(!connected||!Prefs.enabled(this))return;
+        foregroundWatch.request(SystemClock.elapsedRealtime());
+        handler.removeCallbacks(foregroundTask);probeForeground();
+    }
+    private void stopForegroundWatch(){handler.removeCallbacks(foregroundTask);foregroundWatch.clear();}
+    private void probeForeground(){
+        if(!connected||!Prefs.enabled(this)){stopForegroundWatch();return;}
+        if(!unlocked()){resetSession();return;}
+        long now=SystemClock.elapsedRealtime();
+        if(foregroundWatch.take(now)){
+            AccessibilityNodeInfo root=null;
+            try{root=getRootInActiveWindow();if(root!=null&&observeForeground(root,now))queueScan(0);}
+            catch(RuntimeException unavailable){/* Unknown foreground cannot replenish time or attempts. */}
+            finally{if(root!=null)root.recycle();}
+        }
+        long delay=foregroundWatch.delay(SystemClock.elapsedRealtime());
+        if(delay>=0)handler.postDelayed(foregroundTask,delay);
+    }
+    /** Only a full application window can confirm leaving/returning, not an IME or system panel. */
+    private boolean applicationForeground(AccessibilityNodeInfo root){
+        String pkg=str(root.getPackageName());if(pkg.isEmpty())return false;
+        Rect bounds=new Rect();root.getBoundsInScreen(bounds);Rect screen=screenBounds();
+        if(bounds.width()<screen.width()*.9||bounds.height()<screen.height()*.85)return false;
+        if(pkg.equals(getPackageName())||(selected!=null&&selected.contains(pkg)))return true;
+        try{
+            if(getPackageManager().getLaunchIntentForPackage(pkg)!=null)return true;
+            android.content.pm.ResolveInfo home=getPackageManager().resolveActivity(
+                    new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME),0);
+            return home!=null&&home.activityInfo!=null&&pkg.equals(home.activityInfo.packageName);
+        }catch(RuntimeException unavailable){return false;}
+    }
+    private boolean observeForeground(AccessibilityNodeInfo root,long now){
+        if(!applicationForeground(root))return false;
+        String pkg=str(root.getPackageName());RuleData.observeReplayForeground(pkg,now);
+        if(!session.observe(pkg,now))return false;
+        reviewAt=0;versionPackage="";return true;
     }
     private void queueScan(long delay) {
         if (connected && Prefs.enabled(this) && !scanQueued) {
@@ -81,6 +125,7 @@ public final class SkipService extends AccessibilityService implements SharedPre
         }
     }
     private void resetSession() {
+        stopForegroundWatch();
         handler.removeCallbacks(scanTask);
         scanQueued=false;
         session.reset();
@@ -108,9 +153,9 @@ public final class SkipService extends AccessibilityService implements SharedPre
             // A missing package is an unknown foreground, never a synthetic "null" app switch.
             if(pkg.isEmpty()){schedule();return;}
             long now=SystemClock.elapsedRealtime();
-            // End active diagnostics on any confirmed departure, before filtering selected applications.
-            RuleData.observeReplayForeground(str(root.getPackageName()),now);
-            if (session.observe(pkg, now)) { reviewAt=0; versionPackage=""; }
+            // Confirm departure even to an unselected application, before filtering actions.
+            if(!applicationForeground(root)){schedule();return;}
+            observeForeground(root,now);
             if (selected == null || !selected.contains(pkg) || pkg.equals(getPackageName())) return;
             RuleEvaluator.VersionInfo appVersion=versionFor(pkg);
             if (!session.active(now)) {
@@ -421,7 +466,7 @@ public final class SkipService extends AccessibilityService implements SharedPre
                 schedule();
                 return;
             }
-            if (!pkg.equals(current)) { session.observe(current,SystemClock.elapsedRealtime()); reviewAt=0; queueScan(40); return; }
+            if (!pkg.equals(current)) { observeForeground(root,SystemClock.elapsedRealtime());session.cancelled(token);queueScan(40);return; }
         } finally { root.recycle(); }
         if (completed) {
             if (session.recordOnce(token)) Prefs.record(this,pkg,label);
@@ -527,6 +572,7 @@ public final class SkipService extends AccessibilityService implements SharedPre
     @Override public void onInterrupt() {
         // Android defines this as feedback interruption, not a new foreground opening:
         // https://developer.android.com/reference/android/accessibilityservice/AccessibilityService#onInterrupt()
+        stopForegroundWatch();
         handler.removeCallbacks(scanTask);
         scanQueued=false;
         session.stop(); // Retain this package, deadline and spent attempts; invalidate old result tokens.
