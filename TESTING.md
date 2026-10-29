@@ -1,5 +1,11 @@
 # 验证记录
 
+## 0.1.16真实B站切回修正（2026-10-29）
+
+准确源码`d46b9e92bbc821335e71b3f9986ad539a2f29c84`的[标准构建/双lint](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40829832073)、[23程序1713项CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40829832124)与[三系统隔离验收](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40829832079)成功。API26/35/37各10项，原始JUnit/附件摘要核验无失败/错误/跳过及生产包无测试组件。永久摘要见[模拟器记录](docs/validation/android-emulator-20261029-bili-layout.json)。29项新增严格布局检查及case33新增13项语料回放，原1671项保留。
+
+非调试0.1.16/code17包135797字节，SHA256 `1decac1c3a0cff3c0c23cc8b626317d9d25dbb84c84189965b5bdb0df4f4fa51`，沿用原升级证书，v2/v3、6个原始ZIP条目一致、无uses-permission、canPerformGestures=false；手机安装回读一致且服务已绑定。一次保留B站9.16.1同一进程、从另一应用返回的真实天猫“超级秒杀”广告，在录屏1.0秒仍为跳过5，1.2秒退出转场，1.4秒已为首页；无广告点击指令、无UIAutomation行为采集。确认该次提前关闭，不将此前两款不同素材自动标为已重测。见[真实结果摘要](docs/validation/bilibili-9161-warm-20261029.json)与[布局限定](docs/WARM_RETURN.md)。视频及完整页面不公开。
+
 ## 0.1.15切回场景（2026-10-29）
 
 22程序1671项、准确源码`5c9212c019b8878189d0e3f844203dcb5461397f`的[标准构建/双lint](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40823105243)、[纯JavaCI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40823105161)成功；[隔离模拟器](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40823105183)API26/35/37各10项，原始报告均无失败/错误/跳过。新增实际服务用例在原Activity/进程保留时等待旧会话过期，切到未选应用再返回合成广告，实际关闭并计一次；反例确认同应用对话框不续期。详见[永久记录](docs/validation/android-emulator-20261029.json)与[切回边界](docs/WARM_RETURN.md)。

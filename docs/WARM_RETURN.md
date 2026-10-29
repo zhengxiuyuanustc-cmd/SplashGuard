@@ -24,3 +24,13 @@
 [独立兼容试用入口](https://zhengxiuyuanustc-cmd.github.io/xiuyuanzheng.github.io/splashguard/testing/)更新为0.1.15；默认0.1.7及旧试用包保留。网页反馈增加“首次打开／保留后台再切回”，在本页整理后自愿分享、不自动上传。实际广告投放不稳定，没有出现广告只记未知。原生鸿蒙自动跳过仍不支持。
 
 官方接口说明：[窗口变化事件](https://developer.android.com/reference/android/view/accessibility/AccessibilityEvent#TYPE_WINDOW_STATE_CHANGED)、[活动窗口根节点](https://developer.android.com/reference/android/accessibilityservice/AccessibilityService#getRootInActiveWindow())。事件不是完整前台历史；本修正不承诺捕获全部系统切换。
+
+## 0.1.16：真实9.16.1布局与复测
+
+主动脱敏回放取得一个可点击count_down/TextView，结果ANCESTOR_MISMATCH。独立静态技术诊断确认直接父节点logo_layout/ViewGroup、上层root_container/ViewGroup；静态诊断会使用UIAutomation，因此只用于读取技术路径，不算行为测试。新增规则只针对版本名9.16.1且code9161100、count_down/TextView、这两层直接路径、完整同包祖先及广告证据；目标本身还须可点击，原有位置/尺寸/危险文字/WebView排除、唯一候选和提交前复核均保留。两个常见容器ID各自都不是全局广告标记，没有恢复坐标或宽泛父节点点击。
+
+实时扫描、提交前重扫和离线回放共用biliGeometryHit，避免只在回放器修好。回放固定白名单增加两个容器类别和9.16.1版本名；旧文件中OTHER不会自动获得新身份。case33由原脱敏帧结合单独核实的两个固定ID及PackageManager版本构成，来源范围明确，未公开完整页面。
+
+本版23程序1713项通过，含29个新增严格版本/层级/危险条件与回放一致性检查，33份登记语料406项。准确源码d46b9e92bbc821335e71b3f9986ad539a2f29c84标准构建、双lint及Android8/15/17各10项通过，原报告无失败/错误/跳过。
+
+手机安装0.1.16/code17后回读SHA一致，系统绑定与正常截图确认服务已就绪。2026-10-29约14:45，在B站同一进程保留、从本工具切回且未清后台的真实录屏中，约1.0秒天猫“超级秒杀”广告仍显示跳过5，1.2秒开始退出转场，1.4秒为首页。脚本没有向广告页发送点击，录屏未使用UIAutomation，确认提前关闭。该素材与此前两次失败素材不同，不把一次通过宣称为所有素材/版本均已解决。永久摘要见同目录validation/bilibili-9161-warm-20261029.json；视频和完整页面仅留维护者私有诊断目录。

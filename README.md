@@ -1,5 +1,7 @@
 # 开屏清净 · SplashGuard
 
+0.1.16 / versionCode 17补齐B站9.16.1保留后台再切回的开屏布局：限定已核实的版本、两层直接父容器、广告证据与可点击原按钮；同应用弹窗不重开预算，仍不使用坐标。1713项检查及Android8/15/17各10项通过，用户手机已安装回读一致；一次真实天猫切回广告在“跳过5”时提前关闭。此前失败和未投广告的记录分别保留，见[切回场景与验证边界](docs/WARM_RETURN.md)。[独立兼容试用](https://zhengxiuyuanustc-cmd.github.io/xiuyuanzheng.github.io/splashguard/testing/)提供0.1.16，默认下载仍0.1.7。
+
 0.1.15 / versionCode 16兼容候选修正保留后台再切回应用的开屏识别：窗口切换后短时复查真实前台，确认离开并返回才重开有限会话，普通页面刷新/同应用弹窗不续期。1671项检查及Android8/15/17各10项隔离验收通过；手机已安装并回读APK哈希，服务已连接，但真实B站9.16.1天猫切回广告仍未自动关闭，正在继续定位。详见[切回场景与边界](docs/WARM_RETURN.md)。默认下载0.1.7保留，[独立兼容试用](https://zhengxiuyuanustc-cmd.github.io/xiuyuanzheng.github.io/splashguard/testing/)提供0.1.15。
 
 0.1.14 / versionCode 15候选新增[离线规则作者验签与历史防回退](docs/OFFLINE_RULE_AUTH.md)：签名文件使用编译内置的独立公钥，预览后确认时重验，撤销/恢复内置不清除已接收版本历史；普通本地限制仍明确标为未认证。继承0.1.13的真假候选保护和坐标暂停，不新增选择器或点击能力。21个纯Java程序1645项及SDK整包构建通过；源码20227dc的标准debug/未签名release、双lint及纯Java CI均通过，非调试兼容测试包已签名，并通过[独立免登录试用入口](https://zhengxiuyuanustc-cmd.github.io/xiuyuanzheng.github.io/splashguard/testing/)提供。Android8/15/17隔离模拟器各8项验收通过，覆盖真实服务合成按钮、文件选择及保存失败；厂商真机、真实广告与长期后台仍待验证，详情见[验证记录](TESTING.md)。官网下载默认仍0.1.7，原生鸿蒙自动跳过仍不支持并等待官方能力答复。
