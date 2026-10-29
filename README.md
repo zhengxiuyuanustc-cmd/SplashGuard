@@ -1,5 +1,7 @@
 # 开屏清净 · SplashGuard
 
+2026-10-29补充：[服务控制与小窗口验收](docs/SERVICE_CONTROL_ACCEPTANCE.md)在Android8/15/17每个系统16项通过，覆盖暂停、取消选择、指引模式、系统撤权、关闭首页任务及小窗口拒点。仅补测试与文档，不改变已发布0.1.16包，也不代表全部厂商真机已适配。
+
 0.1.16 / versionCode 17补齐B站9.16.1保留后台再切回的开屏布局：限定已核实的版本、两层直接父容器、广告证据与可点击原按钮；同应用弹窗不重开预算，仍不使用坐标。1713项检查及Android8/15/17各10项通过，用户手机已安装回读一致；一次真实天猫切回广告在“跳过5”时提前关闭。此前失败和未投广告的记录分别保留，见[切回场景与验证边界](docs/WARM_RETURN.md)。[独立兼容试用](https://zhengxiuyuanustc-cmd.github.io/xiuyuanzheng.github.io/splashguard/testing/)提供0.1.16，默认下载仍0.1.7。
 
 0.1.15 / versionCode 16兼容候选修正保留后台再切回应用的开屏识别：窗口切换后短时复查真实前台，确认离开并返回才重开有限会话，普通页面刷新/同应用弹窗不续期。1671项检查及Android8/15/17各10项隔离验收通过；手机已安装并回读APK哈希，服务已连接，但真实B站9.16.1天猫切回广告仍未自动关闭，正在继续定位。详见[切回场景与边界](docs/WARM_RETURN.md)。默认下载0.1.7保留，[独立兼容试用](https://zhengxiuyuanustc-cmd.github.io/xiuyuanzheng.github.io/splashguard/testing/)提供0.1.15。

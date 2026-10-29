@@ -34,7 +34,7 @@ macOS / Linux：
 
 ## 先运行不依赖手机的检查
 
-当前0.1.14候选继续使用不依赖Android的纯Java策略检查，覆盖原规则、有限会话、引导、多候选、版本/祖先规则、动作策略、受限文件模型/解析、最小样本及机型分流。新增统一入口由SDK构建与CI复用，避免各处名单不一致：
+当前0.1.16候选继续使用不依赖Android的纯Java策略检查，覆盖原规则、有限会话、引导、多候选、版本/祖先规则、动作策略、受限文件模型/解析、最小样本及机型分流。新增统一入口由SDK构建与CI复用，避免各处名单不一致：
 
 ```powershell
 .\tools\test-local.ps1 -JdkRoot "C:\Program Files\Java\jdk-21" -OutDir ".\build\pure-tests"
@@ -42,7 +42,7 @@ macOS / Linux：
 
 `-JdkRoot`可使用自己的JDK目录；已正确设置`JAVA_HOME`时可省略。`-OutDir`省略时使用项目`build/pure-tests`。脚本内列出的源码和测试类是当前完整清单；新增策略类时需更新清单。非Windows环境可使用同一清单的`javac -encoding UTF-8 -d …`与对应`java -cp …`调用，CI配置记录具体调用环境。
 
-当前0.1.14共有21个纯Java程序1645项本地通过（包括32份合成回放JSON及来源/历史/保存故障模型检查）；实际构建、签名与CI结果以[TESTING.md](../TESTING.md)对应源码为准。公开0.1.7的99项历史CI不覆盖新候选；0.1.8曾通过138项也不能当作最新源码已通过。纯Java检查不证明Android文件选择器、界面、长期后台、覆盖层或真实广告效果已验证。
+当前0.1.16共有23个纯Java程序1713项本地通过（包括33份有限回放JSON、前台复查及来源/历史/保存故障模型检查）；实际构建、签名与CI结果以[TESTING.md](../TESTING.md)对应源码为准。公开0.1.7的99项历史CI不覆盖新候选；0.1.8曾通过138项也不能当作最新源码已通过。纯Java检查不证明Android文件选择器、界面、长期后台、覆盖层或真实广告效果已验证。
 
 ## Windows SDK 备用构建
 
@@ -94,3 +94,5 @@ macOS / Linux：
 网站位于单独的 [GitHub Pages 仓库](https://github.com/zhengxiuyuanustc-cmd/xiuyuanzheng.github.io/tree/main/splashguard)。修改网页时也要核对实际下载版本、签名说明及隐私表述，不把源码功能写成已公开安装包已经具备。
 
 0.1.12另有不接触密钥的UnsignedValidation与显式校验证书的NonDebugPreview。前者不可安装／发布；后者的实际签名仍需维护者明确配置，参见[非调试构建](NONDEBUG_PREVIEW.md)。兼容报告只在本人预览后复制／保存，见[字段边界](COMPATIBILITY_REPORT.md)。
+
+隔离模拟器增加的暂停、取消选择、指引模式、撤权、首页任务移除和小窗口用例，见[服务控制与小窗口验收](SERVICE_CONTROL_ACCEPTANCE.md)。该文档记录准确运行状态；只有实际JUnit结果通过后才能更新覆盖声明，不将源码中的测试数量当作通过数量。

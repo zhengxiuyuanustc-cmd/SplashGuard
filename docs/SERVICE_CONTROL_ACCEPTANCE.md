@@ -1,6 +1,6 @@
 # 服务控制与小窗口验收
 
-2026-10-29新增六项真实Android服务测试，合计16项隔离模拟器场景。当前仅完成现有1713项纯Java检查；本轮Android构建与API26/35/37运行尚待CI结果，不能提前记为通过。生产代码、版本0.1.16及已发布APK均不改变。
+2026-10-29新增六项真实Android服务测试，合计16项隔离模拟器场景。准确源码`d2140cb786142d829cd3141ebf010fd0c882b6e0`的[三系统验收](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40867780298)已通过；API26/35/37每个系统16项，原始JUnit均无失败、错误或跳过，三个附件大小及SHA256与GitHub记录一致，发行Manifest隔离检查通过。[永久结果摘要](validation/android-emulator-20261029-service-controls.json)保留用例名称与附件校验值。[标准构建与双lint](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40867780479)及[1713项纯Java检查](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40867780302)通过。生产代码、版本0.1.16及已发布APK均不改变。
 
 ## 新增场景
 

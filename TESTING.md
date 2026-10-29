@@ -1,5 +1,9 @@
 # 验证记录
 
+## 服务控制与小窗口补充（2026-10-29）
+
+准确源码`d2140cb786142d829cd3141ebf010fd0c882b6e0`的[标准构建/双lint](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40867780479)、[23程序1713项](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40867780302)与[三系统隔离验收](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40867780298)通过。API26/35/37各16项原始JUnit无失败/错误/跳过，三个原始附件SHA256及发行Manifest已独立核验，详见[永久结果](docs/validation/android-emulator-20261029-service-controls.json)。新增暂停、取消选择、指引模式、系统撤权、首页任务移除及小窗口按钮拒点；负向均观察页面保持，恢复后实际节点动作可用。生产代码、权限、版本及已发布0.1.16包未变，没有新增厂商真机或真实广告通过声明。完整范围见[说明](docs/SERVICE_CONTROL_ACCEPTANCE.md)。
+
 ## 0.1.16真实B站切回修正（2026-10-29）
 
 准确源码`d46b9e92bbc821335e71b3f9986ad539a2f29c84`的[标准构建/双lint](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40829832073)、[23程序1713项CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40829832124)与[三系统隔离验收](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40829832079)成功。API26/35/37各10项，原始JUnit/附件摘要核验无失败/错误/跳过及生产包无测试组件。永久摘要见[模拟器记录](docs/validation/android-emulator-20261029-bili-layout.json)。29项新增严格布局检查及case33新增13项语料回放，原1671项保留。

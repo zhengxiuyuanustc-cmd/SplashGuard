@@ -1,5 +1,11 @@
 # Android隔离模拟器验收
 
+## 当前结果（2026-10-29）
+
+准确源码`d2140cb786142d829cd3141ebf010fd0c882b6e0`的[三系统验收](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40867780298)已通过：Android8/API26、Android15/API35、Android17/API37各16项，原始JUnit无失败/错误/跳过，附件SHA256及生产Manifest核对通过。较原8项增加保留任务切回、同应用对话框不续期和六项[服务控制与小窗口场景](SERVICE_CONTROL_ACCEPTANCE.md)。结果见[永久摘要](validation/android-emulator-20261029-service-controls.json)。本次只增测试，未修改生产代码或重发0.1.16安装包。不能替代厂商真机、长期后台或真实广告验证。
+
+## 历史基础（0.1.14）
+
 源码`9fd308b1798394c95904066ace295084849fcca5`的[不可调试目标模拟器验收](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40526038212)已通过：Android8/API26、Android15/API35和Android17/API37各8项，JUnit报告均为8 tests / 0 failures / 0 errors / 0 skipped，另核对正式APK不含测试组件或联网权限。 它补充纯Java规则测试，并实际覆盖系统文件选择器、URI读权限、Activity重建、SharedPreferences保存/写入失败恢复、系统服务绑定及独立合成页面的单按钮操作和双候选拒点。首轮2caf657的API26/35各6项为历史基础检查。
 
 检查在新建的API 26、35和37 Google APIs x86_64模拟器运行，覆盖最低Android版本和当前targetSdk和Android17系统。API37的官方包名为android-37.0，采用至少4GiB内存，见[官方模拟器版本说明](https://developer.android.com/studio/releases/emulator)。它不代表华为、荣耀等厂商系统或原生鸿蒙，也不验证真实广告、长期后台、进程被杀或所有磁盘故障。
