@@ -31,3 +31,4 @@ case-29-unknown-second-blocks-unique.json	INCOMPLETE_SCAN	-1	none	false
 case-30-unknown-first-blocks-unique.json	INCOMPLETE_SCAN	-1	none	false
 case-31-future-schema.json	INVALID	-1	none	false
 case-32-no-candidate-not-success.json	NO_MATCH	-1	none	false
+case-33-bili-9161-warm-return.json	UNIQUE_RULE_MATCH	0	bili.splash.skip	true

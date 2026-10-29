@@ -227,6 +227,8 @@ public final class SkipService extends AccessibilityService implements SharedPre
                         diagnose(pkg,"跳过线索的父层级读取不完整，已停止本次自动点击");
                         return;
                     }
+                    biliHit=RuleCatalog.biliGeometryHit(appVersion,snapshot,ancestry.nodes,ancestry.complete,evidence,biliSplash,
+                            r.left,r.top,r.right,r.bottom,width,height);
                     RuleCatalog.Evaluation evaluation=RuleCatalog.evaluate(appVersion,snapshot,ancestry.nodes,
                             ancestry.complete,evidence,biliHit,genericHit);
                     if(!evaluation.matched) {
@@ -427,6 +429,8 @@ public final class SkipService extends AccessibilityService implements SharedPre
         if(!bili&&!generic&&!RuleCatalog.knownBiliTarget(snapshot))return null;
         Ancestry ancestry=ancestors(node);
         if(!ancestry.complete)throw new IllegalStateException("Incomplete potential-candidate ancestry");
+        bili=RuleCatalog.biliGeometryHit(appVersion,snapshot,ancestry.nodes,ancestry.complete,evidence,biliSplash,
+                bounds.left,bounds.top,bounds.right,bounds.bottom,screen.right,screen.bottom);
         return RuleCatalog.evaluate(appVersion,snapshot,ancestry.nodes,ancestry.complete,evidence,bili,generic);
     }
     private FreshAction rejectFresh(String pkg,RuleEvaluator.VersionInfo appVersion,RuleCatalog.Evaluation evaluation,

@@ -9,3 +9,5 @@ index.tsv每个非注释行5列：文件名、预期Outcome（另有INVALID）�
 RuleReplayCorpusTest逐一调用实际RuleReplay.decode/evaluate/encode，检查预期结论、身份、规则和序列化后相同结果。每个JSON必须在索引登记，未登记或丢失文件会让CI失败。可直接编辑有限字段并审阅，不必把每个新样本重新手写成Java断言。Schema1旧SDK_SKIP可能是任意子串，无法恢复精确原ID，必须拒绝，不能仅改版本号伪装新证据。
 
 本语料不调用Android动作、不模拟真实覆盖层，也不验证服务权限、用户选择、窗口原子性、运行预算或实际广告关闭。唯一规则匹配仍可能是假按钮，实际动作和效果必须分开验证。更多来源与边界见docs/FAKE_BUTTONS.md、docs/RULE_REPLAY.md。
+
+case33源于2026-10-29本机B站9.16.1/code9161100人物天猫广告的主动Schema2采集。原帧父容器ID被折叠为OTHER；随后独立静态布局诊断核实直接logo_layout/ViewGroup及上层root_container/ViewGroup。本用例仅据该技术记录补回这两个固定ID，并据PackageManager核对版本名9.16.1。不是凭空恢复未知ID，也不证明当前完整页面唯一性、提交时状态或实际点击成功。原始视频/完整页面不公开，实际失败与后续复测分别见TESTING。旧Schema2的OTHER不自动升级为新ID。

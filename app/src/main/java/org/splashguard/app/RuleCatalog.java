@@ -20,6 +20,15 @@ public final class RuleCatalog {
     private static final RuleSpec BILI_VERIFIED=biliBuilder().versionNames("9.15.0")
             .verifiedGestureCompatibility(false).build();
     private static final RuleSpec BILI_NODE=biliBuilder().build();
+    // Observed on 9.16.1/code9161100 warm-return Tmall ads; neither generic ID is a scene alone.
+    private static final RuleSpec BILI_WARM=RuleSpec.builder(BILI,BILI_PACKAGE)
+            .versions(9161100,9161100).versionNames("9.16.1")
+            .target(RuleSpec.NodePattern.builder().idIn(BILI_PACKAGE+":id/count_down")
+                    .className("android.widget.TextView").textRegex(BILI_TARGET.textRegex).build())
+            .parentPath(RuleSpec.NodePattern.builder().idIn(BILI_PACKAGE+":id/logo_layout").className("android.view.ViewGroup").build(),
+                    RuleSpec.NodePattern.builder().idIn(BILI_PACKAGE+":id/root_container").className("android.view.ViewGroup").build())
+            .exclude(RuleSpec.NodePattern.builder().className("android.webkit.WebView").build())
+            .requireAdEvidence(true).verifiedGestureCompatibility(false).build();
     private RuleCatalog() {}
 
     public static List<OfflineRuleStore.RuleLimit> builtInLimits() {
@@ -32,6 +41,23 @@ public final class RuleCatalog {
     public static boolean knownBiliTarget(RuleEvaluator.Node node) {
         return node!=null && BILI_PACKAGE.equals(node.packageName)
                 && (node.viewId.equals(BILI_PACKAGE+":id/count_down") || node.viewId.equals(BILI_PACKAGE+":id/countdown_title"));
+    }
+    private static boolean warmPath(List<RuleEvaluator.Node> parents){
+        if(parents==null||parents.size()<2)return false;
+        for(int i=0;i<2;i++)if(parents.get(i)==null||!BILI_PACKAGE.equals(parents.get(i).packageName)
+                ||!BILI_WARM.parentPath.get(i).matches(parents.get(i)))return false;
+        return true;
+    }
+    /** Shared by live scan, submit-time rescan and replay. The legacy geometry/label guard stays mandatory. */
+    public static boolean biliGeometryHit(RuleEvaluator.VersionInfo version,RuleEvaluator.Node node,
+            List<RuleEvaluator.Node> parents,boolean complete,boolean evidence,boolean legacySplash,
+            int left,int top,int right,int bottom,int width,int height){
+        if(node==null)return false;
+        boolean warm=node.clickable&&warmPath(parents)
+                &&RuleEvaluator.evaluate(BILI_WARM,version,node,parents,complete,evidence).matched;
+        boolean scene=legacySplash||warm;
+        return AdRules.biliCandidate(node.packageName,node.text,node.viewId,scene,left,top,right,bottom,width,height)
+                ||AdRules.biliCandidate(node.packageName,node.description,node.viewId,scene,left,top,right,bottom,width,height);
     }
     public static final class Evaluation {
         public final RuleEvaluator.Result result;
@@ -49,13 +75,14 @@ public final class RuleCatalog {
                                       List<RuleEvaluator.Node> ancestors,boolean complete,boolean evidence,
                                       boolean biliLegacyHit,boolean genericLegacyHit) {
         if(knownBiliTarget(node)) {
-            RuleEvaluator.Result result=RuleEvaluator.evaluate(BILI_VERIFIED,version,node,ancestors,complete,evidence);
-            if(result.reason==RuleEvaluator.Reason.VERSION_UNKNOWN || result.reason==RuleEvaluator.Reason.VERSION_OUTSIDE)
+            boolean warm=warmPath(ancestors);
+            RuleEvaluator.Result result=RuleEvaluator.evaluate(warm?BILI_WARM:BILI_VERIFIED,version,node,ancestors,complete,evidence);
+            if(!warm&&(result.reason==RuleEvaluator.Reason.VERSION_UNKNOWN || result.reason==RuleEvaluator.Reason.VERSION_OUTSIDE))
                 result=RuleEvaluator.evaluate(BILI_NODE,version,node,ancestors,complete,evidence);
             // A known target veto never falls through to generic, including identical visible text.
-            boolean hit=biliLegacyHit&&result.matched;
+            boolean hit=biliLegacyHit&&result.matched&&(!warm||node.clickable);
             RuleEvaluator.Reason reason=result.matched&&!biliLegacyHit?RuleEvaluator.Reason.TARGET_MISMATCH:result.reason;
-            boolean scene=complete&&hasSplashAncestor(ancestors)&&result.reason!=RuleEvaluator.Reason.EXCLUDED;
+            boolean scene=complete&&(warm?result.matched:hasSplashAncestor(ancestors))&&result.reason!=RuleEvaluator.Reason.EXCLUDED;
             return new Evaluation(hit?result:null,BILI,reason,hit,true,scene,true);
         }
         RuleEvaluator.Result result=RuleEvaluator.genericCandidate(genericLegacyHit,node);
