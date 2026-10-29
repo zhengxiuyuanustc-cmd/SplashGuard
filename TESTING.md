@@ -1,5 +1,11 @@
 # 验证记录
 
+## 0.1.15切回场景（2026-10-29）
+
+22程序1671项、准确源码`5c9212c019b8878189d0e3f844203dcb5461397f`的[标准构建/双lint](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40823105243)、[纯JavaCI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40823105161)成功；[隔离模拟器](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40823105183)API26/35/37各10项，原始报告均无失败/错误/跳过。新增实际服务用例在原Activity/进程保留时等待旧会话过期，切到未选应用再返回合成广告，实际关闭并计一次；反例确认同应用对话框不续期。详见[永久记录](docs/validation/android-emulator-20261029.json)与[切回边界](docs/WARM_RETURN.md)。
+
+签名包135797字节，SHA256 `e8b4fb53c515c666a43c734a530db7ee8b1207d0175178f4db198cddc125e58c`，沿用证书`48bba90fb630f2b95d30fe7d3420dd7e884fefbaac842f0416424ba42d2517c4`；v2/v3、6个原始条目一致、无uses-permission、不可调试、canPerformGestures=false核对通过。手机从0.1.11覆盖升级到0.1.15/code16，回读APK哈希匹配；正常系统服务刷新后，系统绑定及无干扰首页截图确认已就绪。shell uiautomator dump临时压制服务的诊断误读已纠正并停止使用。一次保留同一进程返回B站9.16.1出现天猫“双11组队PK”广告，跳过5→2仍未关闭，最终自然进入首页，明确未通过；之后两次未出现广告只记no_ad。不能将合成广告、操作计数或安装成功当作真实广告通过。独立兼容试用更新，默认0.1.7保留。
+
 ## 隔离模拟器验收（2026-10-27）
 
 源码`9fd308b1798394c95904066ace295084849fcca5`的[不可调试目标模拟器验收](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40526038212)已通过：Android8/API26、Android15/API35和Android17/API37各8项，JUnit报告均为8 tests / 0 failures / 0 errors / 0 skipped，另核对正式APK不含测试组件或联网权限。 实际系统绑定SkipService，独立测试APK的单按钮导致内容页出现且只计一次；双候选保持原样并报告冲突。其他六项覆盖真正DocumentsUI的URI授权、签名预览/确认、Activity重建、取消/重复导入、SharedPreferences迁移和私有目录只读的实际保存失败恢复。标准构建、双lint及1645项纯Java检查仍通过。
