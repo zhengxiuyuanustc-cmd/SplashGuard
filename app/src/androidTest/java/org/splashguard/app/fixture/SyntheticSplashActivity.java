@@ -4,6 +4,8 @@ import android.app.AlertDialog;
 import android.os.Bundle;
 import android.graphics.Color;
 import android.view.Gravity;
+import android.view.WindowManager;
+import android.widget.LinearLayout;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -24,6 +26,10 @@ public final class SyntheticSplashActivity extends Activity {
                 show.setOnClickListener(view->new AlertDialog.Builder(this).setMessage("FIXTURE_DIALOG")
                         .setPositiveButton("显示测试广告",(dialog,which)->ad()).show());
             }
+        }else if("controlled".equals(mode)){
+            content("FIXTURE_WAITING");
+            addControl("显示测试广告",80,this::ad);
+            addControl("显示小窗口测试广告",144,this::smallDialog);
         }else ad();
     }
     @Override protected void onResume(){super.onResume();resumes++;if("warm".equals(mode)&&resumes>1)ad();}
@@ -36,6 +42,22 @@ public final class SyntheticSplashActivity extends Activity {
     private void content(String value){
         root.removeAllViews();TextView text=new TextView(this);text.setText(value);text.setContentDescription(instance);
         text.setTextSize(22);text.setTextColor(Color.BLACK);text.setGravity(Gravity.CENTER);root.addView(text,new FrameLayout.LayoutParams(-1,-1));
+    }
+    private void addControl(String label,int bottom,Runnable action){
+        Button button=new Button(this);button.setText(label);
+        FrameLayout.LayoutParams params=new FrameLayout.LayoutParams(-2,-2,Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL);
+        params.bottomMargin=dp(bottom);root.addView(button,params);button.setOnClickListener(view->action.run());
+    }
+    private void smallDialog(){
+        LinearLayout box=new LinearLayout(this);box.setOrientation(LinearLayout.VERTICAL);box.setGravity(Gravity.RIGHT);
+        TextView evidence=new TextView(this);evidence.setText("广告（合成小窗口）");box.addView(evidence);
+        Button skip=new Button(this);skip.setText("跳过广告");skip.setContentDescription("FIXTURE_DIALOG_SKIP");
+        box.addView(skip,new LinearLayout.LayoutParams(dp(148),dp(48)));
+        AlertDialog dialog=new AlertDialog.Builder(this).setView(box).create();
+        skip.setOnClickListener(view->{dialog.dismiss();content("FIXTURE_DIALOG_ACTION");});
+        dialog.show();WindowManager.LayoutParams params=dialog.getWindow().getAttributes();
+        params.width=dp(300);params.height=dp(200);params.gravity=Gravity.TOP|Gravity.RIGHT;params.y=dp(32);
+        dialog.getWindow().setAttributes(params);
     }
     private void addSkip(int top){
         Button skip=new Button(this);skip.setText("跳过广告");skip.setTextSize(18);skip.setAllCaps(false);

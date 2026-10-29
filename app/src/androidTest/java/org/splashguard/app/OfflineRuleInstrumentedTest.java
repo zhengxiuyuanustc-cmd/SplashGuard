@@ -171,6 +171,81 @@ public final class OfflineRuleInstrumentedTest {
         assertTrue("An internal dialog cannot restart the expired action window",device.hasObject(By.text("跳过广告")));
         assertFalse(device.hasObject(By.text("FIXTURE_CONTENT")));assertEquals(0,Prefs.get(app).getInt("count",0));
     }
+    private void startControlledSplash()throws Exception{
+        startSyntheticSplash("controlled");
+        assertTrue("The independent fixture is ready before changing runtime settings",device.wait(Until.hasObject(By.text("FIXTURE_WAITING")),5000));
+        assertEquals(0,Prefs.get(app).getInt("count",0));
+    }
+    private void showControlledAd(){
+        UiObject2 show=device.wait(Until.findObject(By.text("显示测试广告")),5000);
+        assertNotNull("The test explicitly requests a synthetic ad",show);show.click();
+    }
+    private void assertAdUnchanged(String reason){
+        assertTrue(device.wait(Until.hasObject(By.text("跳过广告")),5000));SystemClock.sleep(2200);
+        assertTrue(reason,device.hasObject(By.text("跳过广告")));
+        assertFalse(device.hasObject(By.text("FIXTURE_CONTENT")));assertEquals(0,Prefs.get(app).getInt("count",0));
+    }
+    private void assertOneSyntheticAction(){
+        assertTrue("The running service really exits the independent synthetic ad",device.wait(Until.hasObject(By.text("FIXTURE_CONTENT")),10000));
+        awaitBackground("Exactly one synthetic action",()->Prefs.get(app).getInt("count",0)==1);
+    }
+    @Test public void pausingStopsActionsUntilExplicitReenable()throws Exception{
+        enableActualService();startControlledSplash();
+        assertTrue(Prefs.get(app).edit().putBoolean("enabled",false).commit());
+        showControlledAd();assertAdUnchanged("Pause must prevent actual actions, not only change the switch");
+        assertTrue("Pause does not revoke the user's system service",SkipService.isConnected());
+        assertTrue(Prefs.get(app).edit().putBoolean("enabled",true).commit());assertOneSyntheticAction();
+    }
+    @Test public void removingSelectedAppStopsActionsUntilReselected()throws Exception{
+        enableActualService();startControlledSplash();
+        assertTrue(Prefs.get(app).edit().putStringSet("apps",Collections.emptySet()).commit());
+        showControlledAd();assertAdUnchanged("A removed app cannot keep using an earlier selected snapshot");
+        assertTrue(Prefs.get(app).edit().putStringSet("apps",Collections.singleton(InstrumentationRegistry.getInstrumentation().getContext().getPackageName())).commit());
+        assertOneSyntheticAction();
+    }
+    @Test public void leavingGuideOnlyDoesNotResumeActions()throws Exception{
+        enableActualService();startControlledSplash();assertTrue(Prefs.setGuideOnly(app,true));
+        showControlledAd();assertAdUnchanged("Guide-only mode must leave the synthetic ad untouched");
+        assertTrue(Prefs.setGuideOnly(app,false));assertFalse(Prefs.enabled(app));
+        assertAdUnchanged("Leaving guide-only mode must remain paused");
+        assertTrue(Prefs.get(app).edit().putBoolean("enabled",true).commit());assertOneSyntheticAction();
+    }
+    @Test public void systemServiceRevocationStopsAndReconnectRestoresActions()throws Exception{
+        enableActualService();startControlledSplash();
+        // This authorization mutation is confined to the explicitly opted-in empty emulator.
+        device.executeShellCommand("settings put secure enabled_accessibility_services ''");
+        device.executeShellCommand("settings put secure accessibility_enabled 0");
+        awaitBackground("The actual service disconnects after system revocation",()->!SkipService.isConnected());
+        showControlledAd();assertAdUnchanged("A revoked service cannot act using earlier readiness");
+        enableActualService();assertOneSyntheticAction();
+    }
+    @Test public void closingHomeTaskDoesNotStopBoundService()throws Exception{
+        enableActualService();final int[] task={-1};
+        try(ActivityScenario<MainActivity> home=ActivityScenario.launch(new Intent(app,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK))){
+            home.onActivity(activity->{task[0]=activity.getTaskId();activity.finishAndRemoveTask();});
+        }
+        awaitBackground("The tool home task has actually been removed",()->{
+            android.app.ActivityManager manager=(android.app.ActivityManager)app.getSystemService(Context.ACTIVITY_SERVICE);
+            if(manager==null||task[0]<0)return false;
+            for(android.app.ActivityManager.AppTask entry:manager.getAppTasks())if(entry.getTaskInfo().id==task[0])return false;
+            return true;
+        });
+        assertTrue("Removing the home task must retain the bound service",SkipService.isConnected());
+        startSyntheticSplash("unique");assertOneSyntheticAction();
+    }
+    @Test public void smallDialogIsIgnoredWhileFullScreenAdStillWorks()throws Exception{
+        enableActualService();startControlledSplash();
+        UiObject2 show=device.wait(Until.findObject(By.text("显示小窗口测试广告")),5000);assertNotNull(show);show.click();
+        UiObject2 dialogSkip=device.wait(Until.findObject(By.desc("FIXTURE_DIALOG_SKIP")),5000);assertNotNull(dialogSkip);
+        android.graphics.Rect bounds=dialogSkip.getVisibleBounds();
+        assertTrue("The small-dialog control must otherwise satisfy the existing label/geometry rule",AdRules.candidate(
+                dialogSkip.getText(),"",true,bounds.left,bounds.top,bounds.right,bounds.bottom,device.getDisplayWidth(),device.getDisplayHeight()));
+        SystemClock.sleep(2200);
+        assertTrue("An eligible-looking button in a small dialog must remain untouched",device.hasObject(By.desc("FIXTURE_DIALOG_SKIP")));
+        assertFalse(device.hasObject(By.text("FIXTURE_DIALOG_ACTION")));assertEquals(0,Prefs.get(app).getInt("count",0));
+        assertTrue(SkipService.isConnected());device.pressBack();
+        showControlledAd();assertOneSyntheticAction();
+    }
     @Test public void realPreferencesMigrateAndKeepAcceptedHistory()throws Exception{
         OfflineRuleStore store=new OfflineRuleStore(RuleCatalog.builtInLimits());
         OfflineRuleStore.Pack legacy=new OfflineRuleStore.Pack(1,"local.legacy",1,store.effectiveRules());store.apply(legacy);
