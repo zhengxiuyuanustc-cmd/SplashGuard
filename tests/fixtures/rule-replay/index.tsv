@@ -32,3 +32,10 @@ case-30-unknown-first-blocks-unique.json	INCOMPLETE_SCAN	-1	none	false
 case-31-future-schema.json	INVALID	-1	none	false
 case-32-no-candidate-not-success.json	NO_MATCH	-1	none	false
 case-33-bili-9161-warm-return.json	UNIQUE_RULE_MATCH	0	bili.splash.skip	true
+case-34-bili-9161-no-ad-tag.json	UNIQUE_RULE_MATCH	0	bili.splash.skip	true
+case-35-bili-no-tag-other-version.json	NO_MATCH	-1	none	false
+case-36-bili-no-tag-other-parent.json	NO_MATCH	-1	none	false
+case-37-bili-no-tag-two-buttons.json	MULTIPLE_CANDIDATES	-1	none	false
+case-38-bili-no-tag-dangerous-desc.json	NO_MATCH	-1	none	false
+case-39-bili-no-tag-not-clickable.json	NO_MATCH	-1	none	false
+case-40-bili-no-tag-incomplete.json	INCOMPLETE_SCAN	-1	none	false

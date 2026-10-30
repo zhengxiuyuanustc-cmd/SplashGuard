@@ -2,7 +2,7 @@ package org.splashguard.app;
 
 /** User-armed diagnostic window, independent from and unable to extend the action session. */
 public final class ReplayCaptureSession {
-    public static final long WAIT_MS=120000,WINDOW_MS=12000;
+    public static final long WAIT_MS=600000,WINDOW_MS=12000;
     public enum State { IDLE,WAITING,CAPTURING,FINISHED }
     private State state=State.IDLE;private long deadline;private String target="";
     public void arm(long now){if(now<0)throw new IllegalArgumentException();state=State.WAITING;deadline=plus(now,WAIT_MS);target="";}

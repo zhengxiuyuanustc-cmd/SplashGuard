@@ -11,3 +11,5 @@ RuleReplayCorpusTest逐一调用实际RuleReplay.decode/evaluate/encode，检查
 本语料不调用Android动作、不模拟真实覆盖层，也不验证服务权限、用户选择、窗口原子性、运行预算或实际广告关闭。唯一规则匹配仍可能是假按钮，实际动作和效果必须分开验证。更多来源与边界见docs/FAKE_BUTTONS.md、docs/RULE_REPLAY.md。
 
 case33源于2026-10-29本机B站9.16.1/code9161100人物天猫广告的主动Schema2采集。原帧父容器ID被折叠为OTHER；随后独立静态布局诊断核实直接logo_layout/ViewGroup及上层root_container/ViewGroup。本用例仅据该技术记录补回这两个固定ID，并据PackageManager核对版本名9.16.1。不是凭空恢复未知ID，也不证明当前完整页面唯一性、提交时状态或实际点击成功。原始视频/完整页面不公开，实际失败与后续复测分别见TESTING。旧Schema2的OTHER不自动升级为新ID。
+
+case34—40为0.1.18新增的合成边界：以case33已核实路径为基础去掉可访问广告文字，验证唯一原生路径可匹配，而其他版本、错误父路径、双按钮、危险描述、不可点击及祖先不完整仍拒绝。不是本次失败的完整运行时帧；本次真实来源只有进程内13字段诊断，详见docs/BILI_MISSING_TAG_0118.md。

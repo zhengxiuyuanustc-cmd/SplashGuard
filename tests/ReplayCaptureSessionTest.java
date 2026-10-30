@@ -9,7 +9,7 @@ public final class ReplayCaptureSessionTest {
         check("same package before edge",c.accepts("app.one",12999));
         check("same-package scans don't renew",!c.accepts("app.one",13000));
         check("finished not restarted",!c.accepts("app.one",13100));c.arm(20000);
-        check("wait expires without target",!c.accepts("app.two",140000));c.arm(200000);
+        check("wait expires without target",!c.accepts("app.two",20000+ReplayCaptureSession.WAIT_MS));c.arm(200000);
         check("new explicit request works",c.accepts("app.one",200001));
         check("another selected package freezes first",!c.accepts("app.two",200002));
         check("return does not rearm",!c.accepts("app.one",200003));c.clear();
@@ -40,7 +40,13 @@ public final class ReplayCaptureSessionTest {
         check("explicit selected target still binds",scoped.accepts("app.one",4200));
         scoped.observeForeground("app.one",16000);
         check("same foreground observation does not extend capture",!scoped.accepts("app.one",16200));
-        scoped.arm(50000);scoped.screenOff(170000);
-        check("screen-off cannot extend expired waiting window",scoped.state(170000)==ReplayCaptureSession.State.FINISHED);
+        scoped.arm(50000);scoped.screenOff(50000+ReplayCaptureSession.WAIT_MS);
+        check("screen-off cannot extend expired waiting window",scoped.state(50000+ReplayCaptureSession.WAIT_MS)==ReplayCaptureSession.State.FINISHED);
+        ReplayCaptureSession delayed=new ReplayCaptureSession();delayed.arm(0);
+        check("delayed user action survives the old two-minute edge",delayed.state(120000)==ReplayCaptureSession.State.WAITING);
+        delayed.observeForeground("launcher",599999);delayed.screenOff(599999);
+        check("waiting stays finite despite screen and launcher observations",delayed.state(600000)==ReplayCaptureSession.State.FINISHED);
+        delayed.arm(0);check("late selected entry still has only twelve seconds",delayed.accepts("app.one",599999)&&!delayed.accepts("app.one",611999));
+        check("new wait limit explicitly ten minutes",ReplayCaptureSession.WAIT_MS==600000&&ReplayCaptureSession.WINDOW_MS==12000);
         System.out.println("ReplayCaptureSessionTest: "+passed+" checks passed");}
 }

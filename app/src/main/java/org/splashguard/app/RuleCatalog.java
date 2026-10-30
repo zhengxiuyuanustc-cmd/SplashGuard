@@ -20,7 +20,8 @@ public final class RuleCatalog {
     private static final RuleSpec BILI_VERIFIED=biliBuilder().versionNames("9.15.0")
             .verifiedGestureCompatibility(false).build();
     private static final RuleSpec BILI_NODE=biliBuilder().build();
-    // Observed on 9.16.1/code9161100 warm-return Tmall ads; neither generic ID is a scene alone.
+    // Exact native ad-layout path on 9.16.1/code9161100. The path supplies context even when
+    // the creative has no accessible ad label; neither parent ID is a global scene marker.
     private static final RuleSpec BILI_WARM=RuleSpec.builder(BILI,BILI_PACKAGE)
             .versions(9161100,9161100).versionNames("9.16.1")
             .target(RuleSpec.NodePattern.builder().idIn(BILI_PACKAGE+":id/count_down")
@@ -28,7 +29,7 @@ public final class RuleCatalog {
             .parentPath(RuleSpec.NodePattern.builder().idIn(BILI_PACKAGE+":id/logo_layout").className("android.view.ViewGroup").build(),
                     RuleSpec.NodePattern.builder().idIn(BILI_PACKAGE+":id/root_container").className("android.view.ViewGroup").build())
             .exclude(RuleSpec.NodePattern.builder().className("android.webkit.WebView").build())
-            .requireAdEvidence(true).verifiedGestureCompatibility(false).build();
+            .requireAdEvidence(false).verifiedGestureCompatibility(false).build();
     private RuleCatalog() {}
 
     public static List<OfflineRuleStore.RuleLimit> builtInLimits() {

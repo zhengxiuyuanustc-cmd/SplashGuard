@@ -74,7 +74,7 @@ final class RuleData {
     static synchronized void clearReplay(){replay=null;captureSession.clear();}
     static synchronized String replayStatus(){
         ReplayCaptureSession.State state=captureSession.state(android.os.SystemClock.elapsedRealtime());
-        if(state==ReplayCaptureSession.State.WAITING)return "已准备：最多等待2分钟，在下一所选应用的短暂开屏时段记录。";
+        if(state==ReplayCaptureSession.State.WAITING)return "已准备：最多等待10分钟，在下一所选应用的短暂开屏时段记录。";
         if(state==ReplayCaptureSession.State.CAPTURING)return "正在记录该应用本次开屏的匹配线索；不会延长自动点击时段。";
         return replay==null?"暂无规则夹具；未主动准备时不会生成。":"已取得进程内规则夹具，可本人查看后决定是否导出。";
     }
