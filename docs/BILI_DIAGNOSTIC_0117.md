@@ -14,4 +14,11 @@
 
 失败后只取得最终WINDOW_EXPIRED，不能据此断定广告一出现时已过期，早先拒绝可能被覆盖。首轮手机控件采样比电脑画面观察提前到期，已把电脑等待改成110秒，后续一次未出现广告只记未知。安装包资源分析发现不同布局是线索，并非失败现场的运行时节点证据。独立静态检查曾临时暂停功能，仅取得商业count_down路径；暂停期不计为失败行为，之后已恢复启用并确认服务绑定。
 
-0.1.17目前是诊断增强候选，不是已证明解决后台推广的修复版。保留既有版本/祖先/唯一候选/提交前复核、12秒/两次动作、坐标暂停和无网络权限。未改RuleCatalog/AdRules的动作选择器；不以扩大搜索或盲点换取跳过率。需完成构建、隔离验收和本人系统安装确认，再取得实际后台失败帧来决定下一项有证据的规则修正。
+0.1.17目前是诊断增强候选，不是已证明解决后台推广的修复版。保留既有版本/祖先/唯一候选/提交前复核、12秒/两次动作、坐标暂停和无网络权限。未改RuleCatalog/AdRules的动作选择器；不以扩大搜索或盲点换取跳过率。构建与隔离验收已完成，签名候选已在本机安装回读一致、服务已绑定且首页就绪；之后需取得实际后台失败帧来决定下一项有证据的规则修正。
+
+
+## 已完成的工程验收
+
+准确源码`b7c37410d652e2f57599ac5e2249b469de8e6178`的[24程序1764项](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/41018914127)、[标准构建/双lint](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/41018914756)和[Android8/15/17隔离验收](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/41018915139)均通过。每个系统17项原始JUnit无失败、错误或跳过，附件SHA256、用例名集合、环境API及发行Manifest隔离均已独立核验，见[永久摘要](validation/android-emulator-20261030-diagnostic-window.json)。
+
+非调试签名包139895字节，SHA256 `cd73af85a6ab9addbce35bf0664eff9af466d9debe7bdc5f83e1c0263ef8499c`；沿用原升级证书，v2/v3核验通过，原始ZIP条目全部不变，无uses-permission且canPerformGestures=false。当前仅本机诊断候选，不是新公开下载，也没有0.1.17真实广告通过声明。

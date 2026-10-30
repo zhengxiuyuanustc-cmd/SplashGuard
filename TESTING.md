@@ -2,7 +2,7 @@
 
 ## 0.1.17后台漏过诊断候选（2026-10-30）
 
-真实手动返回B站的一次动画宣传页从倒计时5播放至0，没有自动提前关闭；无障碍服务前后均已绑定。其他商业素材成功不抵消该失败。新候选保留最近具体判定、显示会话相对年龄、清除过期预览，并让本人主动准备的只读采样独立于动作时段。新增51项诊断检查，合计24程序1764项通过；SDK无签名构建通过。新增第17项隔离用例：旧动作期结束后可记录夹具，但不能恢复自动点击。远程CI/原始JUnit、签名和实机安装仍待完成，不宣称已修复后台漏过。见[范围与证据](docs/BILI_DIAGNOSTIC_0117.md)。
+真实手动返回B站的一次动画宣传页从倒计时5播放至0，没有自动提前关闭；无障碍服务前后均已绑定。其他商业素材成功不抵消该失败。新候选保留最近具体判定、显示会话相对年龄、清除过期预览，并让本人主动准备的只读采样独立于动作时段。新增51项诊断检查，合计24程序1764项通过；SDK无签名构建通过。新增第17项隔离用例：旧动作期结束后可记录夹具，但不能恢复自动点击。准确源码`b7c37410d652e2f57599ac5e2249b469de8e6178`的[标准构建/双lint](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/41018914756)、[纯Java CI](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/41018914127)和[三系统验收](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/41018915139)均通过，原始JUnit各17项无失败/错误/跳过，附件SHA256、用例名、API及正式Manifest隔离已核验；见[永久摘要](docs/validation/android-emulator-20261030-diagnostic-window.json)。非调试候选139895字节、SHA256 `cd73af85a6ab9addbce35bf0664eff9af466d9debe7bdc5f83e1c0263ef8499c`，原证书及v2/v3/原始条目/无uses-permission/无手势均核验。本机安装回读SHA256一致，服务绑定且正常首页显示已就绪；尚无0.1.17真实漏过样本，未公开新下载，不宣称已修复后台漏过。见[范围与证据](docs/BILI_DIAGNOSTIC_0117.md)。
 
 ## 服务控制与小窗口补充（2026-10-29）
 
