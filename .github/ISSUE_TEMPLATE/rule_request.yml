@@ -1,0 +1,51 @@
+name: 规则样本与适配请求
+description: 提供一个具体开屏广告样式的脱敏证据与反例
+title: "[规则] 应用名 / 版本 / 场景"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请先阅读 docs/RULES.md。当前仅处理有限开屏时段；应用内持续广告请转研究议题。
+        不要提供完整界面树、原始跳转链接、账号画面或完整手机日志。
+  - type: input
+    id: target
+    attributes:
+      label: 目标应用名、包名及版本
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 工具版本、机型与系统
+      description: 不需要 IMEI、序列号等设备唯一标识。
+    validations:
+      required: true
+  - type: textarea
+    id: scenario
+    attributes:
+      label: 广告出现步骤与实际现象
+      description: 是否真的出现广告？是否处于开屏时段？候选、计数与广告提前结束分别是什么结果？
+    validations:
+      required: true
+  - type: textarea
+    id: sample
+    attributes:
+      label: 最小脱敏控件样本
+      description: 可填写相关ID、类名、明确标签、边界、屏幕尺寸、可见/启用状态与场景证据；尚未取得可注明。
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: negatives
+    attributes:
+      label: 相似正常场景与应拒绝的反例
+      description: 至少说明可能混淆的普通内容、引导、付款、授权或导航按钮；未知请注明待补，不要编造结果。
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 样本已脱敏，不包含私人正文、设备唯一标识或凭据。
+          required: true

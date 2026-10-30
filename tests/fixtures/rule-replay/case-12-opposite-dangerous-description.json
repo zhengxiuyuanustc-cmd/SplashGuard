@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 2,
+  "packageCategory": "BILI",
+  "versionCode": -1,
+  "versionName": "BILI9150",
+  "width": 1200,
+  "height": 2652,
+  "evidence": true,
+  "biliSplash": true,
+  "scanComplete": true,
+  "candidates": [
+    {
+      "identity": 0,
+      "node": {
+        "scope": "SAME",
+        "id": "BILI_COUNT_DOWN",
+        "kind": "TEXT_VIEW",
+        "text": "跳过5",
+        "description": "@unsafe",
+        "visible": true,
+        "enabled": true,
+        "clickable": true
+      },
+      "ancestors": [
+        {
+          "scope": "SAME",
+          "id": "OTHER",
+          "kind": "VIEW_GROUP",
+          "text": "@none",
+          "description": "@none",
+          "visible": true,
+          "enabled": true,
+          "clickable": false
+        },
+        {
+          "scope": "SAME",
+          "id": "OTHER",
+          "kind": "VIEW_GROUP",
+          "text": "@none",
+          "description": "@none",
+          "visible": true,
+          "enabled": true,
+          "clickable": false
+        },
+        {
+          "scope": "SAME",
+          "id": "BILI_LAYOUT",
+          "kind": "FRAME_LAYOUT",
+          "text": "@none",
+          "description": "@none",
+          "visible": true,
+          "enabled": true,
+          "clickable": false
+        }
+      ],
+      "ancestorsComplete": true,
+      "bounds": [
+        868,
+        2425,
+        1148,
+        2565
+      ]
+    }
+  ]
+}

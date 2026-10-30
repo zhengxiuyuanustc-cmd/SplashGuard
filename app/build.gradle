@@ -2,7 +2,24 @@ plugins { id 'com.android.application' }
 android {
     namespace 'org.splashguard.app'
     compileSdk 35
-    defaultConfig { applicationId 'org.splashguard.app'; minSdk 26; targetSdk 35; versionCode 5; versionName '0.1.4' }
+    defaultConfig { applicationId 'org.splashguard.app'; minSdk 26; targetSdk 35; versionCode 19; versionName '0.1.18'; testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner' }
     compileOptions { sourceCompatibility JavaVersion.VERSION_1_8; targetCompatibility JavaVersion.VERSION_1_8 }
-    buildTypes { release { minifyEnabled false } }
+    buildTypes {
+        release { minifyEnabled false }
+        acceptance {
+            initWith buildTypes.release
+            debuggable false
+            signingConfig signingConfigs.debug
+            matchingFallbacks = ['release']
+        }
+    }
+    testBuildType 'acceptance'
+    sourceSets { androidTest.assets.srcDirs += [rootProject.file('examples/offline-rules')] }
+}
+
+dependencies {
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test:core:1.6.1'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.3.0'
 }
