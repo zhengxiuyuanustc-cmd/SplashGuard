@@ -1,5 +1,9 @@
 # 验证记录
 
+## 0.1.17后台漏过诊断候选（2026-10-30）
+
+真实手动返回B站的一次动画宣传页从倒计时5播放至0，没有自动提前关闭；无障碍服务前后均已绑定。其他商业素材成功不抵消该失败。新候选保留最近具体判定、显示会话相对年龄、清除过期预览，并让本人主动准备的只读采样独立于动作时段。新增51项诊断检查，合计24程序1764项通过；SDK无签名构建通过。新增第17项隔离用例：旧动作期结束后可记录夹具，但不能恢复自动点击。远程CI/原始JUnit、签名和实机安装仍待完成，不宣称已修复后台漏过。见[范围与证据](docs/BILI_DIAGNOSTIC_0117.md)。
+
 ## 服务控制与小窗口补充（2026-10-29）
 
 准确源码`d2140cb786142d829cd3141ebf010fd0c882b6e0`的[标准构建/双lint](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40867780479)、[23程序1713项](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40867780302)与[三系统隔离验收](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40867780298)通过。API26/35/37各16项原始JUnit无失败/错误/跳过，三个原始附件SHA256及发行Manifest已独立核验，详见[永久结果](docs/validation/android-emulator-20261029-service-controls.json)。新增暂停、取消选择、指引模式、系统撤权、首页任务移除及小窗口按钮拒点；负向均观察页面保持，恢复后实际节点动作可用。生产代码、权限、版本及已发布0.1.16包未变，没有新增厂商真机或真实广告通过声明。完整范围见[说明](docs/SERVICE_CONTROL_ACCEPTANCE.md)。

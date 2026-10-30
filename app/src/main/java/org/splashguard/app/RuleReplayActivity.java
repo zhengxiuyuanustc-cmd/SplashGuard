@@ -41,9 +41,9 @@ public final class RuleReplayActivity extends Activity {
     private void render(){ScrollView scroll=new ScrollView(this);scroll.setBackgroundColor(Color.rgb(245,247,245));scroll.setOnApplyWindowInsetsListener((v,i)->{v.setPadding(0,i.getSystemWindowInsetTop(),0,i.getSystemWindowInsetBottom());return i;});LinearLayout box=new LinearLayout(this);box.setOrientation(LinearLayout.VERTICAL);box.setPadding(dp(22),dp(22),dp(22),dp(24));scroll.addView(box);
         text(box,"规则夹具与离线回放",27);text(box,"这是高级排查工具。与诊断结论复核不同，本页会用当前内置识别规则重新计算匹配和候选冲突。它不执行点击，不重建完整画面，也不证明广告已关闭。",16);
         status=text(box,"",16);
-        button(box,"准备记录下一次所选应用的开屏",()->{if(!Prefs.enabled(this)||!SkipService.isConnected()||Prefs.selected(this).isEmpty()){notice.setText("请先本人启用功能、选择应用并连接服务；本按钮不会自动授权或启用。");return;}RuleData.requestReplayCapture();status.setText(RuleData.replayStatus());notice.setText("准备后请返回并打开需要排查的所选应用。最多等待2分钟，只记录该应用本次约12秒内的匹配线索，不延长自动点击时间。");});
+        button(box,"准备记录下一次所选应用的开屏",()->{if(!Prefs.enabled(this)||!SkipService.isConnected()||Prefs.selected(this).isEmpty()){notice.setText("请先本人启用功能、选择应用并连接服务；本按钮不会自动授权或启用。");return;}RuleData.requestReplayCapture();state.preview=null;state.outgoing=null;refresh();notice.setText("准备后请返回并打开需要排查的所选应用。最多等待2分钟，只记录该应用本次约12秒内的匹配线索；即使点击时段已结束仍可只读记录，不延长自动点击时间。");});
         text(box,"记录须本人先准备，默认不生成夹具。仅进程内保留有限候选和祖先：已知跳过语法／危险标记、固定ID／类名类别、临时同帧身份、版本码、屏幕尺寸和按钮边界。其他文本、包名与类名会折叠；不含截图、完整页面、账号或设备唯一标识。",16);
-        button(box,"查看并重新匹配最近夹具",()->{RuleReplay.Frame frame=RuleData.lastReplay();if(frame==null){status.setText(RuleData.replayStatus());notice.setText("暂无夹具。先准备一次，再打开所选应用；没有广告或没有可访问控件时可能没有有效候选。");return;}state.preview=frame;refresh();notice.setText("已固定本次查看的夹具，导出将使用上方这份内容。");});
+        button(box,"查看并重新匹配最近夹具",()->{RuleReplay.Frame frame=RuleData.lastReplay();if(frame==null){state.preview=null;state.outgoing=null;refresh();notice.setText("暂无夹具。先准备一次，再打开所选应用；没有广告或没有可访问控件时可能没有有效候选。");return;}state.preview=frame;refresh();notice.setText("已固定本次查看的夹具，导出将使用上方这份内容。");});
         button(box,"选择夹具文件，重新运行匹配",()->choose(IMPORT,new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("*/*")));
         preview=text(box,"尚未查看夹具。",16);preview.setTextIsSelectable(true);
         detail=text(box,"",14);detail.setTextIsSelectable(true);detail.setVisibility(View.GONE);

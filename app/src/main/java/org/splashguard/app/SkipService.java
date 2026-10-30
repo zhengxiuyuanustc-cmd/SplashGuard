@@ -116,6 +116,7 @@ public final class SkipService extends AccessibilityService implements SharedPre
         if(!applicationForeground(root))return false;
         String pkg=str(root.getPackageName());RuleData.observeReplayForeground(pkg,now);
         if(!session.observe(pkg,now))return false;
+        if(selected!=null&&selected.contains(pkg)&&!pkg.equals(getPackageName()))RuleData.beginDiagnosticWindow();
         reviewAt=0;versionPackage="";return true;
     }
     private void queueScan(long delay) {
@@ -159,6 +160,10 @@ public final class SkipService extends AccessibilityService implements SharedPre
             if (selected == null || !selected.contains(pkg) || pkg.equals(getPackageName())) return;
             RuleEvaluator.VersionInfo appVersion=versionFor(pkg);
             if (!session.active(now)) {
+                // A user-armed diagnostic read must not depend on an unexpired action window.
+                // It never observes/resets the action session or submits an operation.
+                try{if(RuleData.wantsReplayCapture(pkg,now))captureReplayOnly(root,pkg,appVersion);}
+                catch(RuntimeException unavailable){/* Diagnostic reads never reopen actions or interrupt the service. */}
                 if (!session.done()) {
                     remember(pkg,appVersion,null,null,DiagnosticSample.Reason.WINDOW_EXPIRED,0,true);
                     diagnose(pkg,"开屏处理时段已结束");
@@ -212,7 +217,8 @@ public final class SkipService extends AccessibilityService implements SharedPre
                     boolean genericHit = AdRules.candidate(text, n.getViewIdResourceName(), evidence, r.left, r.top, r.right, r.bottom, width, height)
                             || AdRules.candidate(desc, n.getViewIdResourceName(), evidence, r.left, r.top, r.right, r.bottom, width, height);
                     RuleEvaluator.Node snapshot=snapshot(n);
-                    if(!biliHit&&!genericHit&&!RuleCatalog.knownBiliTarget(snapshot))continue;
+                    boolean runtimeCandidate=biliHit||genericHit||RuleCatalog.knownBiliTarget(snapshot);
+                    if(!runtimeCandidate&&!(captureReplay&&RuleReplay.additionalDiagnosticCandidate(snapshot)))continue;
                     Ancestry ancestry=ancestors(n);
                     if(captureReplay){
                         if(replayCandidates.size()>=RuleReplay.MAX_CANDIDATES)replayComplete=false;
@@ -220,6 +226,8 @@ public final class SkipService extends AccessibilityService implements SharedPre
                             replayCandidates.add(RuleReplay.Candidate.capture(identity,snapshot,ancestry.nodes,ancestry.complete,r.left,r.top,r.right,r.bottom));
                         }catch(RuntimeException unrepresentable){replayComplete=false;}
                     }
+                    // Extra diagnostic-only nodes must not change matching or stop a live session.
+                    if(!runtimeCandidate)continue;
                     if(!ancestry.complete) {
                         session.stop();
                         if(captureReplay)rememberReplayFrame(pkg,appVersion,width,height,evidence,biliSplash,false,replayCandidates);
@@ -503,6 +511,36 @@ public final class SkipService extends AccessibilityService implements SharedPre
             session.stop();remember(pkg,appVersion,null,null,DiagnosticSample.Reason.SERVICE_NOT_READY,0,true);
             diagnose(pkg,"本地规则无法验证，请在离线工具中恢复内置规则");return null;
         }
+    }
+    /** Read-only path used after action expiry, strictly within the separately armed capture window. */
+    private void captureReplayOnly(AccessibilityNodeInfo root,String pkg,RuleEvaluator.VersionInfo appVersion){
+        List<AccessibilityNodeInfo> nodes=new ArrayList<>();List<RuleReplay.Candidate> candidates=new ArrayList<>();
+        List<AccessibilityNodeInfo> identities=new ArrayList<>();Rect screen=screenBounds(),window=new Rect();root.getBoundsInScreen(window);
+        boolean evidence=false,biliSplash=false,complete=true;
+        try{
+            complete=collect(root,nodes,0);
+            for(AccessibilityNodeInfo node:nodes){
+                if(!node.isVisibleToUser()||!pkg.equals(str(node.getPackageName())))continue;
+                evidence|=AdRules.adEvidence(str(node.getText()))||AdRules.adEvidence(str(node.getContentDescription()));
+                biliSplash|=AdRules.biliSplashMarker(node.getViewIdResourceName(),str(node.getClassName()));
+            }
+            biliSplash|=AdRules.biliSplashMarker(root.getViewIdResourceName(),str(root.getClassName()));
+            for(AccessibilityNodeInfo node:nodes){
+                if(!node.isVisibleToUser()||!node.isEnabled()||!pkg.equals(str(node.getPackageName())))continue;
+                Rect bounds=new Rect();node.getBoundsInScreen(bounds);if(!screen.contains(bounds)||!window.contains(bounds))continue;
+                RuleEvaluator.Node value=snapshot(node);
+                boolean potential=RuleCatalog.knownBiliTarget(value)||RuleReplay.additionalDiagnosticCandidate(value)
+                        ||AdRules.candidate(value.text,value.viewId,evidence,bounds.left,bounds.top,bounds.right,bounds.bottom,screen.right,screen.bottom)
+                        ||AdRules.candidate(value.description,value.viewId,evidence,bounds.left,bounds.top,bounds.right,bounds.bottom,screen.right,screen.bottom);
+                if(!potential)continue;
+                if(candidates.size()>=RuleReplay.MAX_CANDIDATES){complete=false;break;}
+                Ancestry ancestry=ancestors(node);int id=identities.indexOf(node);if(id<0){id=identities.size();identities.add(node);}
+                candidates.add(RuleReplay.Candidate.capture(id,value,ancestry.nodes,ancestry.complete,bounds.left,bounds.top,bounds.right,bounds.bottom));
+            }
+            rememberReplayFrame(pkg,appVersion,screen.right,screen.bottom,evidence,biliSplash,complete,candidates);
+        }catch(RuntimeException unavailable){
+            rememberReplayFrame(pkg,appVersion,screen.right,screen.bottom,evidence,biliSplash,false,java.util.Collections.emptyList());
+        }finally{for(AccessibilityNodeInfo node:nodes)node.recycle();}
     }
     private void rememberReplayFrame(String pkg,RuleEvaluator.VersionInfo version,int width,int height,boolean evidence,boolean biliSplash,boolean complete,List<RuleReplay.Candidate> candidates){
         // Diagnostics must never change matching, budgets or Android actions if their limits are exceeded.

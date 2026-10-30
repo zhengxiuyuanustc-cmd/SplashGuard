@@ -24,7 +24,7 @@ public final class RuleReplay {
     public enum Target { BILI,ZHIHU,OTHER_SELECTED }
     public enum VersionName { BILI9150,BILI9161,OTHER,UNKNOWN }
     public enum Scope { SAME,OTHER }
-    public enum Id { NONE,BILI_COUNT_DOWN,BILI_COUNTDOWN_TITLE,BILI_LOGO_LAYOUT,BILI_ROOT_CONTAINER,BILI_INTERACT,BILI_CONTAINER,BILI_LAYOUT,BILI_BUTTON_CONTAINER,BILI_FULL,SDK_SKIP,OTHER }
+    public enum Id { NONE,BILI_EVENT_SKIP,BILI_EVENT_ROOT,BILI_COUNT_DOWN,BILI_COUNTDOWN_TITLE,BILI_LOGO_LAYOUT,BILI_ROOT_CONTAINER,BILI_INTERACT,BILI_CONTAINER,BILI_LAYOUT,BILI_BUTTON_CONTAINER,BILI_FULL,SDK_SKIP,OTHER }
     public enum Kind { TEXT_VIEW,BUTTON,FRAME_LAYOUT,VIEW_GROUP,WEB_VIEW,BILI_WIDGET,OTHER }
     public enum Outcome { INCOMPLETE_SCAN,MULTIPLE_CANDIDATES,NO_MATCH,UNIQUE_RULE_MATCH }
     private static final String SAMPLE_PACKAGE="org.splashguard.selected",OTHER_PACKAGE="org.splashguard.other";
@@ -83,6 +83,13 @@ public final class RuleReplay {
         public final Outcome outcome;public final int candidateCount,matchedIdentities,uniqueIdentity;public final String ruleId;public final boolean versionVerified;public final List<Match> matches;
         Result(Outcome outcome,int count,int identities,int unique,String ruleId,boolean verified,List<Match> matches){this.outcome=outcome;candidateCount=count;matchedIdentities=identities;uniqueIdentity=unique;this.ruleId=ruleId;versionVerified=verified;this.matches=Collections.unmodifiableList(new ArrayList<>(matches));}
     }
+    /** Extra observed-package vocabulary for diagnostics only; this grants no selector or action. */
+    public static boolean additionalDiagnosticCandidate(RuleEvaluator.Node node){
+        if(node==null||!RuleCatalog.BILI_PACKAGE.equals(node.packageName)
+                ||!(RuleCatalog.BILI_PACKAGE+":id/skip").equals(node.viewId)
+                ||!"android.widget.TextView".equals(node.className))return false;
+        return knownLabel(AdRules.normalize(node.text))||knownLabel(AdRules.normalize(node.description));
+    }
     public static Result evaluate(Frame frame){
         if(frame==null)throw invalid();List<Match> results=new ArrayList<>();if(!frame.scanComplete)return new Result(Outcome.INCOMPLETE_SCAN,frame.candidates.size(),0,-1,"none",false,results);
         String pkg=packageText(frame.packageCategory);RuleEvaluator.VersionInfo version=new RuleEvaluator.VersionInfo(frame.versionCode,frame.versionName==VersionName.BILI9150?"9.15.0":frame.versionName==VersionName.BILI9161?"9.16.1":frame.versionName==VersionName.OTHER?"unverified":"");
@@ -112,7 +119,7 @@ public final class RuleReplay {
     private static String label(String raw){if(!boundedLabel(raw))return "@unsafe";String s=AdRules.normalize(raw);if(s.isEmpty())return "@none";RuleEvaluator.Node test=new RuleEvaluator.Node(SAMPLE_PACKAGE,"","",s,"",true,true,true);if(RuleEvaluator.genericCandidate(true,test).reason==RuleEvaluator.Reason.UNSAFE_LABEL)return "@unsafe";return knownLabel(s)?s:"@other";}
     private static String labelText(String token){return token.equals("@none")?"":token.equals("@unsafe")?"安装":token.equals("@other")?"other":token;}
     private static Id id(String raw){String s=raw==null?"":raw;if(s.isEmpty())return Id.NONE;for(Id id:Id.values())if(id!=Id.SDK_SKIP&&id!=Id.OTHER&&id!=Id.NONE&&s.equals(idText(id)))return id;return AdRules.candidate("",s,true,700,20,950,80,1000,2000)?Id.SDK_SKIP:Id.OTHER;}
-    private static String idText(Id id){switch(id){case BILI_COUNT_DOWN:return RuleCatalog.BILI_PACKAGE+":id/count_down";case BILI_COUNTDOWN_TITLE:return RuleCatalog.BILI_PACKAGE+":id/countdown_title";case BILI_LOGO_LAYOUT:return RuleCatalog.BILI_PACKAGE+":id/logo_layout";case BILI_ROOT_CONTAINER:return RuleCatalog.BILI_PACKAGE+":id/root_container";case BILI_INTERACT:return RuleCatalog.BILI_PACKAGE+":id/splash_interact_view";case BILI_CONTAINER:return RuleCatalog.BILI_PACKAGE+":id/splash_container";case BILI_LAYOUT:return RuleCatalog.BILI_PACKAGE+":id/splash_layout";case BILI_BUTTON_CONTAINER:return RuleCatalog.BILI_PACKAGE+":id/splash_button_container";case BILI_FULL:return RuleCatalog.BILI_PACKAGE+":id/full_brand_splash";case SDK_SKIP:return "sdk:id/tt_splash_skip_btn";case OTHER:return "other";default:return "";}}
+    private static String idText(Id id){switch(id){case BILI_EVENT_SKIP:return RuleCatalog.BILI_PACKAGE+":id/skip";case BILI_EVENT_ROOT:return RuleCatalog.BILI_PACKAGE+":id/root";case BILI_COUNT_DOWN:return RuleCatalog.BILI_PACKAGE+":id/count_down";case BILI_COUNTDOWN_TITLE:return RuleCatalog.BILI_PACKAGE+":id/countdown_title";case BILI_LOGO_LAYOUT:return RuleCatalog.BILI_PACKAGE+":id/logo_layout";case BILI_ROOT_CONTAINER:return RuleCatalog.BILI_PACKAGE+":id/root_container";case BILI_INTERACT:return RuleCatalog.BILI_PACKAGE+":id/splash_interact_view";case BILI_CONTAINER:return RuleCatalog.BILI_PACKAGE+":id/splash_container";case BILI_LAYOUT:return RuleCatalog.BILI_PACKAGE+":id/splash_layout";case BILI_BUTTON_CONTAINER:return RuleCatalog.BILI_PACKAGE+":id/splash_button_container";case BILI_FULL:return RuleCatalog.BILI_PACKAGE+":id/full_brand_splash";case SDK_SKIP:return "sdk:id/tt_splash_skip_btn";case OTHER:return "other";default:return "";}}
     private static Kind kind(String raw){if(raw==null)return Kind.OTHER;for(Kind k:Kind.values())if(k!=Kind.OTHER&&raw.equals(classText(k)))return k;return raw.startsWith("tv.danmaku.bili.splash.ad.widget.")?Kind.BILI_WIDGET:Kind.OTHER;}
     private static String classText(Kind k){switch(k){case TEXT_VIEW:return "android.widget.TextView";case BUTTON:return "android.widget.Button";case FRAME_LAYOUT:return "android.widget.FrameLayout";case VIEW_GROUP:return "android.view.ViewGroup";case WEB_VIEW:return "android.webkit.WebView";case BILI_WIDGET:return "tv.danmaku.bili.splash.ad.widget.Replay";default:return "android.view.View";}}
     private static String packageText(Target target){return target==Target.BILI?RuleCatalog.BILI_PACKAGE:target==Target.ZHIHU?"com.zhihu.android":SAMPLE_PACKAGE;}

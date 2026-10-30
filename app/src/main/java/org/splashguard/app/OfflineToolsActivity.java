@@ -113,7 +113,7 @@ public final class OfflineToolsActivity extends Activity {
         body(compatibility,"当前仅使用按钮自身的点击动作。旧版B站触点方式尚缺可维护的数字版本证据与可靠的遮挡判断，已暂停；旧开关不会生效。今后只有补齐独立验证并重新由本人确认，才考虑恢复，不会自动沿用旧偏好。");
         Switch compat=new Switch(this);compat.setText("坐标触点暂停，保留按钮动作");compat.setTextSize(16);compat.setTextColor(INK);compat.setMinHeight(dp(60));compat.setChecked(false);compat.setEnabled(false);compatibility.addView(compat);
         LinearLayout samples=card("最小诊断样本");
-        body(samples,"只暂存本次进程内最近一次判定：固定原因、规则编号、应用类别、版本数字和候选数量等。没有截图、完整页面、原始按钮文字或设备标识；关闭进程后会消失。导出前可在下方检查内容。");
+        body(samples,"只暂存本次进程内最近识别会话的最后状态及最近具体判定：固定原因、规则编号、应用类别、版本数字和候选数量等。没有截图、完整页面、原始按钮文字或设备标识；关闭进程后会消失。导出前可在下方检查内容。");
         button(samples,"查看最近判定",v->previewLatest());
         samplePreview=text("尚未读取样本。",15,MUTED);samplePreview.setTextIsSelectable(true);samples.addView(samplePreview);
         exportSampleButton=button(samples,"导出上方已预览的样本",v->{if(previewedSample==null){notice.setText("请先查看最近判定，再决定是否导出。");return;}requestExport(RuleJsonCodec.encodeSample(previewedSample),"SplashGuard-diagnostic.json");});
@@ -206,7 +206,10 @@ public final class OfflineToolsActivity extends Activity {
         OfflineRuleStore.requireInputSize(bytes.size());
         return StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(bytes.toByteArray())).toString();
     }
-    private void previewLatest(){previewedSample=RuleData.lastSample();work.preview=previewedSample;samplePreview.setText(previewedSample==null?"暂无判定样本。请先在服务已连接时打开所选应用，且确认确实出现广告。":describe(previewedSample)+"\n\n"+RuleJsonCodec.encodeSample(previewedSample));refresh();}
+    private void previewLatest(){DiagnosticSample latest=RuleData.lastSample();previewedSample=RuleData.usefulSample();work.preview=previewedSample;
+        long age=RuleData.diagnosticAgeMillis();String ageText=age<0?"":"最近识别会话约在"+(age/1000)+"秒前开始；不保证与刚出现的广告相同。\n";
+        String end=latest!=null&&latest!=previewedSample?"本轮最后状态："+latest.reason.name()+"\n以下保留本轮最近的具体判定，避免结束状态覆盖线索。\n\n":"";
+        samplePreview.setText(previewedSample==null?"暂无判定样本。请先在服务已连接时打开所选应用，且确认确实出现广告。":ageText+end+describe(previewedSample)+"\n\n"+RuleJsonCodec.encodeSample(previewedSample));refresh();}
     private String describe(OfflineRuleStore.Pack pack){StringBuilder text=new StringBuilder("待确认：").append(pack.id).append(" / 版本 ").append(pack.version);
         for(OfflineRuleStore.RuleLimit r:pack.rules)text.append("\n\n").append(r.id).append("\n").append(r.packageName).append("\n版本数字：").append(r.minVersionCode).append("—").append(r.maxVersionCode).append("\n识别时段：").append(r.windowMs).append("毫秒；最多").append(r.maxActions).append("轮尝试\n").append(r.enabled?"保留规则":"停用规则").append(r.allowGesture?"；保留旧格式能力字段，当前坐标动作仍暂停":"；禁止触点兼容");return text.toString();}
     private String describe(DiagnosticSample value){return "原因："+value.reason.name()+"\n候选数量："+value.candidateCount+"；扫描"+(value.scanComplete?"完整":"不完整")+"\n复核："+decision(value.replay())+"\n以下仅为最小判定数据，不证明广告已关闭。";}

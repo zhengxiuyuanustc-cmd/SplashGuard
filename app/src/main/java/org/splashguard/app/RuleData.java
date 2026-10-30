@@ -6,7 +6,7 @@ import android.content.SharedPreferences;
 /** Local persistence boundary. Invalid saved restrictions stop processing until explicit recovery. */
 final class RuleData {
     private static final String CURRENT="rules_current", PREVIOUS="rules_previous", UNDO="rules_undo", COMPAT="gesture_compatibility";
-    private static volatile DiagnosticSample sample;
+    private static final DiagnosticHistory diagnosticHistory=new DiagnosticHistory();
     private static RuleReplay.Frame replay;
     private static final ReplayCaptureSession captureSession=new ReplayCaptureSession();
     private RuleData() {}
@@ -56,9 +56,12 @@ final class RuleData {
     static boolean affectsRuntime(String key) {
         return key==null||STATE.equals(key)||AUTH_BLOCKED.equals(key)||QUARANTINE.equals(key)||CURRENT.equals(key)||PREVIOUS.equals(key)||UNDO.equals(key)||COMPAT.equals(key);
     }
-    static void rememberSample(DiagnosticSample value){sample=value;}
-    static DiagnosticSample lastSample(){return sample;}
-    static synchronized void clearSample(){sample=null;replay=null;captureSession.clear();}
+    static void beginDiagnosticWindow(){diagnosticHistory.beginWindow(android.os.SystemClock.elapsedRealtime());}
+    static long diagnosticAgeMillis(){return diagnosticHistory.age(android.os.SystemClock.elapsedRealtime());}
+    static void rememberSample(DiagnosticSample value){diagnosticHistory.remember(value);}
+    static DiagnosticSample lastSample(){return diagnosticHistory.last();}
+    static DiagnosticSample usefulSample(){return diagnosticHistory.useful();}
+    static synchronized void clearSample(){diagnosticHistory.clear();replay=null;captureSession.clear();}
     static synchronized void requestReplayCapture(){replay=null;captureSession.arm(android.os.SystemClock.elapsedRealtime());}
     static synchronized void observeReplayForeground(String pkg,long now){captureSession.observeForeground(pkg,now);}
     static synchronized void replayScreenOff(long now){captureSession.screenOff(now);}

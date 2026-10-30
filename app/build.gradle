@@ -2,7 +2,7 @@ plugins { id 'com.android.application' }
 android {
     namespace 'org.splashguard.app'
     compileSdk 35
-    defaultConfig { applicationId 'org.splashguard.app'; minSdk 26; targetSdk 35; versionCode 17; versionName '0.1.16'; testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner' }
+    defaultConfig { applicationId 'org.splashguard.app'; minSdk 26; targetSdk 35; versionCode 18; versionName '0.1.17'; testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner' }
     compileOptions { sourceCompatibility JavaVersion.VERSION_1_8; targetCompatibility JavaVersion.VERSION_1_8 }
     buildTypes {
         release { minifyEnabled false }

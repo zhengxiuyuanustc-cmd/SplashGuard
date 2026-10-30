@@ -171,6 +171,17 @@ public final class OfflineRuleInstrumentedTest {
         assertTrue("An internal dialog cannot restart the expired action window",device.hasObject(By.text("跳过广告")));
         assertFalse(device.hasObject(By.text("FIXTURE_CONTENT")));assertEquals(0,Prefs.get(app).getInt("count",0));
     }
+    @Test public void armedReplayAfterExpiryCapturesWithoutReopeningActions()throws Exception{
+        enableActualService();startSyntheticSplash("late_dialog");
+        assertTrue(device.wait(Until.hasObject(By.text("FIXTURE_WARM_CONTENT")),5000));
+        SystemClock.sleep(SkipSession.WINDOW_MS+300);RuleData.requestReplayCapture();
+        device.findObject(By.text("显示同应用对话框")).click();
+        UiObject2 show=device.wait(Until.findObject(By.text("显示测试广告")),5000);assertNotNull(show);show.click();
+        awaitBackground("Armed diagnostics retain candidates despite the expired action window",()->RuleData.lastReplay()!=null&&!RuleData.lastReplay().candidates.isEmpty());
+        assertEquals(RuleReplay.Outcome.UNIQUE_RULE_MATCH,RuleReplay.evaluate(RuleData.lastReplay()).outcome);
+        SystemClock.sleep(1000);assertTrue("Diagnostic matches never authorize expired actions",device.hasObject(By.text("跳过广告")));
+        assertFalse(device.hasObject(By.text("FIXTURE_CONTENT")));assertEquals(0,Prefs.get(app).getInt("count",0));
+    }
     private void startControlledSplash()throws Exception{
         startSyntheticSplash("controlled");
         assertTrue("The independent fixture is ready before changing runtime settings",device.wait(Until.hasObject(By.text("FIXTURE_WAITING")),5000));
