@@ -2,7 +2,7 @@
 
 ## 0.1.18缺失广告文字的精确布局候选（2026-10-30）
 
-用户报告0.1.17后台返回广告未跳过。电脑限时观察已到期、没有对应帧；从本工具预览取得的13字段最近判定为NO_AD_EVIDENCE，保留该证据归属，不能宣称完整捕获。依据当前匹配器分支顺序、此前核实路径及本机APK原生布局静态核查，候选仅为9.16.1/code9161100的count_down精确两层路径移除额外广告文字条件，其余安全边界保留；另延长本人准备后的等待到10分钟，采样/动作仍12秒。检查、签名、安装及真实广告复测待完成；见[范围](docs/BILI_MISSING_TAG_0118.md)。
+用户报告0.1.17后台返回广告未跳过。电脑限时观察已到期、没有对应帧；从本工具预览取得的13字段最近判定为NO_AD_EVIDENCE，保留该证据归属，不能宣称完整捕获。依据当前匹配器分支顺序、此前核实路径及本机APK原生布局静态核查，候选仅为9.16.1/code9161100的count_down精确两层路径移除额外广告文字条件，其余安全边界保留；另延长本人准备后的等待到10分钟，采样/动作仍12秒。准确源码`4d7806e228d17583e3fa1a4eb479db7c8cc35fc3`的[24程序1881项](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/41028981285)、[标准构建/双lint](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/41028981227)及[Android8/15/17各17项](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/41028981255)通过。原始JUnit无失败/错误/跳过，附件摘要、用例名、API及发行Manifest隔离已独立核验。见[永久摘要](docs/validation/android-emulator-20261030-missing-tag.json)。非调试候选139892字节，SHA256 `5545ee562363ded8cce24f6e4d4714ac1dacf50ed58ae403c287afa99b36b75f`；原升级证书、v2/v3、全部原始ZIP条目一致、无uses-permission及canPerformGestures=false均核验。手机安装及真实广告复测尚待完成，未替换公开下载。见[范围](docs/BILI_MISSING_TAG_0118.md)。
 
 ## 0.1.17后台漏过诊断候选（2026-10-30）
 

@@ -16,4 +16,6 @@
 
 本人主动准备后，等待下一目标的期限由2分钟改为10分钟，避免等待广告刷新时请求先到期；没有扩大实际12秒采样时段或自动点击预算。屏幕/桌面观察不续期，开始后离开/锁屏仍结束，可主动取消；默认不采样。
 
-新增无广告文字的正例及版本/父节点/危险描述/WebView/几何/可点击性等反例，语料case34—40为明确标记的合成数据，不冒充缺失的现场帧。24程序1881项本地逻辑检查已通过；SDK构建、远程CI、签名、安装及真实广告复测待完成；未替换公开下载，不声明已实机解决。
+新增无广告文字的正例及版本/父节点/危险描述/WebView/几何/可点击性等反例，语料case34—40为明确标记的合成数据，不冒充缺失的现场帧。准确源码`4d7806e228d17583e3fa1a4eb479db7c8cc35fc3`的[24程序1881项](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/41028981285)、[标准构建/双lint](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/41028981227)及[Android8/15/17各17项](https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/41028981255)通过。原始JUnit无失败/错误/跳过，附件摘要、用例名、API及发行Manifest隔离已独立核验。见[永久摘要](validation/android-emulator-20261030-missing-tag.json)。
+
+非调试候选139892字节，SHA256 `5545ee562363ded8cce24f6e4d4714ac1dacf50ed58ae403c287afa99b36b75f`；原升级证书、v2/v3、全部原始ZIP条目一致、无uses-permission及canPerformGestures=false均核验。手机安装及真实广告复测尚待完成，未替换公开下载。不声明已实机解决。
