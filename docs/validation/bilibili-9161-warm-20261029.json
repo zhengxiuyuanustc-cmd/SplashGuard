@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "source_commit": "d46b9e92bbc821335e71b3f9986ad539a2f29c84",
+  "tool_version": "0.1.16",
+  "target_package": "tv.danmaku.bili",
+  "target_version": "9.16.1",
+  "target_version_code": 9161100,
+  "date": "2026-10-29",
+  "entry": "retained process; returned from another app",
+  "same_process_verified": true,
+  "force_stop_used": false,
+  "ui_automation_during_behavior_test": false,
+  "observed_result": "Tmall ad visible at skip 5, then app home before countdown finished",
+  "reviewed_recording_times_seconds": {
+    "ad_visible": 1.0,
+    "closing_transition": 1.2,
+    "app_home": 1.4
+  },
+  "ad_input_commands_sent": false,
+  "service_ready_before_test": true,
+  "installed_sha256": "1decac1c3a0cff3c0c23cc8b626317d9d25dbb84c84189965b5bdb0df4f4fa51",
+  "prior_0115_results": [
+    "Tmall mascot ad missed",
+    "Tmall person ad missed",
+    "no-ad returns recorded separately"
+  ],
+  "limits": [
+    "one real warm-ad pass, not every creative or app version",
+    "earlier failed creatives not individually re-served on 0.1.16",
+    "recording remains private; no screenshots, account pages or device identifiers published"
+  ]
+}

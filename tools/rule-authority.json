@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "kid": "splashguard.rules.20261027",
+  "publisher": "splashguard",
+  "channel": "community",
+  "allowedPackIds": [
+    "splashguard.community"
+  ],
+  "publicKeySpkiBase64": "MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAzUFhgQRxtor6c7++SiK6AQb6F1Vjd+0ax3PP2bZTR2VExJI6UwboURDXI9FRRP38/8GkZ1Q70ywZCk843yO71tT2pPHeafRyjjoAyAZ+v7L7p4HF4hzWWOHwECRqsSQeT+D7lNAE9Xc21TniTA4EHb27t52dP/zu8bmLGUNOZna+p0y5MVe3I0eEUbfDuUo1M7mhsJS5zS3tpHbO82IjPmNhr0c0qlN17amjNq/LYrHsc75epb1ivK1gURUCBOIumaGlGVtLu2d7p/3mMvTPMspYZo9rJjOPqrbSJSAevg9mL/S0/uPqo+8ybxjboIZGegFATvUb8T0igcIOE8pXOdnQb3RnQYEYsSbbFSdQsMRICijbnk3EUytYmSSkpKFbTHnw9BGW1bUc6jjJ+WEezFvR+05ZjNVUuggKLyqNH4PSmdBi9sWaPbEkNlpvei9V6IHFMXuyK+vtkLjDCBmyqDUVpQotX2FtdJa2BwVm0dcYX/bCSM9pPaz7h8GL5H3BAgMBAAE=",
+  "publicKeySha256": "b5754754ab983e6f8dacd8c5965390169df08f891c10d8ef911339851cdaa43e"
+}

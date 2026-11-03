@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "head": "5c9212c019b8878189d0e3f844203dcb5461397f",
+  "run": 40823105183,
+  "url": "https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40823105183",
+  "target_debuggable": false,
+  "environments": [
+    {
+      "api": 26,
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "artifact_id": 12875237679,
+      "artifact_sha256": "1647ced08b59c6d793bcf4fc5b5512e48d953f9e891e1c72aa70e59510e2809c",
+      "test_cases": [
+        "actualServiceDoesNotReopenForSameAppDialogAfterExpiry",
+        "actualServiceClicksOneExplicitSyntheticSkip",
+        "cancelingSystemPickerLeavesRulesUnchanged",
+        "realPrivateDirectoryWriteFailureStopsUntilExplicitRecovery",
+        "actualServiceStopsOnTwoSyntheticSkipCandidates",
+        "tamperedDocumentCannotOfferApplyOrSave",
+        "actualServiceHandlesWarmReturnWithoutRecreatingFixture",
+        "documentsUiPreviewNeedsConfirmationAndSurvivesRecreation",
+        "resettingRulesDoesNotReapplySameSignedInput",
+        "realPreferencesMigrateAndKeepAcceptedHistory"
+      ],
+      "production_manifest_isolated": true
+    },
+    {
+      "api": 35,
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "artifact_id": 12875069730,
+      "artifact_sha256": "00048375ff916095805d6c40eaab22247ad0de052e37dd708e8876d99f0f24e8",
+      "test_cases": [
+        "actualServiceDoesNotReopenForSameAppDialogAfterExpiry",
+        "actualServiceClicksOneExplicitSyntheticSkip",
+        "cancelingSystemPickerLeavesRulesUnchanged",
+        "realPrivateDirectoryWriteFailureStopsUntilExplicitRecovery",
+        "actualServiceStopsOnTwoSyntheticSkipCandidates",
+        "tamperedDocumentCannotOfferApplyOrSave",
+        "actualServiceHandlesWarmReturnWithoutRecreatingFixture",
+        "documentsUiPreviewNeedsConfirmationAndSurvivesRecreation",
+        "resettingRulesDoesNotReapplySameSignedInput",
+        "realPreferencesMigrateAndKeepAcceptedHistory"
+      ],
+      "production_manifest_isolated": true
+    },
+    {
+      "api": 37,
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "artifact_id": 12875702281,
+      "artifact_sha256": "d64e98fe90d77c2791925da165ec37762e75f3b33296e83d8887643ce798a10e",
+      "test_cases": [
+        "actualServiceDoesNotReopenForSameAppDialogAfterExpiry",
+        "actualServiceClicksOneExplicitSyntheticSkip",
+        "cancelingSystemPickerLeavesRulesUnchanged",
+        "realPrivateDirectoryWriteFailureStopsUntilExplicitRecovery",
+        "actualServiceStopsOnTwoSyntheticSkipCandidates",
+        "tamperedDocumentCannotOfferApplyOrSave",
+        "actualServiceHandlesWarmReturnWithoutRecreatingFixture",
+        "documentsUiPreviewNeedsConfirmationAndSurvivesRecreation",
+        "resettingRulesDoesNotReapplySameSignedInput",
+        "realPreferencesMigrateAndKeepAcceptedHistory"
+      ],
+      "production_manifest_isolated": true
+    }
+  ]
+}

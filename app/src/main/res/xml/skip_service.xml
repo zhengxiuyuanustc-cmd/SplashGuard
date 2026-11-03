@@ -2,6 +2,6 @@
     android:description="@string/service_description"
     android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged|typeWindowsChanged"
     android:accessibilityFeedbackType="feedbackGeneric" android:notificationTimeout="80"
-    android:canRetrieveWindowContent="true" android:canPerformGestures="true"
+    android:canRetrieveWindowContent="true" android:canPerformGestures="false"
     android:settingsActivity="org.splashguard.app.MainActivity"
     android:accessibilityFlags="flagReportViewIds"/>

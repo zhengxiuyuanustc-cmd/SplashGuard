@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "installed_source": "b7c37410d652e2f57599ac5e2249b469de8e6178",
+  "installed_version": "0.1.17",
+  "user_report": "retained_background_ad_not_skipped",
+  "source": "Own OfflineTools preview after user report",
+  "full_frame_available": false,
+  "desktop_observer_expired": true,
+  "sample": {
+    "schemaVersion": 1,
+    "reason": "NO_AD_EVIDENCE",
+    "ruleId": "BILI_SPLASH_SKIP",
+    "target": "BILIBILI",
+    "versionCode": 9161100,
+    "nodeType": "TEXT_VIEW",
+    "relation": "NONE",
+    "candidateCount": 0,
+    "scanComplete": true,
+    "clickable": true,
+    "sceneMatched": false,
+    "targetMatched": true,
+    "excluded": false
+  },
+  "limits": [
+    "No corresponding image or replay frame",
+    "Relative age is not authenticated ad entry time",
+    "Exact branch is inferred from reviewed matcher ordering, not a freshly exported ancestor tree",
+    "No 0.1.18 real-ad pass yet"
+  ]
+}

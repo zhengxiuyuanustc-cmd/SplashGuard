@@ -40,6 +40,32 @@ public class AdRulesTest {
         check("recorded bottom skip within real display",AdRules.biliCandidate("tv.danmaku.bili","跳过 5","tv.danmaku.bili:id/count_down",true,868,2425,1148,2565,1200,2652),true);
         check("recorded skip was rejected by old app-area height",AdRules.biliCandidate("tv.danmaku.bili","跳过 5","tv.danmaku.bili:id/count_down",true,868,2425,1148,2565,1200,2516),false);
         check("recorded bottom label still requires scene",AdRules.biliCandidate("tv.danmaku.bili","跳过 5","tv.danmaku.bili:id/count_down",false,868,2425,1148,2565,1200,2652),false);
+        boolean tmallScene=AdRules.biliSplashMarker("tv.danmaku.bili:id/splash_layout","android.widget.FrameLayout");
+        check("recorded Tmall FrameLayout scene",tmallScene,true);
+        check("recorded Tmall lower skip",AdRules.biliCandidate("tv.danmaku.bili","跳过5","tv.danmaku.bili:id/count_down",tmallScene,868,2425,1148,2565,1200,2652),true);
+        check("new scene requires recorded class",AdRules.biliSplashMarker("tv.danmaku.bili:id/splash_layout","android.view.ViewGroup"),false);
+        check("new scene exact package",AdRules.biliSplashMarker("com.other:id/splash_layout","android.widget.FrameLayout"),false);
+        check("new scene exact id",AdRules.biliSplashMarker("tv.danmaku.bili:id/splash_layout_extra","android.widget.FrameLayout"),false);
+        check("logo alone is not a scene",AdRules.biliSplashMarker("tv.danmaku.bili:id/logo_layout","android.view.ViewGroup"),false);
+        check("unidentified FrameLayout is not a scene",AdRules.biliSplashMarker("","android.widget.FrameLayout"),false);
+        check("Tmall brand alone is not evidence",AdRules.adEvidence("天猫双十一"),false);
+        check("new scene rejects unrelated button",AdRules.biliCandidate("tv.danmaku.bili","跳过5","tv.danmaku.bili:id/skip",tmallScene,868,2425,1148,2565,1200,2652),false);
+        check("new scene rejects pure countdown",AdRules.biliCandidate("tv.danmaku.bili","5","tv.danmaku.bili:id/count_down",tmallScene,868,2425,1148,2565,1200,2652),false);
+        check("new scene rejects ad destination",AdRules.biliCandidate("tv.danmaku.bili","点击进入淘宝app","tv.danmaku.bili:id/count_down",tmallScene,868,2425,1148,2565,1200,2652),false);
+        check("new scene rejects center content",AdRules.biliCandidate("tv.danmaku.bili","跳过5","tv.danmaku.bili:id/count_down",tmallScene,868,1200,1148,1340,1200,2652),false);
+        check("new scene rejects offscreen control",AdRules.biliCandidate("tv.danmaku.bili","跳过5","tv.danmaku.bili:id/count_down",tmallScene,868,2525,1148,2665,1200,2652),false);
+        String[] sdkNames={"tt_splash_skip_btn","tt_splash_skip","gdt_splash_skip","ksad_splash_skip","splash_skip_view","splash_skip_button","splash_skip_btn","splash_skip"};
+        for(String name:sdkNames){
+            check("exact bare SDK name "+name,rule("",name,true),true);
+            check("exact qualified SDK name "+name,rule("","com.sdk:id/"+name,true),true);
+        }
+        String[] disguised={"not_really_splash_skip_offer","tt_splash_skip_btn_extra","prefix_tt_splash_skip_btn","com.sdk:id/not_really_splash_skip_offer",
+                "com.sdk:id/tt_splash_skip_btn/offer","com.sdk/path/tt_splash_skip_btn","com.sdk:layout/tt_splash_skip_btn",":id/tt_splash_skip_btn",
+                "com..sdk:id/tt_splash_skip_btn","com.sdk:id/com.sdk:id/tt_splash_skip_btn"," com.sdk:id/tt_splash_skip_btn","com.sdk:id/tt_splash_skip_btn ",
+                "com.sdk:id/tt_splash_ skip_btn","com.sdk:id/tt_splash_\u200bskip_btn","COM.SDK:ID/TT_SPLASH_SKIP_BTN","com.sdk:id/tt_splash_skip_btn\n"};
+        for(String id:disguised)check("SDK spelling is not a reviewed ID "+id,rule("",id,true),false);
+        check("invalid ID never removes explicit-label support",rule("跳过广告","com.sdk:id/not_really_splash_skip_offer",false),true);
+        check("known ID still needs evidence",rule("","com.sdk:id/tt_splash_skip_btn",false),false);
         System.out.println("PASS " + passed + " decision-rule cases");
     }
 }

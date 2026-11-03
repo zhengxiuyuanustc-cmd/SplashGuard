@@ -1,0 +1,14 @@
+{
+  "app_version": "9.15.0",
+  "captured_on": "2026-10-24",
+  "source": "Filtered metadata of a real Tmall opening advertisement; host debugger used for diagnosis only",
+  "screen": [0, 0, 1200, 2652],
+  "root": {"id": "", "class": "android.widget.FrameLayout", "bounds": [0, 0, 1200, 2652]},
+  "skip": {"id": "tv.danmaku.bili:id/count_down", "class": "android.widget.TextView", "text": "跳过5", "bounds": [868, 2425, 1148, 2565], "visible": true, "enabled": true, "clickable": true},
+  "parents": [
+    {"id": "tv.danmaku.bili:id/logo_layout", "class": "android.view.ViewGroup", "bounds": [0, 2338, 1200, 2652]},
+    {"id": "tv.danmaku.bili:id/root_container", "class": "android.view.ViewGroup", "bounds": [0, 0, 1200, 2652]},
+    {"id": "tv.danmaku.bili:id/splash_layout", "class": "android.widget.FrameLayout", "bounds": [0, 0, 1200, 2652]}
+  ],
+  "limits": "This excerpt does not enumerate every node or prove which scene boolean the normal scan computed. No account content, screenshots or device identifiers are included."
+}

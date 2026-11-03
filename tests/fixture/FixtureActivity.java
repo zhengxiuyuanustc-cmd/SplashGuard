@@ -22,7 +22,14 @@ public class FixtureActivity extends Activity {
         Runnable show=()->{
             Button skip=new Button(this);skip.setText(chosen.equals("negative")?"跳过":"跳过广告");
             FrameLayout.LayoutParams pos=new FrameLayout.LayoutParams(330,150,Gravity.TOP|Gravity.RIGHT);pos.topMargin=50;pos.rightMargin=40;root.addView(skip,pos);
-            skip.setOnClickListener(v->{title.setText("SKIPPED");root.removeView(skip);});
+            final int[] clicks={0};
+            skip.setOnClickListener(v->{
+                clicks[0]++;
+                if(chosen.equals("persist")) {title.setText("CLICKS "+clicks[0]);return;}
+                if(chosen.equals("retry") && clicks[0]<2) {title.setText("CLICKS "+clicks[0]);return;}
+                title.setText(chosen.equals("retry")?"SKIPPED "+clicks[0]:"SKIPPED");
+                root.removeView(skip);
+            });
         };
         if(mode.equals("late"))handler.postDelayed(show,14000);else show.run();
     }

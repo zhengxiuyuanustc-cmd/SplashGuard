@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "head": "9fd308b1798394c95904066ace295084849fcca5",
+  "run": 40526038212,
+  "url": "https://github.com/zhengxiuyuanustc-cmd/SplashGuard/actions/runs/40526038212",
+  "target_debuggable": false,
+  "environments": [
+    {
+      "api": 26,
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "artifact_id": 12745160215,
+      "artifact_sha256": "9877297ea2c9634db48b20084e0a0bf2a379f31576463d49e2ce643c04169f74",
+      "test_cases": [
+        "actualServiceClicksOneExplicitSyntheticSkip",
+        "cancelingSystemPickerLeavesRulesUnchanged",
+        "realPrivateDirectoryWriteFailureStopsUntilExplicitRecovery",
+        "actualServiceStopsOnTwoSyntheticSkipCandidates",
+        "tamperedDocumentCannotOfferApplyOrSave",
+        "documentsUiPreviewNeedsConfirmationAndSurvivesRecreation",
+        "resettingRulesDoesNotReapplySameSignedInput",
+        "realPreferencesMigrateAndKeepAcceptedHistory"
+      ],
+      "production_manifest_isolated": true
+    },
+    {
+      "api": 35,
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "artifact_id": 12744900375,
+      "artifact_sha256": "e2a922752504bff1350d7abb68127ebbf7708323f1d893c07a496a3742a632ce",
+      "test_cases": [
+        "actualServiceClicksOneExplicitSyntheticSkip",
+        "cancelingSystemPickerLeavesRulesUnchanged",
+        "realPrivateDirectoryWriteFailureStopsUntilExplicitRecovery",
+        "actualServiceStopsOnTwoSyntheticSkipCandidates",
+        "tamperedDocumentCannotOfferApplyOrSave",
+        "documentsUiPreviewNeedsConfirmationAndSurvivesRecreation",
+        "resettingRulesDoesNotReapplySameSignedInput",
+        "realPreferencesMigrateAndKeepAcceptedHistory"
+      ],
+      "production_manifest_isolated": true
+    },
+    {
+      "api": 37,
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "artifact_id": 12744726787,
+      "artifact_sha256": "a875a24e3e6fa7c8db1dbe70e3c9ad70832af32927cc2b9890e95bba143cc8ba",
+      "test_cases": [
+        "actualServiceClicksOneExplicitSyntheticSkip",
+        "cancelingSystemPickerLeavesRulesUnchanged",
+        "realPrivateDirectoryWriteFailureStopsUntilExplicitRecovery",
+        "actualServiceStopsOnTwoSyntheticSkipCandidates",
+        "tamperedDocumentCannotOfferApplyOrSave",
+        "documentsUiPreviewNeedsConfirmationAndSurvivesRecreation",
+        "resettingRulesDoesNotReapplySameSignedInput",
+        "realPreferencesMigrateAndKeepAcceptedHistory"
+      ],
+      "production_manifest_isolated": true
+    }
+  ]
+}

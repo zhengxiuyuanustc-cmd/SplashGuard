@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 2,
+  "packageCategory": "OTHER_SELECTED",
+  "versionCode": -1,
+  "versionName": "UNKNOWN",
+  "width": 1000,
+  "height": 2000,
+  "evidence": true,
+  "biliSplash": false,
+  "scanComplete": true,
+  "candidates": [
+    {
+      "identity": 0,
+      "node": {
+        "scope": "SAME",
+        "id": "SDK_SKIP",
+        "kind": "BUTTON",
+        "text": "@none",
+        "description": "@none",
+        "visible": true,
+        "enabled": true,
+        "clickable": true
+      },
+      "ancestors": [
+        {
+          "scope": "OTHER",
+          "id": "NONE",
+          "kind": "FRAME_LAYOUT",
+          "text": "@none",
+          "description": "@none",
+          "visible": true,
+          "enabled": true,
+          "clickable": false
+        }
+      ],
+      "ancestorsComplete": true,
+      "bounds": [
+        700,
+        20,
+        950,
+        80
+      ]
+    }
+  ]
+}
